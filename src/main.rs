@@ -16,12 +16,6 @@ fn main() {
     let height = 768;
     let editor_height = ((height as f32) * 0.8) as i32;
 
-    // state
-
-    let mut state = ::utils::State{
-        projects: HashSet::new()
-    };
-
     // window
 
     let mut window = gtk::Window::new(gtk::window_type::TopLevel).unwrap();
@@ -37,16 +31,9 @@ fn main() {
     // project pane
 
     let new_project_button = gtk::Button::new_with_label("New Project").unwrap();
-    new_project_button.connect(gtk::signals::Clicked::new(|| {::projects::new_project(&mut state)}));
-
     let import_button = gtk::Button::new_with_label("Import").unwrap();
-    import_button.connect(gtk::signals::Clicked::new(|| {::projects::import_project(&mut state)}));
-
     let rename_button = gtk::Button::new_with_label("Rename").unwrap();
-    rename_button.connect(gtk::signals::Clicked::new(|| {::projects::rename_project(&mut state)}));
-
     let remove_button = gtk::Button::new_with_label("Remove").unwrap();
-    remove_button.connect(gtk::signals::Clicked::new(|| {::projects::remove_project(&mut state)}));
 
     let mut project_buttons = gtk::Box::new(gtk::orientation::Horizontal, 0).unwrap();
     project_buttons.set_size_request(-1, -1);
@@ -55,8 +42,13 @@ fn main() {
     project_buttons.add(&rename_button);
     project_buttons.add(&remove_button);
 
+    let mut project_tree = gtk::TreeView::new().unwrap();
+    let column_types = vec![glib::ffi::g_type_string];
+    let tree_store = gtk::TreeStore::new(column_types).unwrap();
+    let model = tree_store.get_model().unwrap();
+    project_tree.set_model(&model);
+
     let mut project_pane = gtk::Box::new(gtk::orientation::Vertical, 0).unwrap();
-    let project_tree = gtk::TreeView::new().unwrap();
     project_pane.set_size_request(-1, -1);
     project_pane.pack_start(&project_buttons, false, true, 0);
     project_pane.pack_start(&project_tree, true, true, 0);
@@ -82,6 +74,21 @@ fn main() {
     hbox.pack_start(&project_pane, false, true, 0);
     hbox.pack_start(&content, true, true, 0);
     window.add(&hbox);
+
+    // state
+
+    let mut state = ::utils::State{
+        projects: HashSet::new(),
+        expansions: HashSet::new(),
+        selection: None,
+    };
+
+    // connections
+
+    new_project_button.connect(gtk::signals::Clicked::new(|| {::projects::new_project(&mut state)}));
+    import_button.connect(gtk::signals::Clicked::new(|| {::projects::import_project(&mut state)}));
+    rename_button.connect(gtk::signals::Clicked::new(|| {::projects::rename_project(&mut state)}));
+    remove_button.connect(gtk::signals::Clicked::new(|| {::projects::remove_project(&mut state)}));
 
     // show window
 
