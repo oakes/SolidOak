@@ -81,6 +81,7 @@ fn main() {
         projects: HashSet::new(),
         expansions: HashSet::new(),
         selection: None,
+        tree_model: &model
     };
 
     // connections
