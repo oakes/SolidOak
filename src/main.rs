@@ -44,9 +44,23 @@ fn main() {
 
     let mut project_tree = gtk::TreeView::new().unwrap();
     let column_types = vec![glib::ffi::g_type_string];
-    let tree_store = gtk::TreeStore::new(column_types).unwrap();
-    let model = tree_store.get_model().unwrap();
+    let store = gtk::ListStore::new(column_types).unwrap();
+    let model = store.get_model().unwrap();
     project_tree.set_model(&model);
+    project_tree.set_headers_visible(false);
+
+    let column = gtk::TreeViewColumn::new().unwrap();
+    project_tree.append_column(&column);
+
+    let cell = gtk::CellRendererText::new().unwrap();
+    column.pack_start(&cell, true);
+    column.add_attribute(&cell, "text", 0);
+
+    let mut raw_iter = gtk::ffi::C_GtkTreeIter;
+    let iter = gtk::TreeIter::wrap_pointer(&mut raw_iter);
+    model.get_iter_first(&iter);
+    store.append(&iter);
+    store.set_column_text(&iter, 0, "Hello, world!");
 
     let mut project_pane = gtk::Box::new(gtk::orientation::Vertical, 0).unwrap();
     project_pane.set_size_request(-1, -1);
