@@ -3,6 +3,7 @@ extern crate rgtk;
 
 use rgtk::*;
 use std::collections::HashSet;
+use std::ptr;
 
 mod projects;
 mod utils;
@@ -44,18 +45,25 @@ fn main() {
 
     let mut project_tree = gtk::TreeView::new().unwrap();
     let column_types = vec![glib::ffi::g_type_string];
-    let store = gtk::ListStore::new(column_types).unwrap();
+    let store = gtk::TreeStore::new(column_types).unwrap();
     let model = store.get_model().unwrap();
     project_tree.set_model(&model);
     project_tree.set_headers_visible(false);
 
     let column = gtk::TreeViewColumn::new().unwrap();
-    project_tree.append_text_column(&column);
+    let cell = gtk::CellRendererText::new().unwrap();
+    column.pack_start(&cell, true);
+    column.add_attribute(&cell, "text", 0);
+    project_tree.append_column(&column);
 
     let mut iter = gtk::ffi::C_GtkTreeIter;
     model.get_iter_first(&mut iter);
-    store.append(&mut iter);
+    store.append(&mut iter, ptr::null_mut());
+    let mut child = gtk::ffi::C_GtkTreeIter;
+    store.append(&mut child, &mut iter);
+
     store.set_column_text(&mut iter, 0, "Hello, world!");
+    store.set_column_text(&mut child, 0, "Bye, world!");
 
     let mut project_pane = gtk::Box::new(gtk::orientation::Vertical, 0).unwrap();
     project_pane.set_size_request(-1, -1);
