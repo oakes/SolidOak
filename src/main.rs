@@ -56,11 +56,10 @@ fn main() {
     column.pack_start(&cell, true);
     column.add_attribute(&cell, "text", 0);
 
-    let mut raw_iter = gtk::ffi::C_GtkTreeIter;
-    let iter = gtk::TreeIter::wrap_pointer(&mut raw_iter);
-    model.get_iter_first(&iter);
-    store.append(&iter);
-    store.set_column_text(&iter, 0, "Hello, world!");
+    let mut iter = gtk::ffi::C_GtkTreeIter;
+    model.get_iter_first(&mut iter);
+    store.append(&mut iter);
+    store.set_column_text(&mut iter, 0, "Hello, world!");
 
     let mut project_pane = gtk::Box::new(gtk::orientation::Vertical, 0).unwrap();
     project_pane.set_size_request(-1, -1);
