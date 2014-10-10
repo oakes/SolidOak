@@ -50,11 +50,7 @@ fn main() {
     project_tree.set_headers_visible(false);
 
     let column = gtk::TreeViewColumn::new().unwrap();
-    project_tree.append_column(&column);
-
-    let cell = gtk::CellRendererText::new().unwrap();
-    column.pack_start(&cell, true);
-    column.add_attribute(&cell, "text", 0);
+    project_tree.append_text_column(&column);
 
     let mut iter = gtk::ffi::C_GtkTreeIter;
     model.get_iter_first(&mut iter);
