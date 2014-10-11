@@ -56,15 +56,6 @@ fn main() {
     column.add_attribute(&cell, "text", 0);
     project_tree.append_column(&column);
 
-    let mut iter = gtk::ffi::C_GtkTreeIter;
-    model.get_iter_first(&mut iter);
-    store.append(&mut iter, ptr::null_mut());
-    let mut child = gtk::ffi::C_GtkTreeIter;
-    store.append(&mut child, &mut iter);
-
-    store.set_column_text(&mut iter, 0, "Hello, world!");
-    store.set_column_text(&mut child, 0, "Bye, world!");
-
     let mut project_pane = gtk::Box::new(gtk::orientation::Vertical, 0).unwrap();
     project_pane.set_size_request(-1, -1);
     project_pane.pack_start(&project_buttons, false, true, 0);
@@ -98,8 +89,18 @@ fn main() {
         projects: HashSet::new(),
         expansions: HashSet::new(),
         selection: None,
-        tree_model: &model
+        tree_store: &store
     };
+
+    // populate tree
+
+    let mut iter = gtk::ffi::C_GtkTreeIter;
+    state.tree_store.append(&mut iter, ptr::null_mut());
+    state.tree_store.set_string(&mut iter, 0, "Hello, world!");
+
+    let mut child = gtk::ffi::C_GtkTreeIter;
+    state.tree_store.append(&mut child, &mut iter);
+    state.tree_store.set_string(&mut child, 0, "Bye, world!");
 
     // connections
 
