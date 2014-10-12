@@ -3,7 +3,6 @@ extern crate rgtk;
 
 use rgtk::*;
 use std::collections::HashSet;
-use std::ptr;
 
 mod projects;
 mod utils;
@@ -94,13 +93,15 @@ fn main() {
 
     // populate tree
 
-    let mut iter = gtk::ffi::C_GtkTreeIter;
-    state.tree_store.append(&mut iter, ptr::null_mut());
-    state.tree_store.set_string(&mut iter, 0, "Hello, world!");
+    let mut iter_raw = gtk::ffi::C_GtkTreeIter;
+    let iter = gtk::TreeIter::wrap_pointer(&mut iter_raw);
+    state.tree_store.append(&iter, None);
+    state.tree_store.set_string(&iter, 0, "Hello, world!");
 
-    let mut child = gtk::ffi::C_GtkTreeIter;
-    state.tree_store.append(&mut child, &mut iter);
-    state.tree_store.set_string(&mut child, 0, "Bye, world!");
+    let mut child_raw = gtk::ffi::C_GtkTreeIter;
+    let child = gtk::TreeIter::wrap_pointer(&mut child_raw);
+    state.tree_store.append(&child, Some(&iter));
+    state.tree_store.set_string(&child, 0, "Bye, world!");
 
     // connections
 
