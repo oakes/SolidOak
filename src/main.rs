@@ -93,13 +93,11 @@ fn main() {
 
     // populate tree
 
-    let mut iter_raw = gtk::ffi::C_GtkTreeIter;
-    let iter = gtk::TreeIter::wrap_pointer(&mut iter_raw);
+    let iter = gtk::TreeIter::new().unwrap();
     state.tree_store.append(&iter, None);
     state.tree_store.set_string(&iter, 0, "Hello, world!");
 
-    let mut child_raw = gtk::ffi::C_GtkTreeIter;
-    let child = gtk::TreeIter::wrap_pointer(&mut child_raw);
+    let child = gtk::TreeIter::new().unwrap();
     state.tree_store.append(&child, Some(&iter));
     state.tree_store.set_string(&child, 0, "Bye, world!");
 
