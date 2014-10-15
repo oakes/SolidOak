@@ -43,7 +43,7 @@ fn main() {
     project_buttons.add(&remove_button);
 
     let mut project_tree = gtk::TreeView::new().unwrap();
-    let column_types = vec![glib::ffi::g_type_string];
+    let column_types = [glib::ffi::g_type_string];
     let store = gtk::TreeStore::new(column_types).unwrap();
     let model = store.get_model().unwrap();
     project_tree.set_model(&model);
