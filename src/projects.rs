@@ -6,7 +6,7 @@ pub fn new_project(state: &mut ::utils::State) {
     let chooser = gtk::FileChooserDialog::new(
         "New Project",
         None,
-        gtk::FileChooserAction::CreateFolder).unwrap();
+        gtk::FileChooserAction::Save).unwrap();
     chooser.run();
     let filename = chooser.get_filename();
     if filename.is_some() {
