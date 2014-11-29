@@ -32,14 +32,15 @@ fn main() {
 
     // project pane
 
-    let new_project_button = gtk::Button::new_with_label("New Project").unwrap();
+    let new_button = gtk::Button::new_with_label("New Project").unwrap();
     let import_button = gtk::Button::new_with_label("Import").unwrap();
     let rename_button = gtk::Button::new_with_label("Rename").unwrap();
     let remove_button = gtk::Button::new_with_label("Remove").unwrap();
 
-    let mut project_buttons = gtk::Box::new(gtk::Orientation::Horizontal, 0).unwrap();
+    let mut project_buttons =
+        gtk::Box::new(gtk::Orientation::Horizontal, 0).unwrap();
     project_buttons.set_size_request(-1, -1);
-    project_buttons.add(&new_project_button);
+    project_buttons.add(&new_button);
     project_buttons.add(&import_button);
     project_buttons.add(&rename_button);
     project_buttons.add(&remove_button);
@@ -57,7 +58,8 @@ fn main() {
     column.add_attribute(&cell, "text", 0);
     project_tree.append_column(&column);
 
-    let mut project_pane = gtk::Box::new(gtk::Orientation::Vertical, 0).unwrap();
+    let mut project_pane =
+        gtk::Box::new(gtk::Orientation::Vertical, 0).unwrap();
     project_pane.set_size_request(-1, -1);
     project_pane.pack_start(&project_buttons, false, true, 0);
     project_pane.pack_start(&project_tree, true, true, 0);
@@ -100,10 +102,18 @@ fn main() {
 
     // connections
 
-    new_project_button.connect(gtk::signals::Clicked::new(|| {::projects::new_project(&mut state)}));
-    import_button.connect(gtk::signals::Clicked::new(|| {::projects::import_project(&mut state)}));
-    rename_button.connect(gtk::signals::Clicked::new(|| {::projects::rename_project(&mut state)}));
-    remove_button.connect(gtk::signals::Clicked::new(|| {::projects::remove_project(&mut state)}));
+    new_button.connect(gtk::signals::Clicked::new(|| {
+        ::projects::new_project(&mut state)
+    }));
+    import_button.connect(gtk::signals::Clicked::new(|| {
+        ::projects::import_project(&mut state)
+    }));
+    rename_button.connect(gtk::signals::Clicked::new(|| {
+        ::projects::rename_project(&mut state)
+    }));
+    remove_button.connect(gtk::signals::Clicked::new(|| {
+        ::projects::remove_project(&mut state)
+    }));
 
     // show window
 
