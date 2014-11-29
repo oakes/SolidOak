@@ -5,6 +5,7 @@ use rgtk::*;
 use std::collections::HashSet;
 
 mod projects;
+mod ui;
 mod utils;
 
 fn main() {
@@ -93,13 +94,7 @@ fn main() {
 
     // populate tree
 
-    let iter = gtk::TreeIter::new().unwrap();
-    state.tree_store.append(&iter, None);
-    state.tree_store.set_string(&iter, 0, "Hello, world!");
-
-    let child = gtk::TreeIter::new().unwrap();
-    state.tree_store.append(&child, Some(&iter));
-    state.tree_store.set_string(&child, 0, "Bye, world!");
+    ::ui::update_project_tree(&state);
 
     // connections
 
