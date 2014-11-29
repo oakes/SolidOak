@@ -7,3 +7,4 @@ authors = ["oakes <zsoakes@gmail.com>"]
 [dependencies.rgtk]
 
 git = "https://github.com/jeremyletang/rgtk.git"
+features = ["GTK_3_6"]
