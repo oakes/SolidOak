@@ -1,32 +1,29 @@
 extern crate rgtk;
 
 use rgtk::*;
+use std::cmp::Ordering;
 use std::collections::HashSet;
-use std::io::fs::PathExtensions;
 use std::io::fs;
+use std::io::fs::PathExtensions;
+
+fn path_sorter(a: &Path, b: &Path) -> Ordering {
+    let leaf_a = a.filename_str();
+    let leaf_b = b.filename_str();
+    leaf_a.cmp(&leaf_b)
+}
 
 fn sort_paths(paths: &Vec<Path>) -> Vec<Path> {
     let mut paths_vec = paths.clone();
-    paths_vec.sort_by(|a, b| {
-        let leaf_a = a.filename_str();
-        let leaf_b = b.filename_str();
-
-        leaf_a.cmp(&leaf_b)
-    });
+    paths_vec.sort_by(path_sorter);
     paths_vec
 }
 
-fn sort_string_paths(paths: &HashSet<String>) -> Vec<String> {
-    let mut paths_vec : Vec<String> = paths.clone().into_iter().collect();
-    paths_vec.sort_by(|a, b| {
-        let path_a = Path::new(a);
-        let leaf_a = path_a.filename_str();
-
-        let path_b = Path::new(b);
-        let leaf_b = path_b.filename_str();
-
-        leaf_a.cmp(&leaf_b)
-    });
+fn sort_string_paths(paths: &HashSet<String>) -> Vec<Path> {
+    let mut paths_vec = Vec::new();
+    for path in paths.iter() {
+        paths_vec.push(Path::new(path));
+    }
+    paths_vec.sort_by(path_sorter);
     paths_vec
 }
 
@@ -63,8 +60,7 @@ fn update_project_tree_node(
 pub fn update_project_tree(state: &::utils::State) {
     state.tree_store.clear();
 
-    for path_str in sort_string_paths(&state.projects).iter() {
-        let path = Path::new(path_str);
-        update_project_tree_node(state, &path, None);
+    for path in sort_string_paths(&state.projects).iter() {
+        update_project_tree_node(state, path, None);
     }
 }

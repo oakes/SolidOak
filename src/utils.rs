@@ -2,6 +2,7 @@ use rgtk::*;
 use serialize::json;
 use std::collections::HashSet;
 use std::io::fs;
+use std::io::fs::PathExtensions;
 use std::os::homedir;
 
 pub struct State<'a> {
@@ -42,10 +43,12 @@ pub fn write_prefs(state: &State) {
     let json_str = json::encode(&prefs);
 
     let mut prefs_path = get_data_dir();
-    match fs::mkdir(&prefs_path, ::std::io::USER_DIR) {
-        Ok(_) => {},
-        Err(_) => {}
-    };
+    if !prefs_path.exists() {
+        match fs::mkdir(&prefs_path, ::std::io::USER_DIR) {
+            Ok(_) => {},
+            Err(e) => { println!("Error creating directory: {}", e) }
+        };
+    }
 
     prefs_path.push("prefs.json");
     let mut f = fs::File::create(&prefs_path);
@@ -56,10 +59,10 @@ pub fn write_prefs(state: &State) {
 }
 
 pub fn read_prefs(state: &mut State) {
-    let mut prefs = get_data_dir();
-    prefs.push("prefs.json");
+    let mut prefs_path = get_data_dir();
+    prefs_path.push("prefs.json");
 
-    let mut f = fs::File::open(&prefs);
+    let mut f = fs::File::open(&prefs_path);
     let prefs_option : Option<Prefs> = match f.read_to_string() {
         Ok(json_str) => {
             match json::decode(json_str.as_slice()) {
