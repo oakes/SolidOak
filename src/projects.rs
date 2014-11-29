@@ -12,6 +12,7 @@ pub fn new_project(state: &mut ::utils::State) {
     if filename.is_some() {
         state.projects.insert(filename.unwrap());
         ::ui::update_project_tree(state);
+        ::utils::write_prefs(state);
     }
     chooser.destroy();
 }
@@ -26,6 +27,7 @@ pub fn import_project(state: &mut ::utils::State) {
     if filename.is_some() {
         state.projects.insert(filename.unwrap());
         ::ui::update_project_tree(state);
+        ::utils::write_prefs(state);
     }
     chooser.destroy();
 }

@@ -17,17 +17,17 @@ fn update_project_tree_node(
         if !leaf_str.starts_with(".") {
             state.tree_store.append(&iter, parent);
             state.tree_store.set_string(&iter, 0, leaf_str);
-        }
-    }
 
-    if node.is_dir() {
-        match fs::readdir(node) {
-            Ok(children) => {
-                for child in children.iter() {
-                    update_project_tree_node(state, child, Some(&iter));
+            if node.is_dir() {
+                match fs::readdir(node) {
+                    Ok(children) => {
+                        for child in children.iter() {
+                            update_project_tree_node(state, child, Some(&iter));
+                        }
+                    },
+                    Err(e) => println!("Error updating tree: {}", e)
                 }
-            },
-            Err(_) => {}
+            }
         }
     }
 

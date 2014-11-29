@@ -1,5 +1,6 @@
 #![feature(globs)]
 extern crate rgtk;
+extern crate serialize;
 
 use rgtk::*;
 use std::collections::HashSet;
@@ -94,6 +95,7 @@ fn main() {
 
     // populate tree
 
+    ::utils::read_prefs(&mut state);
     ::ui::update_project_tree(&state);
 
     // connections
