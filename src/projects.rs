@@ -11,6 +11,7 @@ pub fn new_project(state: &mut ::utils::State) {
     let filename = chooser.get_filename();
     if filename.is_some() {
         state.projects.insert(filename.unwrap());
+        ::ui::update_project_tree(state);
     }
     chooser.destroy();
 }
@@ -24,6 +25,7 @@ pub fn import_project(state: &mut ::utils::State) {
     let filename = chooser.get_filename();
     if filename.is_some() {
         state.projects.insert(filename.unwrap());
+        ::ui::update_project_tree(state);
     }
     chooser.destroy();
 }
