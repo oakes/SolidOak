@@ -30,12 +30,11 @@ fn get_data_dir() -> Path {
 }
 
 fn get_prefs(state: &State) -> Prefs {
-    let object = Prefs {
+    Prefs {
         projects: state.projects.clone().into_iter().collect(),
         expansions: state.expansions.clone().into_iter().collect(),
         selection: state.selection.clone()
-    };
-    object
+    }
 }
 
 pub fn write_prefs(state: &State) {
@@ -44,15 +43,15 @@ pub fn write_prefs(state: &State) {
 
     let mut prefs_path = get_data_dir();
     match fs::mkdir(&prefs_path, ::std::io::USER_DIR) {
-        Ok(_) => {
-            prefs_path.push("prefs.json");
-            let mut f = fs::File::create(&prefs_path);
-            match f.write_str(json_str.as_slice()) {
-                Ok(_) => {},
-                Err(e) => println!("Error writing prefs: {}", e)
-            };
-        },
-        Err(e) => { println!("Error writing prefs: {}", e); }
+        Ok(_) => {},
+        Err(_) => {}
+    };
+
+    prefs_path.push("prefs.json");
+    let mut f = fs::File::create(&prefs_path);
+    match f.write_str(json_str.as_slice()) {
+        Ok(_) => {},
+        Err(e) => println!("Error writing prefs: {}", e)
     };
 }
 
