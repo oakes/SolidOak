@@ -6,7 +6,7 @@ pub fn new_project(state: &mut ::utils::State) {
     let chooser = gtk::FileChooserDialog::new(
         "New Project",
         None,
-        gtk::enums::file_chooser_action::CreateFolder).unwrap();
+        gtk::FileChooserAction::CreateFolder).unwrap();
     chooser.run();
     let filename = chooser.get_filename();
     if filename.is_some() {
@@ -19,7 +19,7 @@ pub fn import_project(state: &mut ::utils::State) {
     let chooser = gtk::FileChooserDialog::new(
         "Import",
         None,
-        gtk::enums::file_chooser_action::SelectFolder).unwrap();
+        gtk::FileChooserAction::SelectFolder).unwrap();
     chooser.run();
     let filename = chooser.get_filename();
     if filename.is_some() {

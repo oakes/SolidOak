@@ -18,9 +18,9 @@ fn main() {
 
     // window
 
-    let mut window = gtk::Window::new(gtk::window_type::TopLevel).unwrap();
+    let mut window = gtk::Window::new(gtk::WindowType::TopLevel).unwrap();
     window.set_title("SolidOak");
-    window.set_window_position(gtk::window_position::Center);
+    window.set_window_position(gtk::WindowPosition::Center);
     window.set_default_size(width, height);
 
     window.connect(gtk::signals::DeleteEvent::new(|_| {
@@ -35,7 +35,7 @@ fn main() {
     let rename_button = gtk::Button::new_with_label("Rename").unwrap();
     let remove_button = gtk::Button::new_with_label("Remove").unwrap();
 
-    let mut project_buttons = gtk::Box::new(gtk::orientation::Horizontal, 0).unwrap();
+    let mut project_buttons = gtk::Box::new(gtk::Orientation::Horizontal, 0).unwrap();
     project_buttons.set_size_request(-1, -1);
     project_buttons.add(&new_project_button);
     project_buttons.add(&import_button);
@@ -44,7 +44,7 @@ fn main() {
 
     let mut project_tree = gtk::TreeView::new().unwrap();
     let column_types = [glib::ffi::g_type_string];
-    let store = gtk::TreeStore::new(column_types).unwrap();
+    let store = gtk::TreeStore::new(&column_types).unwrap();
     let model = store.get_model().unwrap();
     project_tree.set_model(&model);
     project_tree.set_headers_visible(false);
@@ -55,7 +55,7 @@ fn main() {
     column.add_attribute(&cell, "text", 0);
     project_tree.append_column(&column);
 
-    let mut project_pane = gtk::Box::new(gtk::orientation::Vertical, 0).unwrap();
+    let mut project_pane = gtk::Box::new(gtk::Orientation::Vertical, 0).unwrap();
     project_pane.set_size_request(-1, -1);
     project_pane.pack_start(&project_buttons, false, true, 0);
     project_pane.pack_start(&project_tree, true, true, 0);
@@ -71,13 +71,13 @@ fn main() {
 
     // content
 
-    let mut content = gtk::Box::new(gtk::orientation::Vertical, 0).unwrap();
+    let mut content = gtk::Box::new(gtk::Orientation::Vertical, 0).unwrap();
     content.pack_start(&editor_pane, false, true, 0);
     content.pack_start(&build_pane, true, true, 0);
 
     // hbox
 
-    let mut hbox = gtk::Box::new(gtk::orientation::Horizontal, 0).unwrap();
+    let mut hbox = gtk::Box::new(gtk::Orientation::Horizontal, 0).unwrap();
     hbox.pack_start(&project_pane, false, true, 0);
     hbox.pack_start(&content, true, true, 0);
     window.add(&hbox);
