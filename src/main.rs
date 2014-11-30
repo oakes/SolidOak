@@ -18,7 +18,7 @@ fn main() {
     let height = 768;
     let editor_height = ((height as f32) * 0.8) as i32;
 
-    // window
+    // create the window
 
     let mut window = gtk::Window::new(gtk::WindowType::TopLevel).unwrap();
     window.set_title("SolidOak");
@@ -30,7 +30,7 @@ fn main() {
         true
     }));
 
-    // project pane
+    // create the panes
 
     let new_button = gtk::Button::new_with_label("New Project").unwrap();
     let import_button = gtk::Button::new_with_label("Import").unwrap();
@@ -64,29 +64,21 @@ fn main() {
     project_pane.pack_start(&project_buttons, false, true, 0);
     project_pane.pack_start(&project_tree, true, true, 0);
 
-    // editor pane
-
     let editor_pane = gtk::TextView::new().unwrap();
     editor_pane.set_size_request(-1, editor_height);
 
-    // build pane
-
     let build_pane = gtk::TextView::new().unwrap();
-
-    // content
 
     let mut content = gtk::Box::new(gtk::Orientation::Vertical, 0).unwrap();
     content.pack_start(&editor_pane, false, true, 0);
     content.pack_start(&build_pane, true, true, 0);
-
-    // hbox
 
     let mut hbox = gtk::Box::new(gtk::Orientation::Horizontal, 0).unwrap();
     hbox.pack_start(&project_pane, false, true, 0);
     hbox.pack_start(&content, true, true, 0);
     window.add(&hbox);
 
-    // state
+    // populate the project tree
 
     let mut state = ::utils::State{
         projects: HashSet::new(),
@@ -95,12 +87,11 @@ fn main() {
         tree_store: &store
     };
 
-    // populate tree
-
+    ::utils::create_data_dir();
     ::utils::read_prefs(&mut state);
     ::ui::update_project_tree(&state);
 
-    // connections
+    // connect actions to the buttons
 
     new_button.connect(gtk::signals::Clicked::new(|| {
         ::projects::new_project(&mut state)
@@ -115,7 +106,7 @@ fn main() {
         ::projects::remove_project(&mut state)
     }));
 
-    // show window
+    // show the window
 
     window.show_all();
     gtk::main();

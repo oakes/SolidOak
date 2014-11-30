@@ -30,6 +30,12 @@ fn get_data_dir() -> Path {
     path
 }
 
+fn get_prefs_file() -> Path {
+    let mut path = get_data_dir();
+    path.push("prefs.json");
+    path
+}
+
 fn get_prefs(state: &State) -> Prefs {
     Prefs {
         projects: state.projects.clone().into_iter().collect(),
@@ -38,19 +44,21 @@ fn get_prefs(state: &State) -> Prefs {
     }
 }
 
-pub fn write_prefs(state: &State) {
-    let prefs = get_prefs(state);
-    let json_str = json::encode(&prefs);
-
-    let mut prefs_path = get_data_dir();
-    if !prefs_path.exists() {
-        match fs::mkdir(&prefs_path, ::std::io::USER_DIR) {
+pub fn create_data_dir() {
+    let path = get_data_dir();
+    if !path.exists() {
+        match fs::mkdir(&path, ::std::io::USER_DIR) {
             Ok(_) => {},
             Err(e) => { println!("Error creating directory: {}", e) }
         };
     }
+}
 
-    prefs_path.push("prefs.json");
+pub fn write_prefs(state: &State) {
+    let prefs = get_prefs(state);
+    let json_str = json::encode(&prefs);
+
+    let prefs_path = get_prefs_file();
     let mut f = fs::File::create(&prefs_path);
     match f.write_str(json_str.as_slice()) {
         Ok(_) => {},
@@ -59,9 +67,7 @@ pub fn write_prefs(state: &State) {
 }
 
 pub fn read_prefs(state: &mut State) {
-    let mut prefs_path = get_data_dir();
-    prefs_path.push("prefs.json");
-
+    let prefs_path = get_prefs_file();
     let mut f = fs::File::open(&prefs_path);
     let prefs_option : Option<Prefs> = match f.read_to_string() {
         Ok(json_str) => {
