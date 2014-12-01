@@ -27,8 +27,24 @@ fn sort_string_paths(paths: &HashSet<String>) -> Vec<Path> {
     paths_vec
 }
 
-fn update_project_tree_node(
-    state: &::utils::State,
+fn get_first_path(state: &::utils::State) -> Option<gtk::TreePath> {
+    let mut iter = gtk::TreeIter::new().unwrap();
+    let model = state.tree_store.get_model().unwrap();
+
+    model.get_iter_first(&mut iter);
+
+    let path = model.get_path(&iter);
+    iter.drop();
+    path
+}
+
+pub fn update_project_buttons(state: &::utils::State) {
+    state.rename_button.set_sensitive(state.selection.is_some());
+    state.remove_button.set_sensitive(state.selection.is_some());
+}
+
+fn add_node(
+    state: &mut ::utils::State,
     node: &Path,
     parent: Option<&gtk::TreeIter>)
 {
@@ -40,12 +56,16 @@ fn update_project_tree_node(
         if !leaf_str.starts_with(".") {
             state.tree_store.append(&iter, parent);
             state.tree_store.set_string(&iter, 0, leaf_str);
+            state.tree_store.set_string(&iter, 1, node.as_str().unwrap());
+
+            //let tree_path = state.tree_model.get_path(&iter).unwrap();
+            //state.project_tree.expand_row(&tree_path, false);
 
             if node.is_dir() {
                 match fs::readdir(node) {
                     Ok(children) => {
                         for child in sort_paths(&children).iter() {
-                            update_project_tree_node(state, child, Some(&iter));
+                            add_node(state, child, Some(&iter));
                         }
                     },
                     Err(e) => println!("Error updating tree: {}", e)
@@ -57,10 +77,17 @@ fn update_project_tree_node(
     iter.drop();
 }
 
-pub fn update_project_tree(state: &::utils::State) {
+pub fn update_project_tree(state: &mut ::utils::State) {
     state.tree_store.clear();
 
     for path in sort_string_paths(&state.projects).iter() {
-        update_project_tree_node(state, path, None);
+        add_node(state, path, None);
     }
+
+    if state.selection.is_none() {
+        let path = get_first_path(state);
+        state.project_tree.set_cursor(&path.unwrap(), None, false);
+    }
+
+    update_project_buttons(state);
 }

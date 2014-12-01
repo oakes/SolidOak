@@ -3,6 +3,7 @@ extern crate neovim;
 extern crate rgtk;
 extern crate serialize;
 
+//use neovim::*;
 use rgtk::*;
 use std::collections::HashSet;
 
@@ -47,7 +48,8 @@ fn main() {
     project_buttons.add(&remove_button);
 
     let mut project_tree = gtk::TreeView::new().unwrap();
-    let column_types = [glib::ffi::g_type_string];
+    let selection = project_tree.get_selection().unwrap();
+    let column_types = [glib::ffi::g_type_string, glib::ffi::g_type_string];
     let store = gtk::TreeStore::new(&column_types).unwrap();
     let model = store.get_model().unwrap();
     project_tree.set_model(&model);
@@ -85,14 +87,18 @@ fn main() {
         projects: HashSet::new(),
         expansions: HashSet::new(),
         selection: None,
-        tree_store: &store
+        tree_model: &model,
+        tree_store: &store,
+        project_tree: &mut project_tree,
+        rename_button: &rename_button,
+        remove_button: &remove_button,
     };
 
     ::utils::create_data_dir();
     ::utils::read_prefs(&mut state);
-    ::ui::update_project_tree(&state);
+    ::ui::update_project_tree(&mut state);
 
-    // connect actions to the buttons
+    // connect to the signals
 
     new_button.connect(gtk::signals::Clicked::new(|| {
         ::projects::new_project(&mut state)
@@ -105,6 +111,15 @@ fn main() {
     }));
     remove_button.connect(gtk::signals::Clicked::new(|| {
         ::projects::remove_project(&mut state)
+    }));
+    selection.connect(gtk::signals::Changed::new(|| {
+        let mut iter = gtk::TreeIter::new().unwrap();
+        selection.get_selected(&model, &mut iter);
+        let value = model.get_value(&iter, 1);
+        state.selection = value.get_string();
+        ::utils::write_prefs(&state);
+
+        ::ui::update_project_buttons(&mut state);
     }));
 
     // show the window
