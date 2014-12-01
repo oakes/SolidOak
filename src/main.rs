@@ -1,4 +1,5 @@
 #![feature(globs)]
+extern crate neovim;
 extern crate rgtk;
 extern crate serialize;
 
