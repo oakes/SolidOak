@@ -12,7 +12,7 @@ apt-get install libtool autoconf automake cmake libncurses5-dev g++ pkg-config u
 cargo build
 ```
 
-### Linix (yum)
+### Linux (yum)
 
 
 ```Shell
@@ -21,7 +21,7 @@ yum install autoconf automake cmake gcc gcc-c++ libtool ncurses-devel pkgconfig
 cargo build
 ```
 
-### OSX (homebrew)
+### OS X (homebrew)
 
 ```Shell
 brew install gtk+3
