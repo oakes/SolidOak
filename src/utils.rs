@@ -11,7 +11,7 @@ pub struct State<'a> {
     pub selection: Option<String>,
     pub tree_store: &'a gtk::TreeStore,
     pub tree_model: &'a gtk::TreeModel,
-    pub project_tree: &'a mut gtk::TreeView,
+    pub tree_selection: &'a gtk::TreeSelection,
     pub rename_button: &'a gtk::Button,
     pub remove_button: &'a gtk::Button,
 }

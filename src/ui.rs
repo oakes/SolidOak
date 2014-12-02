@@ -44,7 +44,7 @@ pub fn update_project_buttons(state: &::utils::State) {
 }
 
 fn add_node(
-    state: &mut ::utils::State,
+    state: &::utils::State,
     node: &Path,
     parent: Option<&gtk::TreeIter>)
 {
@@ -57,9 +57,6 @@ fn add_node(
             state.tree_store.append(&iter, parent);
             state.tree_store.set_string(&iter, 0, leaf_str);
             state.tree_store.set_string(&iter, 1, node.as_str().unwrap());
-
-            //let tree_path = state.tree_model.get_path(&iter).unwrap();
-            //state.project_tree.expand_row(&tree_path, false);
 
             if node.is_dir() {
                 match fs::readdir(node) {
@@ -77,17 +74,59 @@ fn add_node(
     iter.drop();
 }
 
-pub fn update_project_tree(state: &mut ::utils::State) {
+fn expand_nodes(tree: &mut gtk::TreeView, state: &mut ::utils::State, parent: Option<&gtk::TreeIter>) {
+    if parent.is_none() {
+        tree.expand_all();
+    }
+
+    let mut iter = gtk::TreeIter::new().unwrap();
+
+    if state.tree_model.iter_children(&mut iter, parent) {
+        loop {
+            let path = state.tree_model.get_value(&iter, 1).get_string();
+            if path.is_some() {
+                let path_str = path.unwrap();
+
+                if state.selection.is_some() {
+                    let selection_str = state.selection.clone().unwrap();
+                    if path_str == selection_str {
+                        let path = state.tree_model.get_path(&iter);
+                        tree.set_cursor(&path.unwrap(), None, false);
+                    }
+                }
+
+                if state.expansions.contains(&path_str) {
+                    expand_nodes(tree, state, Some(&iter));
+                } else {
+                    let tree_path = state.tree_model.get_path(&iter).unwrap();
+                    tree.collapse_row(&tree_path);
+                }
+            }
+
+            if !state.tree_model.iter_next(&mut iter) {
+                break;
+            }
+        }
+    }
+
+    iter.drop();
+}
+
+pub fn update_project_tree(tree: &mut gtk::TreeView, state: &mut ::utils::State) {
     state.tree_store.clear();
 
     for path in sort_string_paths(&state.projects).iter() {
         add_node(state, path, None);
     }
 
-    if state.selection.is_none() {
+    expand_nodes(tree, state, None);
+
+    let mut iter = gtk::TreeIter::new().unwrap();
+    if !state.tree_selection.get_selected(state.tree_model, &mut iter) {
         let path = get_first_path(state);
-        state.project_tree.set_cursor(&path.unwrap(), None, false);
+        tree.set_cursor(&path.unwrap(), None, false);
     }
+    iter.drop();
 
     update_project_buttons(state);
 }

@@ -55,6 +55,9 @@ fn main() {
     project_tree.set_model(&model);
     project_tree.set_headers_visible(false);
 
+    let mut scroll_pane = gtk::ScrolledWindow::new(None, None).unwrap();
+    scroll_pane.add(&project_tree);
+
     let column = gtk::TreeViewColumn::new().unwrap();
     let cell = gtk::CellRendererText::new().unwrap();
     column.pack_start(&cell, true);
@@ -65,7 +68,7 @@ fn main() {
         gtk::Box::new(gtk::Orientation::Vertical, 0).unwrap();
     project_pane.set_size_request(-1, -1);
     project_pane.pack_start(&project_buttons, false, true, 0);
-    project_pane.pack_start(&project_tree, true, true, 0);
+    project_pane.pack_start(&scroll_pane, true, true, 0);
 
     let editor_pane = gtk::TextView::new().unwrap();
     editor_pane.set_size_request(-1, editor_height);
@@ -89,22 +92,22 @@ fn main() {
         selection: None,
         tree_model: &model,
         tree_store: &store,
-        project_tree: &mut project_tree,
+        tree_selection: &selection,
         rename_button: &rename_button,
         remove_button: &remove_button,
     };
 
     ::utils::create_data_dir();
     ::utils::read_prefs(&mut state);
-    ::ui::update_project_tree(&mut state);
+    ::ui::update_project_tree(&mut project_tree, &mut state);
 
     // connect to the signals
 
     new_button.connect(gtk::signals::Clicked::new(|| {
-        ::projects::new_project(&mut state)
+        ::projects::new_project(&mut project_tree, &mut state)
     }));
     import_button.connect(gtk::signals::Clicked::new(|| {
-        ::projects::import_project(&mut state)
+        ::projects::import_project(&mut project_tree, &mut state)
     }));
     rename_button.connect(gtk::signals::Clicked::new(|| {
         ::projects::rename_project(&mut state)
@@ -115,11 +118,27 @@ fn main() {
     selection.connect(gtk::signals::Changed::new(|| {
         let mut iter = gtk::TreeIter::new().unwrap();
         selection.get_selected(&model, &mut iter);
-        let value = model.get_value(&iter, 1);
-        state.selection = value.get_string();
+        let path_str = model.get_value(&iter, 1).get_string();
+        state.selection = path_str;
         ::utils::write_prefs(&state);
 
         ::ui::update_project_buttons(&mut state);
+    }));
+    project_tree.connect(gtk::signals::RowCollapsed::new(|iter_raw, _| {
+        let iter = gtk::TreeIter::wrap_pointer(iter_raw);
+        let path_str = model.get_value(&iter, 1).get_string();
+        if path_str.is_some() {
+            state.expansions.remove(&path_str.unwrap());
+            ::utils::write_prefs(&state);
+        }
+    }));
+    project_tree.connect(gtk::signals::RowExpanded::new(|iter_raw, _| {
+        let iter = gtk::TreeIter::wrap_pointer(iter_raw);
+        let path_str = model.get_value(&iter, 1).get_string();
+        if path_str.is_some() {
+            state.expansions.insert(path_str.unwrap());
+            ::utils::write_prefs(&state);
+        }
     }));
 
     // show the window
