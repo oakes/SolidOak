@@ -6,7 +6,6 @@ extern crate serialize;
 //use neovim::*;
 use rgtk::*;
 use std::collections::HashSet;
-use std::io::fs::PathExtensions;
 
 mod projects;
 mod ui;
@@ -105,54 +104,27 @@ fn main() {
     // connect to the signals
 
     new_button.connect(gtk::signals::Clicked::new(|| {
-        ::projects::new_project(&mut state, &mut project_tree)
+        ::projects::new_project(&mut state, &mut project_tree);
     }));
     import_button.connect(gtk::signals::Clicked::new(|| {
-        ::projects::import_project(&mut state, &mut project_tree)
+        ::projects::import_project(&mut state, &mut project_tree);
     }));
     rename_button.connect(gtk::signals::Clicked::new(|| {
-        ::projects::rename_project(&mut state)
+        ::projects::rename_project(&mut state);
     }));
     remove_button.connect(gtk::signals::Clicked::new(|| {
-        ::projects::remove_project(&mut state)
+        ::projects::remove_project(&mut state);
     }));
     selection.connect(gtk::signals::Changed::new(|| {
-        let mut iter = gtk::TreeIter::new().unwrap();
-        selection.get_selected(&model, &mut iter);
-        let path = model.get_value(&iter, 1).get_string();
-        state.selection = path;
-        ::utils::write_prefs(&state);
-        iter.drop();
-
-        ::ui::update_project_buttons(&mut state);
+        ::projects::update_selection(&mut state);
     }));
     project_tree.connect(gtk::signals::RowCollapsed::new(|iter_raw, _| {
         let iter = gtk::TreeIter::wrap_pointer(iter_raw);
-        match model.get_value(&iter, 1).get_string() {
-            Some(path_str) => {
-                for p in state.expansions.clone().iter() {
-                    if *p == path_str ||
-                        !Path::new(p).exists() ||
-                        (p.starts_with(path_str.as_slice()) &&
-                        !::utils::are_siblings(&path_str, p))
-                    {
-                        state.expansions.remove(p);
-                    }
-                }
-                ::utils::write_prefs(&state);
-            },
-            None => {}
-        };
+        ::projects::remove_expansion(&mut state, &iter);
     }));
     project_tree.connect(gtk::signals::RowExpanded::new(|iter_raw, _| {
         let iter = gtk::TreeIter::wrap_pointer(iter_raw);
-        match model.get_value(&iter, 1).get_string() {
-            Some(path_str) => {
-                state.expansions.insert(path_str);
-                ::utils::write_prefs(&state);
-            },
-            None => {}
-        };
+        ::projects::add_expansion(&mut state, &iter);
     }));
 
     // show the window
