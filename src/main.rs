@@ -104,10 +104,10 @@ fn main() {
     // connect to the signals
 
     new_button.connect(gtk::signals::Clicked::new(|| {
-        ::projects::new_project(&mut project_tree, &mut state)
+        ::projects::new_project(&mut state, &mut project_tree)
     }));
     import_button.connect(gtk::signals::Clicked::new(|| {
-        ::projects::import_project(&mut project_tree, &mut state)
+        ::projects::import_project(&mut state, &mut project_tree)
     }));
     rename_button.connect(gtk::signals::Clicked::new(|| {
         ::projects::rename_project(&mut state)

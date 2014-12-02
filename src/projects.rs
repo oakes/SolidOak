@@ -2,7 +2,7 @@ extern crate rgtk;
 
 use rgtk::*;
 
-pub fn new_project(tree: &mut gtk::TreeView, state: &mut ::utils::State) {
+pub fn new_project(state: &mut ::utils::State, tree: &mut gtk::TreeView) {
     let chooser = gtk::FileChooserDialog::new(
         "New Project",
         None,
@@ -17,7 +17,7 @@ pub fn new_project(tree: &mut gtk::TreeView, state: &mut ::utils::State) {
     chooser.destroy();
 }
 
-pub fn import_project(tree: &mut gtk::TreeView, state: &mut ::utils::State) {
+pub fn import_project(state: &mut ::utils::State, tree: &mut gtk::TreeView) {
     let chooser = gtk::FileChooserDialog::new(
         "Import",
         None,

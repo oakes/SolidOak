@@ -74,7 +74,7 @@ fn add_node(
     iter.drop();
 }
 
-fn expand_nodes(tree: &mut gtk::TreeView, state: &mut ::utils::State, parent: Option<&gtk::TreeIter>) {
+fn expand_nodes(state: &mut ::utils::State, tree: &mut gtk::TreeView, parent: Option<&gtk::TreeIter>) {
     if parent.is_none() {
         tree.expand_all();
     }
@@ -96,7 +96,7 @@ fn expand_nodes(tree: &mut gtk::TreeView, state: &mut ::utils::State, parent: Op
                 }
 
                 if state.expansions.contains(&path_str) {
-                    expand_nodes(tree, state, Some(&iter));
+                    expand_nodes(state, tree, Some(&iter));
                 } else {
                     let tree_path = state.tree_model.get_path(&iter).unwrap();
                     tree.collapse_row(&tree_path);
@@ -119,7 +119,7 @@ pub fn update_project_tree(tree: &mut gtk::TreeView, state: &mut ::utils::State)
         add_node(state, path, None);
     }
 
-    expand_nodes(tree, state, None);
+    expand_nodes(state, tree, None);
 
     let mut iter = gtk::TreeIter::new().unwrap();
     if !state.tree_selection.get_selected(state.tree_model, &mut iter) {
