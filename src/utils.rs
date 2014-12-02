@@ -25,10 +25,9 @@ struct Prefs {
 
 fn get_data_dir() -> Path {
     let home = homedir();
-    let mut path = if home.is_some() {
-        home.unwrap()
-    } else {
-        Path::new(".")
+    let mut path = match home {
+        Some(p) => p,
+        None => Path::new(".")
     };
     path.push(".solidoak");
     path
@@ -86,19 +85,20 @@ pub fn read_prefs(state: &mut State) {
         Err(_) => None
     };
 
-    if prefs_option.is_some() {
-        let prefs = prefs_option.unwrap();
+    match prefs_option {
+        Some(prefs) => {
+            state.projects.clear();
+            for path in prefs.projects.iter() {
+                state.projects.insert(path.clone());
+            }
 
-        state.projects.clear();
-        for path in prefs.projects.iter() {
-            state.projects.insert(path.clone());
-        }
+            state.expansions.clear();
+            for path in prefs.expansions.iter() {
+                state.expansions.insert(path.clone());
+            }
 
-        state.expansions.clear();
-        for path in prefs.expansions.iter() {
-            state.expansions.insert(path.clone());
-        }
-
-        state.selection = prefs.selection;
-    }
+            state.selection = prefs.selection;
+        },
+        None => {}
+    };
 }

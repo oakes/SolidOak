@@ -118,27 +118,31 @@ fn main() {
     selection.connect(gtk::signals::Changed::new(|| {
         let mut iter = gtk::TreeIter::new().unwrap();
         selection.get_selected(&model, &mut iter);
-        let path_str = model.get_value(&iter, 1).get_string();
-        state.selection = path_str;
+        let path = model.get_value(&iter, 1).get_string();
+        state.selection = path;
         ::utils::write_prefs(&state);
 
         ::ui::update_project_buttons(&mut state);
     }));
     project_tree.connect(gtk::signals::RowCollapsed::new(|iter_raw, _| {
         let iter = gtk::TreeIter::wrap_pointer(iter_raw);
-        let path_str = model.get_value(&iter, 1).get_string();
-        if path_str.is_some() {
-            state.expansions.remove(&path_str.unwrap());
-            ::utils::write_prefs(&state);
-        }
+        match model.get_value(&iter, 1).get_string() {
+            Some(path_str) => {
+                state.expansions.remove(&path_str);
+                ::utils::write_prefs(&state);
+            },
+            None => {}
+        };
     }));
     project_tree.connect(gtk::signals::RowExpanded::new(|iter_raw, _| {
         let iter = gtk::TreeIter::wrap_pointer(iter_raw);
-        let path_str = model.get_value(&iter, 1).get_string();
-        if path_str.is_some() {
-            state.expansions.insert(path_str.unwrap());
-            ::utils::write_prefs(&state);
-        }
+        match model.get_value(&iter, 1).get_string() {
+            Some(path_str) => {
+                state.expansions.insert(path_str);
+                ::utils::write_prefs(&state);
+            },
+            None => {}
+        };
     }));
 
     // show the window

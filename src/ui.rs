@@ -50,26 +50,27 @@ fn add_node(
 {
     let mut iter = gtk::TreeIter::new().unwrap();
 
-    let leaf = node.filename_str();
-    if leaf.is_some() {
-        let leaf_str = leaf.unwrap();
-        if !leaf_str.starts_with(".") {
-            state.tree_store.append(&iter, parent);
-            state.tree_store.set_string(&iter, 0, leaf_str);
-            state.tree_store.set_string(&iter, 1, node.as_str().unwrap());
+    match node.filename_str() {
+        Some(leaf_str) => {
+            if !leaf_str.starts_with(".") {
+                state.tree_store.append(&iter, parent);
+                state.tree_store.set_string(&iter, 0, leaf_str);
+                state.tree_store.set_string(&iter, 1, node.as_str().unwrap());
 
-            if node.is_dir() {
-                match fs::readdir(node) {
-                    Ok(children) => {
-                        for child in sort_paths(&children).iter() {
-                            add_node(state, child, Some(&iter));
-                        }
-                    },
-                    Err(e) => println!("Error updating tree: {}", e)
+                if node.is_dir() {
+                    match fs::readdir(node) {
+                        Ok(children) => {
+                            for child in sort_paths(&children).iter() {
+                                add_node(state, child, Some(&iter));
+                            }
+                        },
+                        Err(e) => println!("Error updating tree: {}", e)
+                    }
                 }
             }
-        }
-    }
+        },
+        None => {}
+    };
 
     iter.drop();
 }
@@ -83,25 +84,27 @@ fn expand_nodes(state: &mut ::utils::State, tree: &mut gtk::TreeView, parent: Op
 
     if state.tree_model.iter_children(&mut iter, parent) {
         loop {
-            let path = state.tree_model.get_value(&iter, 1).get_string();
-            if path.is_some() {
-                let path_str = path.unwrap();
+            match state.tree_model.get_value(&iter, 1).get_string() {
+                Some(path_str) => {
+                    match state.selection.clone() {
+                        Some(selection_str) => {
+                            if path_str == selection_str {
+                                let path = state.tree_model.get_path(&iter);
+                                tree.set_cursor(&path.unwrap(), None, false);
+                            }
+                        },
+                        None => {}
+                    };
 
-                if state.selection.is_some() {
-                    let selection_str = state.selection.clone().unwrap();
-                    if path_str == selection_str {
-                        let path = state.tree_model.get_path(&iter);
-                        tree.set_cursor(&path.unwrap(), None, false);
+                    if state.expansions.contains(&path_str) {
+                        expand_nodes(state, tree, Some(&iter));
+                    } else {
+                        let tree_path = state.tree_model.get_path(&iter).unwrap();
+                        tree.collapse_row(&tree_path);
                     }
-                }
-
-                if state.expansions.contains(&path_str) {
-                    expand_nodes(state, tree, Some(&iter));
-                } else {
-                    let tree_path = state.tree_model.get_path(&iter).unwrap();
-                    tree.collapse_row(&tree_path);
-                }
-            }
+                },
+                None => {}
+            };
 
             if !state.tree_model.iter_next(&mut iter) {
                 break;

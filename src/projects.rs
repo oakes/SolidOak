@@ -8,12 +8,14 @@ pub fn new_project(state: &mut ::utils::State, tree: &mut gtk::TreeView) {
         None,
         gtk::FileChooserAction::Save).unwrap();
     chooser.run();
-    let filename = chooser.get_filename();
-    if filename.is_some() {
-        state.projects.insert(filename.unwrap());
-        ::ui::update_project_tree(tree, state);
-        ::utils::write_prefs(state);
-    }
+    match chooser.get_filename() {
+        Some(filename_str) => {
+            state.projects.insert(filename_str);
+            ::ui::update_project_tree(tree, state);
+            ::utils::write_prefs(state);
+        },
+        None => {}
+    };
     chooser.destroy();
 }
 
@@ -23,12 +25,14 @@ pub fn import_project(state: &mut ::utils::State, tree: &mut gtk::TreeView) {
         None,
         gtk::FileChooserAction::SelectFolder).unwrap();
     chooser.run();
-    let filename = chooser.get_filename();
-    if filename.is_some() {
-        state.projects.insert(filename.unwrap());
-        ::ui::update_project_tree(tree, state);
-        ::utils::write_prefs(state);
-    }
+    match chooser.get_filename() {
+        Some(filename_str) => {
+            state.projects.insert(filename_str);
+            ::ui::update_project_tree(tree, state);
+            ::utils::write_prefs(state);
+        },
+        None => {}
+    };
     chooser.destroy();
 }
 
