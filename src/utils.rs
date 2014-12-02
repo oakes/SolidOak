@@ -109,20 +109,17 @@ pub fn read_prefs(state: &mut State) {
         Err(_) => None
     };
 
-    match prefs_option {
-        Some(prefs) => {
-            state.projects.clear();
-            for path in prefs.projects.iter() {
-                state.projects.insert(path.clone());
-            }
+    if let Some(prefs) = prefs_option {
+        state.projects.clear();
+        for path in prefs.projects.iter() {
+            state.projects.insert(path.clone());
+        }
 
-            state.expansions.clear();
-            for path in prefs.expansions.iter() {
-                state.expansions.insert(path.clone());
-            }
+        state.expansions.clear();
+        for path in prefs.expansions.iter() {
+            state.expansions.insert(path.clone());
+        }
 
-            state.selection = prefs.selection;
-        },
-        None => {}
-    };
+        state.selection = prefs.selection;
+    }
 }

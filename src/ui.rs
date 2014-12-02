@@ -57,27 +57,24 @@ fn add_node(
 {
     let mut iter = gtk::TreeIter::new().unwrap();
 
-    match node.filename_str() {
-        Some(leaf_str) => {
-            if !leaf_str.starts_with(".") {
-                state.tree_store.append(&iter, parent);
-                state.tree_store.set_string(&iter, 0, leaf_str);
-                state.tree_store.set_string(&iter, 1, node.as_str().unwrap());
+    if let Some(leaf_str) = node.filename_str() {
+        if !leaf_str.starts_with(".") {
+            state.tree_store.append(&iter, parent);
+            state.tree_store.set_string(&iter, 0, leaf_str);
+            state.tree_store.set_string(&iter, 1, node.as_str().unwrap());
 
-                if node.is_dir() {
-                    match fs::readdir(node) {
-                        Ok(children) => {
-                            for child in sort_paths(&children).iter() {
-                                add_node(state, child, Some(&iter));
-                            }
-                        },
-                        Err(e) => println!("Error updating tree: {}", e)
-                    }
+            if node.is_dir() {
+                match fs::readdir(node) {
+                    Ok(children) => {
+                        for child in sort_paths(&children).iter() {
+                            add_node(state, child, Some(&iter));
+                        }
+                    },
+                    Err(e) => println!("Error updating tree: {}", e)
                 }
             }
-        },
-        None => {}
-    };
+        }
+    }
 
     iter.drop();
 }
@@ -91,32 +88,24 @@ fn expand_nodes(
 
     if state.tree_model.iter_children(&mut iter, parent) {
         loop {
-            match state.tree_model.get_value(&iter, 1).get_string() {
-                Some(path_str) => {
-                    match state.selection.clone() {
-                        Some(selection_str) => {
-                            if path_str == selection_str {
-                                match state.tree_model.get_path(&iter) {
-                                    Some(path) => {
-                                        tree.set_cursor(&path, None, false);
-                                    },
-                                    None => {}
-                                };
-                            }
-                        },
-                        None => {}
-                    };
-
-                    if state.expansions.contains(&path_str) {
-                        match state.tree_model.get_path(&iter) {
-                            Some(path) => { tree.expand_row(&path, false); },
-                            None => {}
-                        };
-                        expand_nodes(state, tree, Some(&iter));
+            if let Some(path_str) =
+                state.tree_model.get_value(&iter, 1).get_string()
+            {
+                if let Some(selection_str) = state.selection.clone() {
+                    if path_str == selection_str {
+                        if let Some(path) = state.tree_model.get_path(&iter) {
+                            tree.set_cursor(&path, None, false);
+                        }
                     }
-                },
-                None => {}
-            };
+                }
+
+                if state.expansions.contains(&path_str) {
+                    if let Some(path) = state.tree_model.get_path(&iter) {
+                        tree.expand_row(&path, false);
+                    }
+                    expand_nodes(state, tree, Some(&iter));
+                }
+            }
 
             if !state.tree_model.iter_next(&mut iter) {
                 break;
@@ -141,10 +130,9 @@ pub fn update_project_tree(
 
     let mut iter = gtk::TreeIter::new().unwrap();
     if !state.tree_selection.get_selected(state.tree_model, &mut iter) {
-        match get_first_path(state) {
-            Some(path) => tree.set_cursor(&path, None, false),
-            None => {}
-        };
+        if let Some(path) = get_first_path(state) {
+            tree.set_cursor(&path, None, false)
+        }
     }
     iter.drop();
 
