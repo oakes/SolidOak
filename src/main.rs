@@ -6,6 +6,7 @@ extern crate serialize;
 //use neovim::*;
 use rgtk::*;
 use std::collections::HashSet;
+use std::io::fs::PathExtensions;
 
 mod projects;
 mod ui;
@@ -121,6 +122,7 @@ fn main() {
         let path = model.get_value(&iter, 1).get_string();
         state.selection = path;
         ::utils::write_prefs(&state);
+        iter.drop();
 
         ::ui::update_project_buttons(&mut state);
     }));
@@ -128,7 +130,15 @@ fn main() {
         let iter = gtk::TreeIter::wrap_pointer(iter_raw);
         match model.get_value(&iter, 1).get_string() {
             Some(path_str) => {
-                state.expansions.remove(&path_str);
+                for p in state.expansions.clone().iter() {
+                    if *p == path_str ||
+                        !Path::new(p).exists() ||
+                        (p.starts_with(path_str.as_slice()) &&
+                        !::utils::are_siblings(&path_str, p))
+                    {
+                        state.expansions.remove(p);
+                    }
+                }
                 ::utils::write_prefs(&state);
             },
             None => {}

@@ -47,6 +47,17 @@ fn get_prefs(state: &State) -> Prefs {
     }
 }
 
+pub fn are_siblings(path1: &String, path2: &String) -> bool {
+    let parent_path1 = Path::new(path1).dir_path();
+    let parent_path2 = Path::new(path2).dir_path();
+
+    let parent1 = parent_path1.as_str();
+    let parent2 = parent_path2.as_str();
+
+    parent1.is_some() && parent2.is_some() &&
+    parent1.unwrap() == parent2.unwrap()
+}
+
 pub fn create_data_dir() {
     let path = get_data_dir();
     if !path.exists() {
