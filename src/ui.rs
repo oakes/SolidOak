@@ -31,16 +31,23 @@ fn get_first_path(state: &::utils::State) -> Option<gtk::TreePath> {
     let mut iter = gtk::TreeIter::new().unwrap();
     let model = state.tree_store.get_model().unwrap();
 
-    model.get_iter_first(&mut iter);
+    let path = if model.get_iter_first(&mut iter) {
+        model.get_path(&iter)
+    } else {
+        None
+    };
 
-    let path = model.get_path(&iter);
     iter.drop();
     path
 }
 
 pub fn update_project_buttons(state: &::utils::State) {
-    state.rename_button.set_sensitive(state.selection.is_some());
-    state.remove_button.set_sensitive(state.selection.is_some());
+    let path = ::utils::get_selected_path(state);
+    state.rename_button.set_sensitive(match path {
+        Some(ref path_str) => !Path::new(path_str).is_dir(),
+        None => false
+    });
+    state.remove_button.set_sensitive(path.is_some());
 }
 
 fn add_node(
@@ -93,8 +100,12 @@ fn expand_nodes(
                     match state.selection.clone() {
                         Some(selection_str) => {
                             if path_str == selection_str {
-                                let path = state.tree_model.get_path(&iter);
-                                tree.set_cursor(&path.unwrap(), None, false);
+                                match state.tree_model.get_path(&iter) {
+                                    Some(path) => {
+                                        tree.set_cursor(&path, None, false);
+                                    },
+                                    None => {}
+                                };
                             }
                         },
                         None => {}
@@ -103,8 +114,10 @@ fn expand_nodes(
                     if state.expansions.contains(&path_str) {
                         expand_nodes(state, tree, Some(&iter));
                     } else {
-                        let path = state.tree_model.get_path(&iter).unwrap();
-                        tree.collapse_row(&path);
+                        match state.tree_model.get_path(&iter) {
+                            Some(path) => { tree.collapse_row(&path); },
+                            None => {}
+                        };
                     }
                 },
                 None => {}
@@ -133,8 +146,10 @@ pub fn update_project_tree(
 
     let mut iter = gtk::TreeIter::new().unwrap();
     if !state.tree_selection.get_selected(state.tree_model, &mut iter) {
-        let path = get_first_path(state);
-        tree.set_cursor(&path.unwrap(), None, false);
+        match get_first_path(state) {
+            Some(path) => tree.set_cursor(&path, None, false),
+            None => {}
+        };
     }
     iter.drop();
 
