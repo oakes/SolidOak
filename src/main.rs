@@ -110,10 +110,10 @@ fn main() {
         ::projects::import_project(&mut state, &mut project_tree);
     }));
     rename_button.connect(gtk::signals::Clicked::new(|| {
-        ::projects::rename_project(&mut state);
+        ::projects::rename_file(&mut state);
     }));
     remove_button.connect(gtk::signals::Clicked::new(|| {
-        ::projects::remove_project(&mut state);
+        ::projects::remove_item(&mut state);
     }));
     selection.connect(gtk::signals::Changed::new(|| {
         ::projects::update_selection(&mut state);

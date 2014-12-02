@@ -58,6 +58,14 @@ pub fn are_siblings(path1: &String, path2: &String) -> bool {
     parent1.unwrap() == parent2.unwrap()
 }
 
+pub fn get_selected_path(state: &State) -> Option<String> {
+    let mut iter = gtk::TreeIter::new().unwrap();
+    state.tree_selection.get_selected(state.tree_model, &mut iter);
+    let path = state.tree_model.get_value(&iter, 1).get_string();
+    iter.drop();
+    path
+}
+
 pub fn create_data_dir() {
     let path = get_data_dir();
     if !path.exists() {

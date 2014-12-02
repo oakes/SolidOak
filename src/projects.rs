@@ -37,22 +37,23 @@ pub fn import_project(state: &mut ::utils::State, tree: &mut gtk::TreeView) {
     chooser.destroy();
 }
 
-pub fn rename_project(state: &mut ::utils::State) {
-    
+pub fn rename_file(state: &mut ::utils::State) {
+    match ::utils::get_selected_path(state) {
+        Some(_) => {},
+        None => {}
+    }
 }
 
-pub fn remove_project(state: &mut ::utils::State) {
-    
+pub fn remove_item(state: &mut ::utils::State) {
+    match ::utils::get_selected_path(state) {
+        Some(_) => {},
+        None => {}
+    }
 }
 
 pub fn update_selection(state: &mut ::utils::State) {
-    let mut iter = gtk::TreeIter::new().unwrap();
-    state.tree_selection.get_selected(state.tree_model, &mut iter);
-    let path = state.tree_model.get_value(&iter, 1).get_string();
-    state.selection = path;
+    state.selection = ::utils::get_selected_path(state);
     ::utils::write_prefs(state);
-    iter.drop();
-
     ::ui::update_project_buttons(state);
 }
 
