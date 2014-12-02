@@ -87,10 +87,6 @@ fn expand_nodes(
     tree: &mut gtk::TreeView,
     parent: Option<&gtk::TreeIter>)
 {
-    if parent.is_none() {
-        tree.expand_all();
-    }
-
     let mut iter = gtk::TreeIter::new().unwrap();
 
     if state.tree_model.iter_children(&mut iter, parent) {
@@ -112,12 +108,11 @@ fn expand_nodes(
                     };
 
                     if state.expansions.contains(&path_str) {
-                        expand_nodes(state, tree, Some(&iter));
-                    } else {
                         match state.tree_model.get_path(&iter) {
-                            Some(path) => { tree.collapse_row(&path); },
+                            Some(path) => { tree.expand_row(&path, false); },
                             None => {}
                         };
+                        expand_nodes(state, tree, Some(&iter));
                     }
                 },
                 None => {}
@@ -133,8 +128,8 @@ fn expand_nodes(
 }
 
 pub fn update_project_tree(
-    tree: &mut gtk::TreeView,
-    state: &mut ::utils::State)
+    state: &mut ::utils::State,
+    tree: &mut gtk::TreeView)
 {
     state.tree_store.clear();
 

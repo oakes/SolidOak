@@ -99,7 +99,7 @@ fn main() {
 
     ::utils::create_data_dir();
     ::utils::read_prefs(&mut state);
-    ::ui::update_project_tree(&mut project_tree, &mut state);
+    ::ui::update_project_tree(&mut state, &mut project_tree);
 
     // connect to the signals
 
