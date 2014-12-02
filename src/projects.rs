@@ -41,14 +41,14 @@ pub fn rename_file(state: &mut ::utils::State) {
     match ::utils::get_selected_path(state) {
         Some(_) => {},
         None => {}
-    }
+    };
 }
 
 pub fn remove_item(state: &mut ::utils::State) {
     match ::utils::get_selected_path(state) {
         Some(_) => {},
         None => {}
-    }
+    };
 }
 
 pub fn update_selection(state: &mut ::utils::State) {
