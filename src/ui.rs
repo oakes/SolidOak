@@ -42,12 +42,15 @@ fn get_first_path(state: &::utils::State) -> Option<gtk::TreePath> {
 }
 
 pub fn update_project_buttons(state: &::utils::State) {
-    let path = ::utils::get_selected_path(state);
-    state.rename_button.set_sensitive(match path {
-        Some(ref path_str) => !Path::new(path_str).is_dir(),
-        None => false
-    });
-    state.remove_button.set_sensitive(path.is_some());
+    if let Some(path_str) = ::utils::get_selected_path(state) {
+        let is_project = state.projects.contains(&path_str);
+        let path = Path::new(path_str);
+        state.rename_button.set_sensitive(!path.is_dir());
+        state.remove_button.set_sensitive(!path.is_dir() || is_project);
+    } else {
+        state.rename_button.set_sensitive(false);
+        state.remove_button.set_sensitive(false);
+    }
 }
 
 fn add_node(
