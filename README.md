@@ -7,7 +7,7 @@ SolidOak is a simple IDE for Rust.
 ### Linux (apt-get)
 
 ```Shell
-apt-get install libgtk-3-dev libglib2.0-dev libcairo2-dev
+apt-get install libgtk-3-dev libglib2.0-dev libcairo2-dev libvte-2.90-dev
 apt-get install libtool autoconf automake cmake libncurses5-dev g++ pkg-config unzip
 cargo build
 ```
@@ -16,7 +16,7 @@ cargo build
 
 
 ```Shell
-yum install gtk3-devel glib2-devel
+yum install gtk3-devel glib2-devel vte3-devel
 yum install autoconf automake cmake gcc gcc-c++ libtool ncurses-devel pkgconfig
 cargo build
 ```
@@ -24,7 +24,7 @@ cargo build
 ### OS X (homebrew)
 
 ```Shell
-brew install gtk+3
+brew install gtk+3 vte3
 brew install libtool automake cmake pkg-config
 cargo build
 ```

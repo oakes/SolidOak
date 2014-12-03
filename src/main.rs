@@ -72,7 +72,7 @@ fn main() {
     project_pane.pack_start(&project_buttons, false, true, 0);
     project_pane.pack_start(&scroll_pane, true, true, 0);
 
-    let editor_pane = gtk::TextView::new().unwrap();
+    let editor_pane = gtk::VteTerminal::new().unwrap();
     editor_pane.set_size_request(-1, editor_height);
 
     let build_pane = gtk::TextView::new().unwrap();
