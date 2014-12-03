@@ -20,7 +20,7 @@ fn main() {
 
     let width = 1242;
     let height = 768;
-    let editor_height = ((height as f32) * 0.8) as i32;
+    let editor_height = ((height as f32) * 0.75) as i32;
 
     // create the window
 
