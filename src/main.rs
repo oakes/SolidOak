@@ -17,6 +17,7 @@ mod utils;
 
 extern "C" {
     fn fork () -> c_int;
+    fn kill (pid: c_int, sig: c_int);
 }
 
 fn start_gui(pty: &mut gtk::VtePty, pid: i32) {
@@ -36,6 +37,7 @@ fn start_gui(pty: &mut gtk::VtePty, pid: i32) {
     window.set_default_size(width, height);
 
     window.connect(gtk::signals::DeleteEvent::new(|_| {
+        unsafe { kill(pid, 15); }
         gtk::main_quit();
         true
     }));
