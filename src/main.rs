@@ -6,7 +6,7 @@ extern crate neovim;
 extern crate rgtk;
 extern crate serialize;
 
-use libc::{c_int};
+use libc::c_int;
 use neovim::*;
 use rgtk::*;
 use std::collections::HashSet;
@@ -20,7 +20,7 @@ extern "C" {
     fn kill (pid: c_int, sig: c_int);
 }
 
-fn start_gui(pty: &mut gtk::VtePty, pid: i32) {
+fn start_gui(pty: &mut gtk::VtePty, pid: c_int) {
     gtk::init();
 
     // constants
