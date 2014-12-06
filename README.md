@@ -29,6 +29,10 @@ brew install libtool automake cmake pkg-config
 cargo build
 ```
 
+### Windows is not supported
+
+This is not a near-term goal. To support Windows, we would need to get both the rgtk and neovim-rs dependencies to build. Additionally, we would need to find a replacement for `fork()`, which is a Posix-specific function being used to run neovim in a separate process.
+
 ## Licensing
 
 All files that originate from this project are dedicated to the public domain. I would love pull requests, and will assume that they are also dedicated to the public domain.
