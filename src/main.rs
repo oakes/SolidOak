@@ -6,7 +6,6 @@ extern crate neovim;
 extern crate rgtk;
 extern crate serialize;
 
-use libc::c_int;
 use neovim::*;
 use rgtk::*;
 use std::collections::HashSet;
@@ -15,12 +14,16 @@ mod projects;
 mod ui;
 mod utils;
 
-extern "C" {
-    fn fork () -> c_int;
-    fn kill (pid: c_int, sig: c_int);
+mod ffi {
+    use libc::c_int;
+
+    extern "C" {
+        pub fn fork () -> c_int;
+        pub fn kill (pid: c_int, sig: c_int);
+    }
 }
 
-fn start_gui(pty: &mut gtk::VtePty, pid: c_int) {
+fn start_gui(pty: &mut gtk::VtePty, pid: i32) {
     gtk::init();
 
     // constants
@@ -37,7 +40,7 @@ fn start_gui(pty: &mut gtk::VtePty, pid: c_int) {
     window.set_default_size(width, height);
 
     window.connect(gtk::signals::DeleteEvent::new(|_| {
-        unsafe { kill(pid, 15); }
+        unsafe { ffi::kill(pid, 15); }
         gtk::main_quit();
         true
     }));
@@ -163,7 +166,7 @@ fn start_gui(pty: &mut gtk::VtePty, pid: c_int) {
 
 fn main() {
     let mut pty = gtk::VtePty::new().unwrap();
-    let pid = unsafe { fork() };
+    let pid = unsafe { ffi::fork() };
 
     if pid > 0 {
         start_gui(&mut pty, pid);
