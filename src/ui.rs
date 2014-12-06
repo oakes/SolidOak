@@ -105,8 +105,8 @@ fn expand_nodes(
                 if state.expansions.contains(&path_str) {
                     if let Some(path) = state.tree_model.get_path(&iter) {
                         tree.expand_row(&path, false);
+                        expand_nodes(state, tree, Some(&iter));
                     }
-                    expand_nodes(state, tree, Some(&iter));
                 }
             }
 
