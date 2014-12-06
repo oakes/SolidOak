@@ -1,11 +1,13 @@
 #![feature(globs)]
 #![feature(if_let)]
 
+extern crate libc;
 extern crate neovim;
 extern crate rgtk;
 extern crate serialize;
 
-//use neovim::*;
+use libc::{c_int};
+use neovim::*;
 use rgtk::*;
 use std::collections::HashSet;
 
@@ -13,7 +15,11 @@ mod projects;
 mod ui;
 mod utils;
 
-fn main() {
+extern "C" {
+    fn fork () -> c_int;
+}
+
+fn start_gui(pty: &mut gtk::VtePty, pid: i32) {
     gtk::init();
 
     // constants
@@ -70,8 +76,10 @@ fn main() {
     proj_pane.pack_start(&proj_btns, false, true, 0);
     proj_pane.pack_start(&scroll_pane, true, true, 0);
 
-    let editor_pane = gtk::VteTerminal::new().unwrap();
+    let mut editor_pane = gtk::VteTerminal::new().unwrap();
     editor_pane.set_size_request(-1, editor_height);
+    editor_pane.set_pty(pty);
+    editor_pane.watch_child(pid);
 
     let run_button = gtk::Button::new_with_label("Run").unwrap();
     let build_button = gtk::Button::new_with_label("Build").unwrap();
@@ -149,4 +157,16 @@ fn main() {
 
     window.show_all();
     gtk::main();
+}
+
+fn main() {
+    let mut pty = gtk::VtePty::new().unwrap();
+    let pid = unsafe { fork() };
+
+    if pid > 0 {
+        start_gui(&mut pty, pid);
+    } else {
+        pty.child_setup();
+        nvim_main();
+    }
 }
