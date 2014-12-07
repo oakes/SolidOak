@@ -1,5 +1,5 @@
 use rgtk::*;
-use serialize::json;
+use serialize::{Encodable, json};
 use std::collections::HashSet;
 use std::io::fs;
 use std::io::fs::PathExtensions;
@@ -83,7 +83,13 @@ pub fn create_data_dir() {
 
 pub fn write_prefs(state: &State) {
     let prefs = get_prefs(state);
-    let json_str = json::encode(&prefs);
+
+    let mut buffer: Vec<u8> = Vec::new();
+    {
+        let mut encoder = json::PrettyEncoder::new(&mut buffer);
+        prefs.encode(&mut encoder).ok().expect("Error encoding prefs.");
+    }
+    let json_str = String::from_utf8(buffer).unwrap();
 
     let prefs_path = get_prefs_file();
     let mut f = fs::File::create(&prefs_path);
