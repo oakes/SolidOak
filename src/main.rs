@@ -5,7 +5,7 @@ extern crate neovim;
 extern crate rgtk;
 extern crate serialize;
 
-use neovim::*;
+use neovim::nvim_main;
 use rgtk::*;
 use std::collections::HashSet;
 
