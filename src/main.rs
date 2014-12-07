@@ -1,5 +1,4 @@
 #![feature(globs)]
-#![feature(if_let)]
 
 extern crate libc;
 extern crate neovim;
