@@ -8,21 +8,31 @@ extern crate serialize;
 use neovim::nvim_main;
 use rgtk::*;
 use std::collections::HashSet;
+use std::{io, str, time};
 
 mod projects;
 mod ui;
 mod utils;
 
 mod ffi {
-    use libc::c_int;
+    pub use libc::{c_char, c_uchar, c_int, c_void, uint64_t};
+    pub use libc::funcs::posix88::unistd::{close, pipe, read, write};
+    pub use libc::types::os::arch::c95::size_t;
 
     extern "C" {
         pub fn fork () -> c_int;
         pub fn kill (pid: c_int, sig: c_int);
+        pub fn channel_from_fds (read_fd: c_int, write_fd: c_int) -> uint64_t;
+        pub fn channel_subscribe(id: uint64_t, event: *const c_char);
     }
 }
 
-fn start_gui(pty: &mut gtk::VtePty, pid: i32) {
+fn gui_main(
+    pty: &mut gtk::VtePty,
+    pid: ffi::c_int,
+    read_fd: ffi::c_int,
+    write_fd: ffi::c_int)
+{
     gtk::init();
 
     // constants
@@ -39,7 +49,11 @@ fn start_gui(pty: &mut gtk::VtePty, pid: i32) {
     window.set_default_size(width, height);
 
     window.connect(gtk::signals::DeleteEvent::new(|_| {
-        unsafe { ffi::kill(pid, 15); }
+        unsafe {
+            ffi::close(read_fd);
+            ffi::close(write_fd);
+            ffi::kill(pid, 15);
+        }
         gtk::main_quit();
         true
     }));
@@ -165,12 +179,45 @@ fn start_gui(pty: &mut gtk::VtePty, pid: i32) {
 
 fn main() {
     let mut pty = gtk::VtePty::new().unwrap();
+
+    let mut nvim_from_gui : [ffi::c_int, ..2] = [0, ..2];
+    let mut gui_from_nvim : [ffi::c_int, ..2] = [0, ..2];
+    unsafe {
+        ffi::pipe(nvim_from_gui.as_mut_ptr());
+        ffi::pipe(gui_from_nvim.as_mut_ptr());
+    };
+
     let pid = unsafe { ffi::fork() };
 
     if pid > 0 {
-        start_gui(&mut pty, pid);
+        spawn(proc() {
+            let mut buf : [ffi::c_uchar, ..100] = [0, ..100];
+            unsafe {
+                loop {
+                    let buf_ptr = buf.as_mut_ptr() as *mut ffi::c_void;
+                    let n = ffi::read(gui_from_nvim[0], buf_ptr, 100);
+                    if n < 0 { break; }
+                    let msg = str::from_utf8(buf.slice_to(n as uint)).unwrap();
+                    println!("Received: {}", msg);
+                }
+            }
+        });
+        gui_main(&mut pty, pid, gui_from_nvim[0], gui_from_nvim[1]);
     } else {
         pty.child_setup();
+        spawn(proc() {
+            io::timer::sleep(time::Duration::seconds(1));
+            unsafe {
+                let id = ffi::channel_from_fds(nvim_from_gui[0], gui_from_nvim[1]);
+                let cmd = "test";
+                ffi::channel_subscribe(id, cmd.to_c_str().as_ptr());
+
+                let msg = "Hello, world!";
+                let msg_c = msg.to_c_str();
+                let msg_ptr = msg_c.as_ptr() as *const ffi::c_void;
+                ffi::write(gui_from_nvim[1], msg_ptr, msg_c.len() as ffi::size_t);
+            }
+        });
         nvim_main();
     }
 }
