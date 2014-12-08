@@ -15,7 +15,7 @@ mod ui;
 mod utils;
 
 mod ffi {
-    pub use libc::{c_char, c_uchar, c_int, c_void, uint64_t};
+    pub use libc::{c_char, c_int, c_uchar, c_void, uint64_t};
     pub use libc::funcs::posix88::unistd::{close, pipe, read, write};
     pub use libc::types::os::arch::c95::size_t;
 
@@ -29,9 +29,9 @@ mod ffi {
 
 fn gui_main(
     pty: &mut gtk::VtePty,
-    pid: ffi::c_int,
     read_fd: ffi::c_int,
-    write_fd: ffi::c_int)
+    write_fd: ffi::c_int,
+    pid: ffi::c_int)
 {
     gtk::init();
 
@@ -178,8 +178,10 @@ fn gui_main(
 }
 
 fn main() {
+    // takes care of piping stdin/stdout between the gui and nvim
     let mut pty = gtk::VtePty::new().unwrap();
 
+    // two pairs of anonymous pipes for msgpack-rpc between the gui and nvim
     let mut nvim_from_gui : [ffi::c_int, ..2] = [0, ..2];
     let mut gui_from_nvim : [ffi::c_int, ..2] = [0, ..2];
     unsafe {
@@ -187,9 +189,11 @@ fn main() {
         ffi::pipe(gui_from_nvim.as_mut_ptr());
     };
 
+    // split into two processes
     let pid = unsafe { ffi::fork() };
 
-    if pid > 0 {
+    if pid > 0 { // the gui process
+        // listen for messages from nvim
         spawn(proc() {
             let mut buf : [ffi::c_uchar, ..100] = [0, ..100];
             unsafe {
@@ -202,9 +206,14 @@ fn main() {
                 }
             }
         });
-        gui_main(&mut pty, pid, gui_from_nvim[0], gui_from_nvim[1]);
-    } else {
+
+        // start the gui
+        gui_main(&mut pty, gui_from_nvim[0], gui_from_nvim[1], pid);
+    } else { // the nvim process
+        // prepare this process to be piped into the gui
         pty.child_setup();
+
+        // listen for messages from the gui
         spawn(proc() {
             io::timer::sleep(time::Duration::seconds(1));
             unsafe {
@@ -218,6 +227,8 @@ fn main() {
                 ffi::write(gui_from_nvim[1], msg_ptr, msg_c.len() as ffi::size_t);
             }
         });
+
+        // start nvim
         nvim_main();
     }
 }
