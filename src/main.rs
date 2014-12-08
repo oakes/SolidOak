@@ -23,7 +23,7 @@ mod ffi {
         pub fn fork () -> c_int;
         pub fn kill (pid: c_int, sig: c_int);
         pub fn channel_from_fds (read_fd: c_int, write_fd: c_int) -> uint64_t;
-        pub fn channel_subscribe(id: uint64_t, event: *const c_char);
+        pub fn channel_subscribe (id: uint64_t, event: *const c_char);
     }
 }
 
