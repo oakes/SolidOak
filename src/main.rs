@@ -41,8 +41,12 @@ fn gui_main(
 
     // create the window
 
+    let version = format!("SolidOak {}.{}.{}",
+                          option_env!("CARGO_PKG_VERSION_MAJOR").unwrap(),
+                          option_env!("CARGO_PKG_VERSION_MINOR").unwrap(),
+                          option_env!("CARGO_PKG_VERSION_PATCH").unwrap());
     let mut window = gtk::Window::new(gtk::WindowType::TopLevel).unwrap();
-    window.set_title("SolidOak");
+    window.set_title(version.as_slice());
     window.set_window_position(gtk::WindowPosition::Center);
     window.set_default_size(width, height);
 
