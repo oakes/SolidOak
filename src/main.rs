@@ -15,15 +15,13 @@ mod ui;
 mod utils;
 
 mod ffi {
-    pub use libc::{c_char, c_int, c_uchar, c_void, uint64_t};
+    pub use libc::{c_int, c_uchar, c_void};
     pub use libc::funcs::posix88::unistd::{close, pipe, read, write};
     pub use libc::types::os::arch::c95::size_t;
 
     extern "C" {
         pub fn fork () -> c_int;
         pub fn kill (pid: c_int, sig: c_int);
-        pub fn channel_from_fds (read_fd: c_int, write_fd: c_int) -> uint64_t;
-        pub fn channel_subscribe (id: uint64_t, event: *const c_char);
     }
 }
 
@@ -216,11 +214,11 @@ fn main() {
         // listen for messages from the gui
         spawn(proc() {
             io::timer::sleep(time::Duration::seconds(1));
-            unsafe {
-                let id = ffi::channel_from_fds(nvim_from_gui[0], gui_from_nvim[1]);
-                let cmd = "test";
-                ffi::channel_subscribe(id, cmd.to_c_str().as_ptr());
 
+            let mut ch = neovim::Channel::new(nvim_from_gui[0], gui_from_nvim[1]);
+            ch.subscribe("test");
+
+            unsafe {
                 let msg = "Hello, world!";
                 let msg_c = msg.to_c_str();
                 let msg_ptr = msg_c.as_ptr() as *const ffi::c_void;
