@@ -1,6 +1,6 @@
 ## Introduction
 
-SolidOak is a simple IDE for Rust.
+SolidOak is a simple IDE for Rust. It uses GTK+ for the UI and Neovim for the editor. The goal is to provide a simple, all-in-one solution to get started with Rust programming.
 
 ## Build Instructions
 
@@ -32,7 +32,7 @@ cargo build
 
 ### Windows is not supported
 
-This is not a near-term goal. To support Windows, we would need to get both the rgtk and neovim-rs dependencies to build. Additionally, we would need to find a replacement for `fork()`, which is a Posix-specific function being used to run neovim in a separate process.
+To support Windows, we need to get rgtk and neovim-rs to build for it. Additionally, we need to find a replacement for `fork()` and other Posix-specific functions being used to run Neovim in a separate process.
 
 ## Licensing
 
