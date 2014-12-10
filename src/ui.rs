@@ -119,10 +119,7 @@ fn expand_nodes(
     iter.drop();
 }
 
-pub fn update_project_tree(
-    state: &mut ::utils::State,
-    tree: &mut gtk::TreeView)
-{
+pub fn update_project_tree(state: &mut ::utils::State, tree: &mut gtk::TreeView) {
     state.tree_store.clear();
 
     for path in sort_string_paths(&state.projects).iter() {

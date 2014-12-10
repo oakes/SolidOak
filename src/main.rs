@@ -67,34 +67,34 @@ fn gui_main(
     let rename_button = gtk::Button::new_with_label("Rename").unwrap();
     let remove_button = gtk::Button::new_with_label("Remove").unwrap();
 
-    let mut proj_btns = gtk::Box::new(gtk::Orientation::Horizontal, 0).unwrap();
-    proj_btns.set_size_request(-1, -1);
-    proj_btns.add(&new_button);
-    proj_btns.add(&import_button);
-    proj_btns.add(&rename_button);
-    proj_btns.add(&remove_button);
+    let mut project_buttons = gtk::Box::new(gtk::Orientation::Horizontal, 0).unwrap();
+    project_buttons.set_size_request(-1, -1);
+    project_buttons.add(&new_button);
+    project_buttons.add(&import_button);
+    project_buttons.add(&rename_button);
+    project_buttons.add(&remove_button);
 
-    let mut proj_tree = gtk::TreeView::new().unwrap();
-    let selection = proj_tree.get_selection().unwrap();
+    let mut project_tree = gtk::TreeView::new().unwrap();
+    let selection = project_tree.get_selection().unwrap();
     let column_types = [glib::ffi::g_type_string, glib::ffi::g_type_string];
     let store = gtk::TreeStore::new(&column_types).unwrap();
     let model = store.get_model().unwrap();
-    proj_tree.set_model(&model);
-    proj_tree.set_headers_visible(false);
+    project_tree.set_model(&model);
+    project_tree.set_headers_visible(false);
 
     let mut scroll_pane = gtk::ScrolledWindow::new(None, None).unwrap();
-    scroll_pane.add(&proj_tree);
+    scroll_pane.add(&project_tree);
 
     let column = gtk::TreeViewColumn::new().unwrap();
     let cell = gtk::CellRendererText::new().unwrap();
     column.pack_start(&cell, true);
     column.add_attribute(&cell, "text", 0);
-    proj_tree.append_column(&column);
+    project_tree.append_column(&column);
 
-    let mut proj_pane = gtk::Box::new(gtk::Orientation::Vertical, 0).unwrap();
-    proj_pane.set_size_request(-1, -1);
-    proj_pane.pack_start(&proj_btns, false, true, 0);
-    proj_pane.pack_start(&scroll_pane, true, true, 0);
+    let mut project_pane = gtk::Box::new(gtk::Orientation::Vertical, 0).unwrap();
+    project_pane.set_size_request(-1, -1);
+    project_pane.pack_start(&project_buttons, false, true, 0);
+    project_pane.pack_start(&scroll_pane, true, true, 0);
 
     let mut editor_pane = gtk::VteTerminal::new().unwrap();
     editor_pane.set_size_request(-1, editor_height);
@@ -107,18 +107,18 @@ fn gui_main(
     let clean_button = gtk::Button::new_with_label("Clean").unwrap();
     let stop_button = gtk::Button::new_with_label("Stop").unwrap();
 
-    let mut build_btns = gtk::Box::new(gtk::Orientation::Horizontal, 0).unwrap();
-    build_btns.set_size_request(-1, -1);
-    build_btns.add(&run_button);
-    build_btns.add(&build_button);
-    build_btns.add(&test_button);
-    build_btns.add(&clean_button);
-    build_btns.add(&stop_button);
+    let mut build_buttons = gtk::Box::new(gtk::Orientation::Horizontal, 0).unwrap();
+    build_buttons.set_size_request(-1, -1);
+    build_buttons.add(&run_button);
+    build_buttons.add(&build_button);
+    build_buttons.add(&test_button);
+    build_buttons.add(&clean_button);
+    build_buttons.add(&stop_button);
 
     let build_term = gtk::VteTerminal::new().unwrap();
 
     let mut build_pane = gtk::Box::new(gtk::Orientation::Vertical, 0).unwrap();
-    build_pane.pack_start(&build_btns, false, true, 0);
+    build_pane.pack_start(&build_buttons, false, true, 0);
     build_pane.pack_start(&build_term, true, true, 0);
 
     let mut content = gtk::Box::new(gtk::Orientation::Vertical, 0).unwrap();
@@ -126,7 +126,7 @@ fn gui_main(
     content.pack_start(&build_pane, true, true, 0);
 
     let mut hbox = gtk::Box::new(gtk::Orientation::Horizontal, 0).unwrap();
-    hbox.pack_start(&proj_pane, false, true, 0);
+    hbox.pack_start(&project_pane, false, true, 0);
     hbox.pack_start(&content, true, true, 0);
     window.add(&hbox);
 
@@ -145,15 +145,15 @@ fn gui_main(
 
     ::utils::create_data_dir();
     ::utils::read_prefs(&mut state);
-    ::ui::update_project_tree(&mut state, &mut proj_tree);
+    ::ui::update_project_tree(&mut state, &mut project_tree);
 
     // connect to the signals
 
     new_button.connect(gtk::signals::Clicked::new(|| {
-        ::projects::new_project(&mut state, &mut proj_tree);
+        ::projects::new_project(&mut state, &mut project_tree);
     }));
     import_button.connect(gtk::signals::Clicked::new(|| {
-        ::projects::import_project(&mut state, &mut proj_tree);
+        ::projects::import_project(&mut state, &mut project_tree);
     }));
     rename_button.connect(gtk::signals::Clicked::new(|| {
         ::projects::rename_file(&mut state);
@@ -164,11 +164,11 @@ fn gui_main(
     selection.connect(gtk::signals::Changed::new(|| {
         ::projects::save_selection(&mut state);
     }));
-    proj_tree.connect(gtk::signals::RowCollapsed::new(|iter_raw, _| {
+    project_tree.connect(gtk::signals::RowCollapsed::new(|iter_raw, _| {
         let iter = gtk::TreeIter::wrap_pointer(iter_raw);
         ::projects::remove_expansion(&mut state, &iter);
     }));
-    proj_tree.connect(gtk::signals::RowExpanded::new(|iter_raw, _| {
+    project_tree.connect(gtk::signals::RowExpanded::new(|iter_raw, _| {
         let iter = gtk::TreeIter::wrap_pointer(iter_raw);
         ::projects::add_expansion(&mut state, &iter);
     }));
