@@ -162,7 +162,7 @@ fn gui_main(
         ::projects::remove_item(&mut state);
     }));
     selection.connect(gtk::signals::Changed::new(|| {
-        ::projects::update_selection(&mut state);
+        ::projects::save_selection(&mut state);
     }));
     proj_tree.connect(gtk::signals::RowCollapsed::new(|iter_raw, _| {
         let iter = gtk::TreeIter::wrap_pointer(iter_raw);
@@ -202,9 +202,12 @@ fn main() {
                 loop {
                     let buf_ptr = buf.as_mut_ptr() as *mut ffi::c_void;
                     let n = ffi::read(gui_from_nvim[0], buf_ptr, 100);
-                    if n < 0 { break; }
-                    let msg = str::from_utf8(buf.slice_to(n as uint)).unwrap();
-                    println!("Received: {}", msg);
+                    if n < 0 {
+                        break;
+                    } else if n > 0 {
+                        let msg = str::from_utf8(buf.slice_to(n as uint)).unwrap();
+                        println!("Received: {}", msg);
+                    }
                 }
             }
         });

@@ -3,16 +3,27 @@ extern crate rgtk;
 use rgtk::*;
 use std::io::fs::PathExtensions;
 
+fn save_project(
+    state: &mut ::utils::State,
+    tree: &mut gtk::TreeView,
+    filename: String)
+{
+    state.projects.insert(filename.clone());
+    state.selection = Some(filename.clone());
+    ::utils::write_prefs(state);
+    ::ui::update_project_tree(state, tree);
+}
+
 pub fn new_project(state: &mut ::utils::State, tree: &mut gtk::TreeView) {
     let chooser = gtk::FileChooserDialog::new(
         "New Project",
         None,
-        gtk::FileChooserAction::Save).unwrap();
+        gtk::FileChooserAction::Save
+    ).unwrap();
     chooser.run();
-    if let Some(filename_str) = chooser.get_filename() {
-        state.projects.insert(filename_str);
-        ::utils::write_prefs(state);
-        ::ui::update_project_tree(state, tree);
+    if let Some(filename) = chooser.get_filename() {
+        save_project(state, tree, filename);
+        // TODO
     }
     chooser.destroy();
 }
@@ -21,12 +32,11 @@ pub fn import_project(state: &mut ::utils::State, tree: &mut gtk::TreeView) {
     let chooser = gtk::FileChooserDialog::new(
         "Import",
         None,
-        gtk::FileChooserAction::SelectFolder).unwrap();
+        gtk::FileChooserAction::SelectFolder
+    ).unwrap();
     chooser.run();
-    if let Some(filename_str) = chooser.get_filename() {
-        state.projects.insert(filename_str);
-        ::utils::write_prefs(state);
-        ::ui::update_project_tree(state, tree);
+    if let Some(filename) = chooser.get_filename() {
+        save_project(state, tree, filename);
     }
     chooser.destroy();
 }
@@ -43,10 +53,13 @@ pub fn remove_item(state: &mut ::utils::State) {
     }
 }
 
-pub fn update_selection(state: &mut ::utils::State) {
-    state.selection = ::utils::get_selected_path(state);
-    ::utils::write_prefs(state);
-    ::ui::update_project_buttons(state);
+pub fn save_selection(state: &mut ::utils::State) {
+    let path = ::utils::get_selected_path(state);
+    if path.is_some() {
+        state.selection = path;
+        ::utils::write_prefs(state);
+        ::ui::update_project_buttons(state);
+    }
 }
 
 pub fn remove_expansion(state: &mut ::utils::State, iter: &gtk::TreeIter) {
