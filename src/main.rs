@@ -234,6 +234,6 @@ fn main() {
         });
 
         // start nvim
-        nvim_main();
+        nvim_main(&["nvim"]);
     }
 }
