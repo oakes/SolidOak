@@ -8,7 +8,7 @@ extern crate serialize;
 use neovim::nvim_main;
 use rgtk::*;
 use std::collections::HashSet;
-use std::{io, str, time};
+use std::{io, os, str, time};
 
 mod projects;
 mod ui;
@@ -234,6 +234,6 @@ fn main() {
         });
 
         // start nvim
-        nvim_main(&["nvim"]);
+        nvim_main(os::args());
     }
 }
