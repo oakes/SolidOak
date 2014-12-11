@@ -5,7 +5,6 @@ extern crate neovim;
 extern crate rgtk;
 extern crate serialize;
 
-use neovim::nvim_main;
 use rgtk::*;
 use std::collections::HashSet;
 use std::{io, os, str, time};
@@ -222,7 +221,7 @@ fn main() {
         spawn(proc() {
             io::timer::sleep(time::Duration::seconds(1));
 
-            let mut ch = neovim::Channel::new(nvim_from_gui[0], gui_from_nvim[1]);
+            let mut ch = neovim::Channel::new_with_fds(nvim_from_gui[0], gui_from_nvim[1]);
             ch.subscribe("test");
 
             unsafe {
@@ -234,6 +233,6 @@ fn main() {
         });
 
         // start nvim
-        nvim_main(os::args());
+        neovim::run_with_vec(os::args());
     }
 }
