@@ -24,8 +24,8 @@ cargo build
 ### OS X (homebrew)
 
 ```Shell
-brew tap TingPing/gnome
-brew install TingPing/gnome/gtk+3 TingPing/gnome/vte3
+brew tap oakes/gnome
+brew install oakes/gnome/gtk+3 oakes/gnome/vte3
 brew install libtool automake cmake pkg-config
 cargo build
 ```
