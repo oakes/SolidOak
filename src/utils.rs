@@ -3,6 +3,11 @@ use serialize::{Encodable, json};
 use std::collections::HashSet;
 use std::io::fs;
 
+pub static DATA_DIR : &'static str = ".soak";
+pub static CONFIG_FILE : &'static str = ".soakrc";
+pub static PREFS_FILE : &'static str = "prefs.json";
+pub static CONFIG_CONTENT : &'static str = include_str!("../resources/soakrc");
+
 pub struct State<'a> {
     pub projects: HashSet<String>,
     pub expansions: HashSet<String>,
@@ -21,20 +26,11 @@ struct Prefs {
     selection: Option<String>
 }
 
-pub fn get_data_dir() -> Path {
-    let home = ::std::os::homedir();
-    let mut path = match home {
+pub fn get_home_dir() -> Path {
+    match ::std::os::homedir() {
         Some(p) => p,
         None => Path::new(".")
-    };
-    path.push(".solidoak");
-    path
-}
-
-fn get_prefs_file() -> Path {
-    let mut path = get_data_dir();
-    path.push("prefs.json");
-    path
+    }
 }
 
 fn get_prefs(state: &State) -> Prefs {
@@ -79,7 +75,7 @@ pub fn write_prefs(state: &State) {
     }
     let json_str = String::from_utf8(buffer).unwrap();
 
-    let prefs_path = get_prefs_file();
+    let prefs_path = get_home_dir().join(DATA_DIR).join(PREFS_FILE);
     let mut f = fs::File::create(&prefs_path);
     match f.write_str(json_str.as_slice()) {
         Ok(_) => {},
@@ -88,7 +84,7 @@ pub fn write_prefs(state: &State) {
 }
 
 pub fn read_prefs(state: &mut State) {
-    let prefs_path = get_prefs_file();
+    let prefs_path = get_home_dir().join(DATA_DIR).join(PREFS_FILE);
     let mut f = fs::File::open(&prefs_path);
     let prefs_option : Option<Prefs> = match f.read_to_string() {
         Ok(json_str) => {

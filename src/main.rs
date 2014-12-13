@@ -191,17 +191,26 @@ extern "C" fn nvim_init(read_fs: i32, write_fs: i32) {
 }
 
 fn main() {
-    // create data dir and set $VIM to it
-    let path = ::utils::get_data_dir();
-    if !path.exists() {
-        match fs::mkdir(&path, ::std::io::USER_DIR) {
+    // create data dir and config file
+    let home_dir = ::utils::get_home_dir();
+    let data_dir = home_dir.join(::utils::DATA_DIR);
+    if !data_dir.exists() {
+        match fs::mkdir(&data_dir, ::std::io::USER_DIR) {
             Ok(_) => {
                 // TODO: copy all the vim files into the path
             },
             Err(e) => { println!("Error creating directory: {}", e) }
         }
     }
-    std::os::setenv("VIM", path.as_str().unwrap());
+    std::os::setenv("VIM", data_dir.as_str().unwrap());
+
+    let config_file = home_dir.join(::utils::CONFIG_FILE);
+    if !config_file.exists() {
+        match std::io::File::create(&config_file).write(::utils::CONFIG_CONTENT.as_bytes()) {
+            Ok(_) => {},
+            Err(e) => { println!("Error creating directory: {}", e) }
+        }
+    }
 
     // takes care of piping stdin/stdout between the gui and nvim
     let mut pty = gtk::VtePty::new().unwrap();
@@ -242,9 +251,8 @@ fn main() {
         pty.child_setup();
 
         // start nvim
-        neovim::run_with_callback(std::os::args(),
-                                  Some(nvim_init),
-                                  nvim_from_gui[0],
-                                  gui_from_nvim[1]);
+        let mut args = std::os::args().clone();
+        args.push_all(&["-u".to_string(), config_file.as_str().unwrap().to_string()]);
+        neovim::run_with_callback(args, Some(nvim_init), nvim_from_gui[0], gui_from_nvim[1]);
     }
 }

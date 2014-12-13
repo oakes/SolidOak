@@ -1,0 +1,7 @@
+set colorcolumn=101
+set tabstop=4
+set shiftwidth=4
+set expandtab
+set hidden
+set mouse=a
+syntax on
