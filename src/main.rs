@@ -191,13 +191,14 @@ extern "C" fn nvim_init(read_fs: i32, write_fs: i32) {
 }
 
 fn main() {
-    // create data dir
+    // create data dir and set $VIM to it
     let home_dir = ::utils::get_home_dir();
     let data_dir = home_dir.join(::utils::DATA_DIR);
     if !data_dir.exists() {
         match fs::mkdir(&data_dir, ::std::io::USER_DIR) {
             Ok(_) => {
                 // TODO: copy all the vim files into the path
+                println!("Created data dir at {}", data_dir.as_str().unwrap());
             },
             Err(e) => { println!("Error creating data dir: {}", e) }
         }
@@ -208,7 +209,7 @@ fn main() {
     let config_file = home_dir.join(::utils::CONFIG_FILE);
     if !config_file.exists() {
         match ::std::io::File::create(&config_file).write(::utils::CONFIG_CONTENT.as_bytes()) {
-            Ok(_) => {},
+            Ok(_) => { println!("Created config file at {}", config_file.as_str().unwrap()) },
             Err(e) => { println!("Error creating config file: {}", e) }
         }
     }
