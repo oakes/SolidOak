@@ -7,7 +7,8 @@ extern crate serialize;
 
 use rgtk::*;
 use std::collections::HashSet;
-use std::{io, os, str, time};
+use std::io::fs;
+use std::io::fs::PathExtensions;
 
 mod projects;
 mod ui;
@@ -142,7 +143,6 @@ fn gui_main(
         remove_button: &remove_button,
     };
 
-    ::utils::create_data_dir();
     ::utils::read_prefs(&mut state);
     ::ui::update_project_tree(&mut state, &mut project_tree);
 
@@ -179,6 +179,18 @@ fn gui_main(
 }
 
 fn main() {
+    // create data dir and set $VIM to it
+    let path = ::utils::get_data_dir();
+    if !path.exists() {
+        match fs::mkdir(&path, ::std::io::USER_DIR) {
+            Ok(_) => {
+                // TODO: copy all the vim files into the path
+            },
+            Err(e) => { println!("Error creating directory: {}", e) }
+        }
+    }
+    std::os::setenv("VIM", path.as_str().unwrap());
+
     // takes care of piping stdin/stdout between the gui and nvim
     let mut pty = gtk::VtePty::new().unwrap();
 
@@ -204,7 +216,7 @@ fn main() {
                     if n < 0 {
                         break;
                     } else if n > 0 {
-                        let msg = str::from_utf8(buf.slice_to(n as uint)).unwrap();
+                        let msg = std::str::from_utf8(buf.slice_to(n as uint)).unwrap();
                         println!("Received: {}", msg);
                     }
                 }
@@ -219,7 +231,7 @@ fn main() {
 
         // listen for messages from the gui
         spawn(proc() {
-            io::timer::sleep(time::Duration::seconds(1));
+            std::io::timer::sleep(std::time::Duration::seconds(1));
 
             let mut ch = neovim::Channel::new_with_fds(nvim_from_gui[0], gui_from_nvim[1]);
             ch.subscribe("test");
@@ -233,6 +245,6 @@ fn main() {
         });
 
         // start nvim
-        neovim::run_with_vec(os::args());
+        neovim::run_with_vec(std::os::args());
     }
 }

@@ -23,7 +23,7 @@ pub fn new_project(state: &mut ::utils::State, tree: &mut gtk::TreeView) {
     chooser.run();
     if let Some(filename) = chooser.get_filename() {
         save_project(state, tree, filename);
-        // TODO
+        // TODO: cargo new filename --bin
     }
     chooser.destroy();
 }
@@ -43,13 +43,13 @@ pub fn import_project(state: &mut ::utils::State, tree: &mut gtk::TreeView) {
 
 pub fn rename_file(state: &mut ::utils::State) {
     if let Some(_) = ::utils::get_selected_path(state) {
-        // TODO
+        // TODO: show dialog with a text field
     }
 }
 
 pub fn remove_item(state: &mut ::utils::State) {
     if let Some(_) = ::utils::get_selected_path(state) {
-        // TODO
+        // TODO: show dialog with confirmation buttons
     }
 }
 

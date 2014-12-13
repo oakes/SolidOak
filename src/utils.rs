@@ -2,8 +2,6 @@ use rgtk::*;
 use serialize::{Encodable, json};
 use std::collections::HashSet;
 use std::io::fs;
-use std::io::fs::PathExtensions;
-use std::os::homedir;
 
 pub struct State<'a> {
     pub projects: HashSet<String>,
@@ -23,8 +21,8 @@ struct Prefs {
     selection: Option<String>
 }
 
-fn get_data_dir() -> Path {
-    let home = homedir();
+pub fn get_data_dir() -> Path {
+    let home = ::std::os::homedir();
     let mut path = match home {
         Some(p) => p,
         None => Path::new(".")
@@ -69,16 +67,6 @@ pub fn get_selected_path(state: &State) -> Option<String> {
 
     iter.drop();
     path
-}
-
-pub fn create_data_dir() {
-    let path = get_data_dir();
-    if !path.exists() {
-        match fs::mkdir(&path, ::std::io::USER_DIR) {
-            Ok(_) => {},
-            Err(e) => { println!("Error creating directory: {}", e) }
-        };
-    }
 }
 
 pub fn write_prefs(state: &State) {
