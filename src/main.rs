@@ -199,7 +199,7 @@ fn main() {
             Ok(_) => {
                 // TODO: copy all the vim files into the path
             },
-            Err(e) => { println!("Error creating directory: {}", e) }
+            Err(e) => { println!("Error creating data dir: {}", e) }
         }
     }
     std::os::setenv("VIM", data_dir.as_str().unwrap());
@@ -208,7 +208,7 @@ fn main() {
     if !config_file.exists() {
         match std::io::File::create(&config_file).write(::utils::CONFIG_CONTENT.as_bytes()) {
             Ok(_) => {},
-            Err(e) => { println!("Error creating directory: {}", e) }
+            Err(e) => { println!("Error creating config file: {}", e) }
         }
     }
 
