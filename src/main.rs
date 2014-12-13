@@ -178,6 +178,18 @@ fn gui_main(
     gtk::main();
 }
 
+extern "C" fn nvim_init(read_fs: i32, write_fs: i32) {
+    let mut ch = neovim::Channel::new_with_fds(read_fs, write_fs);
+    ch.subscribe("test");
+
+    unsafe {
+        let msg = "Hello, world!";
+        let msg_c = msg.to_c_str();
+        let msg_ptr = msg_c.as_ptr() as *const ffi::c_void;
+        ffi::write(write_fs, msg_ptr, msg_c.len() as ffi::size_t);
+    }
+}
+
 fn main() {
     // create data dir and set $VIM to it
     let path = ::utils::get_data_dir();
@@ -229,22 +241,10 @@ fn main() {
         // prepare this process to be piped into the gui
         pty.child_setup();
 
-        // listen for messages from the gui
-        spawn(proc() {
-            std::io::timer::sleep(std::time::Duration::seconds(1));
-
-            let mut ch = neovim::Channel::new_with_fds(nvim_from_gui[0], gui_from_nvim[1]);
-            ch.subscribe("test");
-
-            unsafe {
-                let msg = "Hello, world!";
-                let msg_c = msg.to_c_str();
-                let msg_ptr = msg_c.as_ptr() as *const ffi::c_void;
-                ffi::write(gui_from_nvim[1], msg_ptr, msg_c.len() as ffi::size_t);
-            }
-        });
-
         // start nvim
-        neovim::run_with_vec(std::os::args());
+        neovim::run_with_callback(std::os::args(),
+                                  Some(nvim_init),
+                                  nvim_from_gui[0],
+                                  gui_from_nvim[1]);
     }
 }
