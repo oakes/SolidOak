@@ -191,7 +191,7 @@ extern "C" fn nvim_init(read_fs: i32, write_fs: i32) {
 }
 
 fn main() {
-    // create data dir and set $VIM to it
+    // create data dir
     let home_dir = ::utils::get_home_dir();
     let data_dir = home_dir.join(::utils::DATA_DIR);
     if !data_dir.exists() {
@@ -203,7 +203,11 @@ fn main() {
             Err(e) => { println!("Error creating data dir: {}", e) }
         }
     }
-    ::std::os::setenv("VIM", data_dir.as_str().unwrap());
+
+    // set $VIM to the data dir if it isn't already set
+    if ::std::os::getenv("VIM").is_none() {
+        ::std::os::setenv("VIM", data_dir.as_str().unwrap());
+    }
 
     // create config file
     let config_file = home_dir.join(::utils::CONFIG_FILE);
