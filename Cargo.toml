@@ -1,12 +1,14 @@
 [package]
+
 name = "solidoak"
 version = "0.0.1"
 authors = ["oakes <zsoakes@gmail.com>"]
 
 [dependencies.rgtk]
-#git = "https://github.com/jeremyletang/rgtk.git"
+
 path = "../rgtk"
 features = ["GTK_3_6"]
 
 [dependencies.neovim-rs]
+
 path = "../neovim-rs"
