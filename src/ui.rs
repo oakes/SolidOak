@@ -1,5 +1,3 @@
-extern crate rgtk;
-
 use rgtk::*;
 use std::cmp::Ordering;
 use std::collections::HashSet;
