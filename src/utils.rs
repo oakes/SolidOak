@@ -5,8 +5,61 @@ use std::io::fs;
 
 pub static DATA_DIR : &'static str = ".soak";
 pub static CONFIG_FILE : &'static str = ".soakrc";
-pub static PREFS_FILE : &'static str = "prefs.json";
 pub static CONFIG_CONTENT : &'static str = include_str!("../resources/soakrc");
+pub static PREFS_FILE : &'static str = "prefs.json";
+
+struct Resource {
+    pub path: &'static [&'static str],
+    pub data: &'static str,
+}
+pub static DATA_CONTENT : &'static [Resource] = &[
+    Resource{path: &["after", "syntax", "rust.vim"],
+             data: include_str!("../resources/soak/after/syntax/rust.vim")},
+
+    Resource{path: &["autoload", "rust.vim"],
+             data: include_str!("../resources/soak/autoload/rust.vim")},
+
+    Resource{path: &["compiler", "rustc.vim"],
+             data: include_str!("../resources/soak/compiler/rustc.vim")},
+    Resource{path: &["compiler", "cargo.vim"],
+             data: include_str!("../resources/soak/compiler/cargo.vim")},
+
+    Resource{path: &["doc", "rust.txt"],
+             data: include_str!("../resources/soak/doc/rust.txt")},
+
+    Resource{path: &["ftdetect", "rust.vim"],
+             data: include_str!("../resources/soak/ftdetect/rust.vim")},
+
+    Resource{path: &["ftplugin", "rust.vim"],
+             data: include_str!("../resources/soak/ftplugin/rust.vim")},
+    Resource{path: &["ftplugin", "c.vim"],
+             data: include_str!("../resources/soak/ftplugin/c.vim")},
+
+    Resource{path: &["indent", "rust.vim"],
+             data: include_str!("../resources/soak/indent/rust.vim")},
+    Resource{path: &["indent", "c.vim"],
+             data: include_str!("../resources/soak/indent/c.vim")},
+
+    Resource{path: &["plugin", "rust.vim"],
+             data: include_str!("../resources/soak/plugin/rust.vim")},
+
+    Resource{path: &["syntax", "rust.vim"],
+             data: include_str!("../resources/soak/syntax/rust.vim")},
+    Resource{path: &["syntax", "syncolor.vim"],
+             data: include_str!("../resources/soak/syntax/syncolor.vim")},
+    Resource{path: &["syntax", "synload.vim"],
+             data: include_str!("../resources/soak/syntax/synload.vim")},
+    Resource{path: &["syntax", "syntax.vim"],
+             data: include_str!("../resources/soak/syntax/syntax.vim")},
+
+    Resource{path: &["syntax_checkers", "rust", "rustc.vim"],
+             data: include_str!("../resources/soak/syntax_checkers/rust/rustc.vim")},
+
+    Resource{path: &["evim.vim"],
+             data: include_str!("../resources/soak/evim.vim")},
+    Resource{path: &["filetype.vim"],
+             data: include_str!("../resources/soak/filetype.vim")},
+];
 
 pub struct State<'a> {
     pub projects: HashSet<String>,

@@ -197,7 +197,11 @@ fn main() {
     if !data_dir.exists() {
         match fs::mkdir(&data_dir, ::std::io::USER_DIR) {
             Ok(_) => {
-                // TODO: copy all the vim files into the path
+                for res in ::utils::DATA_CONTENT.iter() {
+                    let res_path = data_dir.join_many(res.path);
+                    ::std::io::fs::mkdir_recursive(&res_path.dir_path(), ::std::io::USER_DIR).ok();
+                    ::std::io::File::create(&res_path).write(res.data.as_bytes()).ok();
+                }
                 println!("Created data dir at {}", data_dir.as_str().unwrap());
             },
             Err(e) => { println!("Error creating data dir: {}", e) }
