@@ -178,18 +178,6 @@ fn gui_main(
     gtk::main();
 }
 
-extern "C" fn nvim_init(read_fs: i32, write_fs: i32) {
-    let mut ch = neovim::Channel::new_with_fds(read_fs, write_fs);
-    ch.subscribe("test");
-
-    unsafe {
-        let msg = "Hello, world!";
-        let msg_c = msg.to_c_str();
-        let msg_ptr = msg_c.as_ptr() as *const ffi::c_void;
-        ffi::write(write_fs, msg_ptr, msg_c.len() as ffi::size_t);
-    }
-}
-
 fn main() {
     // create data dir
     let home_dir = ::utils::get_home_dir();
@@ -263,6 +251,6 @@ fn main() {
         // start nvim
         let mut args = ::std::os::args().clone();
         args.push_all(&["-u".to_string(), config_file.as_str().unwrap().to_string()]);
-        neovim::run_with_callback(args, Some(nvim_init), nvim_from_gui[0], gui_from_nvim[1]);
+        neovim::run_with_fds(args, nvim_from_gui[0], gui_from_nvim[1]);
     }
 }
