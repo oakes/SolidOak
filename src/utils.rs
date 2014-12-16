@@ -18,6 +18,8 @@ pub static DATA_CONTENT : &'static [Resource] = &[
 
     Resource{path: &["autoload", "rust.vim"],
              data: include_str!("../resources/soak/autoload/rust.vim")},
+    Resource{path: &["autoload", "paste.vim"],
+             data: include_str!("../resources/soak/autoload/paste.vim")},
 
     Resource{path: &["compiler", "rustc.vim"],
              data: include_str!("../resources/soak/compiler/rustc.vim")},
@@ -45,6 +47,8 @@ pub static DATA_CONTENT : &'static [Resource] = &[
 
     Resource{path: &["syntax", "c.vim"],
              data: include_str!("../resources/soak/syntax/c.vim")},
+    Resource{path: &["syntax", "nosyntax.vim"],
+             data: include_str!("../resources/soak/syntax/nosyntax.vim")},
     Resource{path: &["syntax", "rust.vim"],
              data: include_str!("../resources/soak/syntax/rust.vim")},
     Resource{path: &["syntax", "syncolor.vim"],
@@ -61,6 +65,8 @@ pub static DATA_CONTENT : &'static [Resource] = &[
              data: include_str!("../resources/soak/evim.vim")},
     Resource{path: &["filetype.vim"],
              data: include_str!("../resources/soak/filetype.vim")},
+    Resource{path: &["mswin.vim"],
+             data: include_str!("../resources/soak/mswin.vim")},
 ];
 
 pub struct State<'a> {
