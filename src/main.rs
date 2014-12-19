@@ -227,15 +227,25 @@ fn main() {
     if pid > 0 { // the gui process
         // listen for messages from nvim
         spawn(proc() {
+            // send attach_ui message
+            {
+                let mut arr = neovim::Array::new();
+                arr.add_integer(80);
+                arr.add_integer(24);
+                let msg = neovim::serialize_request(1, "attach_ui", &arr);
+                let msg_ptr = msg.as_slice().as_ptr() as *const ffi::c_void;
+                unsafe { ffi::write(nvim_from_gui[1], msg_ptr, msg.len() as ffi::size_t) };
+            }
+
+            // listen for messages
             let mut buf : [ffi::c_uchar, ..100] = [0, ..100];
             unsafe {
                 loop {
-                    let buf_ptr = buf.as_mut_ptr() as *mut ffi::c_void;
-                    let n = ffi::read(gui_from_nvim[0], buf_ptr, 100);
+                    let n = ffi::read(gui_from_nvim[0], buf.as_mut_ptr() as *mut ffi::c_void, 100);
                     if n < 0 {
                         break;
                     } else if n > 0 {
-                        let msg = ::std::str::from_utf8(buf.slice_to(n as uint)).unwrap();
+                        let msg = ::std::string::String::from_raw_buf_len(buf.as_ptr(), n as uint);
                         println!("Received: {}", msg);
                     }
                 }
