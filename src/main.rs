@@ -225,7 +225,6 @@ fn main() {
     let pid = unsafe { ffi::fork() };
 
     if pid > 0 { // the gui process
-        // listen for messages from nvim
         spawn(proc() {
             // send attach_ui message
             {
