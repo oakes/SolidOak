@@ -225,7 +225,7 @@ fn main() {
     let pid = unsafe { ffi::fork() };
 
     if pid > 0 { // the gui process
-        spawn(proc() {
+        ::std::thread::Thread::spawn(move || {
             // send attach_ui message
             {
                 let mut arr = neovim::Array::new();
@@ -249,7 +249,7 @@ fn main() {
                     }
                 }
             }
-        });
+        }).detach();
 
         // start the gui
         gui_main(&mut pty, gui_from_nvim[0], gui_from_nvim[1], pid);
