@@ -116,14 +116,11 @@ pub fn are_siblings(path1: &String, path2: &String) -> bool {
 pub fn get_selected_path(state: &State) -> Option<String> {
     let mut iter = gtk::TreeIter::new().unwrap();
 
-    let path = if state.tree_selection.get_selected(state.tree_model, &mut iter) {
+    if state.tree_selection.get_selected(state.tree_model, &mut iter) {
         state.tree_model.get_value(&iter, 1).get_string()
     } else {
         None
-    };
-
-    iter.drop();
-    path
+    }
 }
 
 pub fn write_prefs(state: &State) {

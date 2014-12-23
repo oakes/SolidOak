@@ -29,14 +29,11 @@ fn get_first_path(state: &::utils::State) -> Option<gtk::TreePath> {
     let mut iter = gtk::TreeIter::new().unwrap();
     let model = state.tree_store.get_model().unwrap();
 
-    let path = if model.get_iter_first(&mut iter) {
+    if model.get_iter_first(&mut iter) {
         model.get_path(&iter)
     } else {
         None
-    };
-
-    iter.drop();
-    path
+    }
 }
 
 pub fn update_project_buttons(state: &::utils::State) {
@@ -60,7 +57,7 @@ fn add_node(
 
     if let Some(leaf_str) = node.filename_str() {
         if !leaf_str.starts_with(".") {
-            state.tree_store.append(&iter, parent);
+            state.tree_store.append(&mut iter, parent);
             state.tree_store.set_string(&iter, 0, leaf_str);
             state.tree_store.set_string(&iter, 1, node.as_str().unwrap());
 
@@ -76,8 +73,6 @@ fn add_node(
             }
         }
     }
-
-    iter.drop();
 }
 
 fn expand_nodes(
@@ -113,8 +108,6 @@ fn expand_nodes(
             }
         }
     }
-
-    iter.drop();
 }
 
 pub fn update_project_tree(state: &mut ::utils::State, tree: &mut gtk::TreeView) {
@@ -132,7 +125,6 @@ pub fn update_project_tree(state: &mut ::utils::State, tree: &mut gtk::TreeView)
             tree.set_cursor(&path, None, false)
         }
     }
-    iter.drop();
 
     update_project_buttons(state);
 }
