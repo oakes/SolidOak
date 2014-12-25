@@ -3,7 +3,7 @@
 extern crate libc;
 extern crate neovim;
 extern crate rgtk;
-extern crate serialize;
+extern crate "rustc-serialize" as rustc_serialize;
 
 use rgtk::*;
 use std::collections::HashSet;

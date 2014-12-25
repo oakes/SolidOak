@@ -1,5 +1,5 @@
 use rgtk::*;
-use serialize::{Encodable, json};
+use rustc_serialize::{Encodable, json};
 use std::collections::HashSet;
 use std::io::fs;
 
@@ -80,7 +80,7 @@ pub struct State<'a> {
     pub remove_button: &'a gtk::Button,
 }
 
-#[deriving(Decodable, Encodable)]
+#[deriving(RustcDecodable, RustcEncodable)]
 struct Prefs {
     projects: Vec<String>,
     expansions: Vec<String>,
