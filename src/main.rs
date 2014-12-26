@@ -231,7 +231,7 @@ fn main() {
                 let mut arr = neovim::Array::new();
                 arr.add_integer(80);
                 arr.add_integer(24);
-                let msg = neovim::serialize_request(1, "attach_ui", &arr);
+                let msg = neovim::serialize_message(1, "attach_ui", &arr);
                 let msg_ptr = msg.as_slice().as_ptr() as *const ffi::c_void;
                 unsafe { ffi::write(nvim_from_gui[1], msg_ptr, msg.len() as ffi::size_t) };
             }
@@ -245,7 +245,8 @@ fn main() {
                         break;
                     } else if n > 0 {
                         let msg = ::std::string::String::from_raw_buf_len(buf.as_ptr(), n as uint);
-                        println!("Received: {}", msg);
+                        let arr = neovim::deserialize_message(&msg);
+                        println!("Received array of length: {}", arr.len());
                     }
                 }
             }
