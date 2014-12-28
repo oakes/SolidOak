@@ -237,16 +237,21 @@ fn main() {
             }
 
             // listen for messages
-            let mut buf : [ffi::c_uchar, ..100] = [0, ..100];
+            let mut buf : [ffi::c_uchar, ..1024] = [0, ..1024];
             unsafe {
                 loop {
-                    let n = ffi::read(gui_from_nvim[0], buf.as_mut_ptr() as *mut ffi::c_void, 100);
+                    let n = ffi::read(gui_from_nvim[0], buf.as_mut_ptr() as *mut ffi::c_void, 1024);
                     if n < 0 {
                         break;
                     } else if n > 0 {
                         let msg = ::std::string::String::from_raw_buf_len(buf.as_ptr(), n as uint);
                         let arr = neovim::deserialize_message(&msg);
-                        println!("Received array of length: {}", arr.len());
+                        print!("Received:");
+                        for i in range(0, arr.len()) {
+                            let o = arr.get(i);
+                            if o.is_some() { print!(" {}", o.unwrap()) } else { print!(" Nil") };
+                        }
+                        println!("");
                     }
                 }
             }
