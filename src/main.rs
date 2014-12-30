@@ -246,12 +246,7 @@ fn main() {
                     } else if n > 0 {
                         let msg = ::std::string::String::from_raw_buf_len(buf.as_ptr(), n as uint);
                         let arr = neovim::deserialize_message(&msg);
-                        print!("Received:");
-                        for i in range(0, arr.len()) {
-                            let o = arr.get(i);
-                            if o.is_some() { print!(" {}", o.unwrap()) } else { print!(" Nil") };
-                        }
-                        println!("");
+                        println!("Received: {}", arr);
                     }
                 }
             }
