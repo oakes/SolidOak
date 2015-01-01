@@ -178,6 +178,20 @@ fn gui_main(
     gtk::main();
 }
 
+fn receive_message (fd: ffi::c_int) -> bool {
+    let mut buf : [ffi::c_uchar, ..1024] = [0, ..1024];
+    let n = unsafe { ffi::read(fd, buf.as_mut_ptr() as *mut ffi::c_void, 1024) };
+    if n < 0 {
+        return false;
+    } else if n > 0 {
+        let msg = unsafe { ::std::string::String::from_raw_buf_len(buf.as_ptr(), n as uint) };
+        let arr = neovim::deserialize_message(&msg);
+        println!("Received: {}", arr);
+    }
+
+    true
+}
+
 fn main() {
     // create data dir
     let home_dir = ::utils::get_home_dir();
@@ -235,19 +249,24 @@ fn main() {
                 let msg_ptr = msg.as_slice().as_ptr() as *const ffi::c_void;
                 unsafe { ffi::write(nvim_from_gui[1], msg_ptr, msg.len() as ffi::size_t) };
             }
+            receive_message(gui_from_nvim[0]);
+
+            // send vim_command message
+/*
+            {
+                let mut arr = neovim::Array::new();
+                arr.add_string("");
+                let msg = neovim::serialize_message(1, "vim_command", &arr);
+                let msg_ptr = msg.as_slice().as_ptr() as *const ffi::c_void;
+                unsafe { ffi::write(nvim_from_gui[1], msg_ptr, msg.len() as ffi::size_t) };
+            }
+            receive_message(gui_from_nvim[0]);
+*/
 
             // listen for messages
-            let mut buf : [ffi::c_uchar, ..1024] = [0, ..1024];
-            unsafe {
-                loop {
-                    let n = ffi::read(gui_from_nvim[0], buf.as_mut_ptr() as *mut ffi::c_void, 1024);
-                    if n < 0 {
-                        break;
-                    } else if n > 0 {
-                        let msg = ::std::string::String::from_raw_buf_len(buf.as_ptr(), n as uint);
-                        let arr = neovim::deserialize_message(&msg);
-                        println!("Received: {}", arr);
-                    }
+            loop {
+                if !receive_message(gui_from_nvim[0]) {
+                    break;
                 }
             }
         }).detach();
@@ -261,6 +280,8 @@ fn main() {
         // start nvim
         let mut args = ::std::os::args().clone();
         args.push_all(&["-u".to_string(), config_file.as_str().unwrap().to_string()]);
-        neovim::run_with_fds(args, nvim_from_gui[0], gui_from_nvim[1]);
+        neovim::main_setup(args);
+        neovim::channel_from_fds(nvim_from_gui[0], gui_from_nvim[1]);
+        neovim::main_loop();
     }
 }
