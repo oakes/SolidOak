@@ -178,18 +178,14 @@ fn gui_main(
     gtk::main();
 }
 
-fn receive_message (fd: ffi::c_int) -> bool {
+fn receive_message (fd: ffi::c_int) -> Option<neovim::Array> {
     let mut buf : [ffi::c_uchar, ..1024] = [0, ..1024];
     let n = unsafe { ffi::read(fd, buf.as_mut_ptr() as *mut ffi::c_void, 1024) };
     if n < 0 {
-        return false;
-    } else if n > 0 {
-        let msg = unsafe { ::std::string::String::from_raw_buf_len(buf.as_ptr(), n as uint) };
-        let arr = neovim::deserialize_message(&msg);
-        println!("Received: {}", arr);
+        return None;
     }
-
-    true
+    let s = unsafe { ::std::string::String::from_raw_buf_len(buf.as_ptr(), n as uint) };
+    Some(neovim::deserialize_message(&s))
 }
 
 fn main() {
@@ -248,25 +244,40 @@ fn main() {
                 let msg = neovim::serialize_message(1, "attach_ui", &arr);
                 let msg_ptr = msg.as_slice().as_ptr() as *const ffi::c_void;
                 unsafe { ffi::write(nvim_from_gui[1], msg_ptr, msg.len() as ffi::size_t) };
+                if let Some(recv_arr) = receive_message(gui_from_nvim[0]) {
+                    println!("Received: {}", recv_arr);
+                }
             }
-            receive_message(gui_from_nvim[0]);
 
-            // send vim_command message
-/*
+            // send vim_subscribe message
             {
                 let mut arr = neovim::Array::new();
-                arr.add_string("");
+                arr.add_string("bufread");
+                let msg = neovim::serialize_message(1, "vim_subscribe", &arr);
+                let msg_ptr = msg.as_slice().as_ptr() as *const ffi::c_void;
+                unsafe { ffi::write(nvim_from_gui[1], msg_ptr, msg.len() as ffi::size_t) };
+                if let Some(recv_arr) = receive_message(gui_from_nvim[0]) {
+                    println!("Received: {}", recv_arr);
+                }
+            }
+
+            // send vim_command message
+            {
+                let mut arr = neovim::Array::new();
+                let s = format!("au BufRead * call rpcnotify(1, \"bufread\", bufname(\"\"))");
+                arr.add_string(s.as_slice());
                 let msg = neovim::serialize_message(1, "vim_command", &arr);
                 let msg_ptr = msg.as_slice().as_ptr() as *const ffi::c_void;
                 unsafe { ffi::write(nvim_from_gui[1], msg_ptr, msg.len() as ffi::size_t) };
+                if let Some(recv_arr) = receive_message(gui_from_nvim[0]) {
+                    println!("Received: {}", recv_arr);
+                }
             }
-            receive_message(gui_from_nvim[0]);
-*/
 
             // listen for messages
-            loop {
-                if !receive_message(gui_from_nvim[0]) {
-                    break;
+            while let Some(recv_arr) = receive_message(gui_from_nvim[0]) {
+                if recv_arr.len() > 0 {
+                    println!("Received: {}", recv_arr);
                 }
             }
         }).detach();
