@@ -80,7 +80,7 @@ pub struct State<'a> {
     pub remove_button: &'a gtk::Button,
 }
 
-#[deriving(RustcDecodable, RustcEncodable)]
+#[derive(RustcDecodable, RustcEncodable)]
 struct Prefs {
     projects: Vec<String>,
     expansions: Vec<String>,

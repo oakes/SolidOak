@@ -1,5 +1,3 @@
-#![feature(globs)]
-
 extern crate libc;
 extern crate neovim;
 extern crate rgtk;
@@ -50,7 +48,7 @@ fn gui_main(
     window.set_window_position(gtk::WindowPosition::Center);
     window.set_default_size(width, height);
 
-    window.connect(gtk::signals::DeleteEvent::new(|_| {
+    window.connect(gtk::signals::DeleteEvent::new(&mut |&: _| {
         unsafe {
             ffi::close(read_fd);
             ffi::close(write_fd);
@@ -148,26 +146,26 @@ fn gui_main(
 
     // connect to the signals
 
-    new_button.connect(gtk::signals::Clicked::new(|| {
+    new_button.connect(gtk::signals::Clicked::new(&mut |&mut:| {
         ::projects::new_project(&mut state, &mut project_tree);
     }));
-    import_button.connect(gtk::signals::Clicked::new(|| {
+    import_button.connect(gtk::signals::Clicked::new(&mut |&mut:| {
         ::projects::import_project(&mut state, &mut project_tree);
     }));
-    rename_button.connect(gtk::signals::Clicked::new(|| {
+    rename_button.connect(gtk::signals::Clicked::new(&mut |&mut:| {
         ::projects::rename_file(&mut state);
     }));
-    remove_button.connect(gtk::signals::Clicked::new(|| {
+    remove_button.connect(gtk::signals::Clicked::new(&mut |&mut:| {
         ::projects::remove_item(&mut state);
     }));
-    selection.connect(gtk::signals::Changed::new(|| {
+    selection.connect(gtk::signals::Changed::new(&mut |&mut:| {
         ::projects::save_selection(&mut state);
     }));
-    project_tree.connect(gtk::signals::RowCollapsed::new(|iter_raw, _| {
+    project_tree.connect(gtk::signals::RowCollapsed::new(&mut |&mut: iter_raw, _| {
         let iter = gtk::TreeIter::wrap_pointer(iter_raw);
         ::projects::remove_expansion(&mut state, &iter);
     }));
-    project_tree.connect(gtk::signals::RowExpanded::new(|iter_raw, _| {
+    project_tree.connect(gtk::signals::RowExpanded::new(&mut |&mut: iter_raw, _| {
         let iter = gtk::TreeIter::wrap_pointer(iter_raw);
         ::projects::add_expansion(&mut state, &iter);
     }));
@@ -179,13 +177,16 @@ fn gui_main(
 }
 
 fn receive_message (fd: ffi::c_int) -> Option<neovim::Array> {
-    let mut buf : [ffi::c_uchar, ..1024] = [0, ..1024];
+    let mut buf : [ffi::c_uchar; 1024] = [0; 1024];
     let n = unsafe { ffi::read(fd, buf.as_mut_ptr() as *mut ffi::c_void, 1024) };
     if n < 0 {
         return None;
     }
-    let s = unsafe { ::std::string::String::from_raw_buf_len(buf.as_ptr(), n as uint) };
-    Some(neovim::deserialize_message(&s))
+    unsafe {
+        let v = Vec::from_raw_buf(buf.as_ptr(), n as usize);
+        let s = String::from_utf8_unchecked(v);
+        Some(neovim::deserialize_message(&s))
+    }
 }
 
 fn main() {
@@ -224,8 +225,8 @@ fn main() {
     let mut pty = gtk::VtePty::new().unwrap();
 
     // two pairs of anonymous pipes for msgpack-rpc between the gui and nvim
-    let mut nvim_from_gui : [ffi::c_int, ..2] = [0, ..2];
-    let mut gui_from_nvim : [ffi::c_int, ..2] = [0, ..2];
+    let mut nvim_from_gui : [ffi::c_int; 2] = [0; 2];
+    let mut gui_from_nvim : [ffi::c_int; 2] = [0; 2];
     unsafe {
         ffi::pipe(nvim_from_gui.as_mut_ptr());
         ffi::pipe(gui_from_nvim.as_mut_ptr());
@@ -245,7 +246,7 @@ fn main() {
                 let msg_ptr = msg.as_slice().as_ptr() as *const ffi::c_void;
                 unsafe { ffi::write(nvim_from_gui[1], msg_ptr, msg.len() as ffi::size_t) };
                 if let Some(recv_arr) = receive_message(gui_from_nvim[0]) {
-                    println!("Received: {}", recv_arr);
+                    println!("Received: {:?}", recv_arr);
                 }
             }
 
@@ -257,7 +258,7 @@ fn main() {
                 let msg_ptr = msg.as_slice().as_ptr() as *const ffi::c_void;
                 unsafe { ffi::write(nvim_from_gui[1], msg_ptr, msg.len() as ffi::size_t) };
                 if let Some(recv_arr) = receive_message(gui_from_nvim[0]) {
-                    println!("Received: {}", recv_arr);
+                    println!("Received: {:?}", recv_arr);
                 }
             }
 
@@ -270,17 +271,17 @@ fn main() {
                 let msg_ptr = msg.as_slice().as_ptr() as *const ffi::c_void;
                 unsafe { ffi::write(nvim_from_gui[1], msg_ptr, msg.len() as ffi::size_t) };
                 if let Some(recv_arr) = receive_message(gui_from_nvim[0]) {
-                    println!("Received: {}", recv_arr);
+                    println!("Received: {:?}", recv_arr);
                 }
             }
 
             // listen for messages
             while let Some(recv_arr) = receive_message(gui_from_nvim[0]) {
                 if recv_arr.len() > 0 {
-                    println!("Received: {}", recv_arr);
+                    println!("Received: {:?}", recv_arr);
                 }
             }
-        }).detach();
+        });
 
         // start the gui
         gui_main(&mut pty, gui_from_nvim[0], gui_from_nvim[1], pid);
