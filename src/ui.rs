@@ -84,9 +84,7 @@ fn expand_nodes(
 
     if state.tree_model.iter_children(&mut iter, parent) {
         loop {
-            if let Some(path_str) =
-                state.tree_model.get_value(&iter, 1).get_string()
-            {
+            if let Some(path_str) = state.tree_model.get_value(&iter, 1).get_string() {
                 if let Some(selection_str) = state.selection.clone() {
                     if path_str == selection_str {
                         if let Some(path) = state.tree_model.get_path(&iter) {

@@ -1,5 +1,6 @@
 use rgtk::*;
 use std::io::fs::PathExtensions;
+use std::num::FromPrimitive;
 
 fn save_project(
     state: &mut ::utils::State,
@@ -18,10 +19,11 @@ pub fn new_project(state: &mut ::utils::State, tree: &mut gtk::TreeView) {
         None,
         gtk::FileChooserAction::Save
     ).unwrap();
-    chooser.run();
-    if let Some(filename) = chooser.get_filename() {
-        save_project(state, tree, filename);
-        // TODO: cargo new filename --bin
+    if let Some(gtk::ResponseType::Accept) = FromPrimitive::from_i32(chooser.run()) {
+        if let Some(filename) = chooser.get_filename() {
+            save_project(state, tree, filename);
+            // TODO: cargo new filename --bin
+        }
     }
     chooser.destroy();
 }
@@ -32,9 +34,10 @@ pub fn import_project(state: &mut ::utils::State, tree: &mut gtk::TreeView) {
         None,
         gtk::FileChooserAction::SelectFolder
     ).unwrap();
-    chooser.run();
-    if let Some(filename) = chooser.get_filename() {
-        save_project(state, tree, filename);
+    if let Some(gtk::ResponseType::Accept) = FromPrimitive::from_i32(chooser.run()) {
+        if let Some(filename) = chooser.get_filename() {
+            save_project(state, tree, filename);
+        }
     }
     chooser.destroy();
 }
