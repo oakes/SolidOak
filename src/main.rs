@@ -176,7 +176,25 @@ fn gui_main(
     gtk::main();
 }
 
-fn receive_message (fd: ffi::c_int) -> Option<neovim::Array> {
+fn nvim_attach(fd: ffi::c_int) {
+    let mut arr = neovim::Array::new();
+    arr.add_integer(80);
+    arr.add_integer(24);
+    arr.add_boolean(true);
+    let msg = neovim::serialize_message(1, "ui_attach", &arr);
+    let msg_ptr = msg.as_slice().as_ptr() as *const ffi::c_void;
+    unsafe { ffi::write(fd, msg_ptr, msg.len() as ffi::size_t) };
+}
+
+fn nvim_execute(fd: ffi::c_int, command: &str) {
+    let mut arr = neovim::Array::new();
+    arr.add_string(command);
+    let msg = neovim::serialize_message(1, "vim_command", &arr);
+    let msg_ptr = msg.as_slice().as_ptr() as *const ffi::c_void;
+    unsafe { ffi::write(fd, msg_ptr, msg.len() as ffi::size_t) };
+}
+
+fn receive_message(fd: ffi::c_int) -> Option<neovim::Array> {
     let mut buf : [ffi::c_uchar; 1024] = [0; 1024];
     let n = unsafe { ffi::read(fd, buf.as_mut_ptr() as *mut ffi::c_void, 1024) };
     if n < 0 {
@@ -225,11 +243,11 @@ fn main() {
     let mut pty = gtk::VtePty::new().unwrap();
 
     // two pairs of anonymous pipes for msgpack-rpc between the gui and nvim
-    let mut nvim_from_gui : [ffi::c_int; 2] = [0; 2];
-    let mut gui_from_nvim : [ffi::c_int; 2] = [0; 2];
+    let mut nvim_gui : [ffi::c_int; 2] = [0; 2]; // to nvim from gui
+    let mut gui_nvim : [ffi::c_int; 2] = [0; 2]; // to gui from nvim
     unsafe {
-        ffi::pipe(nvim_from_gui.as_mut_ptr());
-        ffi::pipe(gui_from_nvim.as_mut_ptr());
+        ffi::pipe(nvim_gui.as_mut_ptr());
+        ffi::pipe(gui_nvim.as_mut_ptr());
     };
 
     // split into two processes
@@ -238,34 +256,13 @@ fn main() {
     if pid > 0 { // the gui process
         ::std::thread::Thread::spawn(move || {
             // start communicating with nvim
-            {
-                let mut arr = neovim::Array::new();
-                arr.add_integer(80);
-                arr.add_integer(24);
-                arr.add_boolean(true);
-                let msg = neovim::serialize_message(1, "ui_attach", &arr);
-                let msg_ptr = msg.as_slice().as_ptr() as *const ffi::c_void;
-                unsafe { ffi::write(nvim_from_gui[1], msg_ptr, msg.len() as ffi::size_t) };
-                if let Some(recv_arr) = receive_message(gui_from_nvim[0]) {
-                    println!("Received: {:?}", recv_arr);
-                }
-            }
+            nvim_attach(nvim_gui[1]);
 
             // listen for bufread events
-            {
-                let mut arr = neovim::Array::new();
-                let s = format!("au BufRead * call rpcnotify(1, \"bufread\", bufname(\"\"))");
-                arr.add_string(s.as_slice());
-                let msg = neovim::serialize_message(1, "vim_command", &arr);
-                let msg_ptr = msg.as_slice().as_ptr() as *const ffi::c_void;
-                unsafe { ffi::write(nvim_from_gui[1], msg_ptr, msg.len() as ffi::size_t) };
-                if let Some(recv_arr) = receive_message(gui_from_nvim[0]) {
-                    println!("Received: {:?}", recv_arr);
-                }
-            }
+            nvim_execute(nvim_gui[1], "au BufRead * call rpcnotify(1, \"bufread\", bufname(\"\"))");
 
-            // listen for messages
-            while let Some(recv_arr) = receive_message(gui_from_nvim[0]) {
+            // receive messages
+            while let Some(recv_arr) = receive_message(gui_nvim[0]) {
                 if recv_arr.len() > 0 {
                     println!("Received: {:?}", recv_arr);
                 }
@@ -273,7 +270,7 @@ fn main() {
         });
 
         // start the gui
-        gui_main(&mut pty, gui_from_nvim[0], gui_from_nvim[1], pid);
+        gui_main(&mut pty, gui_nvim[0], gui_nvim[1], pid);
     } else { // the nvim process
         // prepare this process to be piped into the gui
         pty.child_setup();
@@ -282,7 +279,7 @@ fn main() {
         let mut args = ::std::os::args().clone();
         args.push_all(&["-u".to_string(), config_file.as_str().unwrap().to_string()]);
         neovim::main_setup(args);
-        neovim::channel_from_fds(nvim_from_gui[0], gui_from_nvim[1]);
+        neovim::channel_from_fds(nvim_gui[0], gui_nvim[1]);
         neovim::main_loop();
     }
 }
