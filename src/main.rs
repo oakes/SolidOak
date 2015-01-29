@@ -237,12 +237,13 @@ fn main() {
 
     if pid > 0 { // the gui process
         ::std::thread::Thread::spawn(move || {
-            // send attach_ui message
+            // start communicating with nvim
             {
                 let mut arr = neovim::Array::new();
                 arr.add_integer(80);
                 arr.add_integer(24);
-                let msg = neovim::serialize_message(1, "attach_ui", &arr);
+                arr.add_boolean(true);
+                let msg = neovim::serialize_message(1, "ui_attach", &arr);
                 let msg_ptr = msg.as_slice().as_ptr() as *const ffi::c_void;
                 unsafe { ffi::write(nvim_from_gui[1], msg_ptr, msg.len() as ffi::size_t) };
                 if let Some(recv_arr) = receive_message(gui_from_nvim[0]) {
@@ -250,19 +251,7 @@ fn main() {
                 }
             }
 
-            // send vim_subscribe message
-            {
-                let mut arr = neovim::Array::new();
-                arr.add_string("bufread");
-                let msg = neovim::serialize_message(1, "vim_subscribe", &arr);
-                let msg_ptr = msg.as_slice().as_ptr() as *const ffi::c_void;
-                unsafe { ffi::write(nvim_from_gui[1], msg_ptr, msg.len() as ffi::size_t) };
-                if let Some(recv_arr) = receive_message(gui_from_nvim[0]) {
-                    println!("Received: {:?}", recv_arr);
-                }
-            }
-
-            // send vim_command message
+            // listen for bufread events
             {
                 let mut arr = neovim::Array::new();
                 let s = format!("au BufRead * call rpcnotify(1, \"bufread\", bufname(\"\"))");
