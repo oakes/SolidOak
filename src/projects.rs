@@ -1,5 +1,5 @@
 use rgtk::*;
-use std::io::fs::PathExtensions;
+use std::old_io::fs::PathExtensions;
 use std::num::FromPrimitive;
 
 fn save_project(

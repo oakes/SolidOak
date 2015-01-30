@@ -15,4 +15,4 @@ path = "../neovim-rs"
 
 [dependencies.rustc-serialize]
 
-rustc-serialize = "0.2.9"
+rustc-serialize = "0.2.10"

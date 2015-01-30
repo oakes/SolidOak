@@ -1,7 +1,7 @@
 use rgtk::*;
 use rustc_serialize::{Encodable, json};
 use std::collections::HashSet;
-use std::io::fs;
+use std::old_io::fs;
 
 pub static DATA_DIR : &'static str = ".soak";
 pub static CONFIG_FILE : &'static str = ".soakrc";
@@ -128,7 +128,7 @@ pub fn write_prefs(state: &State) {
 
     let mut buffer: Vec<u8> = Vec::new();
     {
-        let mut encoder = json::PrettyEncoder::new(&mut buffer);
+        let mut encoder = json::Encoder::new_pretty(&mut buffer);
         prefs.encode(&mut encoder).ok().expect("Error encoding prefs.");
     }
     let json_str = String::from_utf8(buffer).unwrap();

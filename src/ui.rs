@@ -1,8 +1,8 @@
 use rgtk::*;
 use std::cmp::Ordering;
 use std::collections::HashSet;
-use std::io::fs;
-use std::io::fs::PathExtensions;
+use std::old_io::fs;
+use std::old_io::fs::PathExtensions;
 
 fn path_sorter(a: &Path, b: &Path) -> Ordering {
     let leaf_a = a.filename_str();

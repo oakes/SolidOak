@@ -5,8 +5,8 @@ extern crate "rustc-serialize" as rustc_serialize;
 
 use rgtk::*;
 use std::collections::HashSet;
-use std::io::fs;
-use std::io::fs::PathExtensions;
+use std::old_io::fs;
+use std::old_io::fs::PathExtensions;
 
 mod projects;
 mod ui;
@@ -212,12 +212,12 @@ fn main() {
     let home_dir = ::utils::get_home_dir();
     let data_dir = home_dir.join(::utils::DATA_DIR);
     if !data_dir.exists() {
-        match fs::mkdir(&data_dir, ::std::io::USER_DIR) {
+        match fs::mkdir(&data_dir, ::std::old_io::USER_DIR) {
             Ok(_) => {
                 for res in ::utils::DATA_CONTENT.iter() {
                     let res_path = data_dir.join_many(res.path);
-                    ::std::io::fs::mkdir_recursive(&res_path.dir_path(), ::std::io::USER_DIR).ok();
-                    ::std::io::File::create(&res_path).write(res.data.as_bytes()).ok();
+                    ::std::old_io::fs::mkdir_recursive(&res_path.dir_path(), ::std::old_io::USER_DIR).ok();
+                    ::std::old_io::File::create(&res_path).write(res.data.as_bytes()).ok();
                 }
                 println!("Created data dir at {}", data_dir.as_str().unwrap());
             },
@@ -233,7 +233,7 @@ fn main() {
     // create config file
     let config_file = home_dir.join(::utils::CONFIG_FILE);
     if !config_file.exists() {
-        match ::std::io::File::create(&config_file).write(::utils::CONFIG_CONTENT.as_bytes()) {
+        match ::std::old_io::File::create(&config_file).write(::utils::CONFIG_CONTENT.as_bytes()) {
             Ok(_) => { println!("Created config file at {}", config_file.as_str().unwrap()) },
             Err(e) => { println!("Error creating config file: {}", e) }
         }
