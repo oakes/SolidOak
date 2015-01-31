@@ -1,0 +1,3 @@
+[submodule "resources/soak"]
+	path = resources/soak
+	url = git@github.com:oakes/rust.vim.git
