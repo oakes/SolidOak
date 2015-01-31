@@ -217,7 +217,7 @@ fn main() {
                 for res in ::utils::DATA_CONTENT.iter() {
                     let res_path = data_dir.join_many(res.path);
                     ::std::old_io::fs::mkdir_recursive(&res_path.dir_path(), ::std::old_io::USER_DIR).ok();
-                    ::std::old_io::File::create(&res_path).write(res.data.as_bytes()).ok();
+                    ::std::old_io::File::create(&res_path).write_all(res.data.as_bytes()).ok();
                 }
                 println!("Created data dir at {}", data_dir.as_str().unwrap());
             },
@@ -233,7 +233,7 @@ fn main() {
     // create config file
     let config_file = home_dir.join(::utils::CONFIG_FILE);
     if !config_file.exists() {
-        match ::std::old_io::File::create(&config_file).write(::utils::CONFIG_CONTENT.as_bytes()) {
+        match ::std::old_io::File::create(&config_file).write_all(::utils::CONFIG_CONTENT.as_bytes()) {
             Ok(_) => { println!("Created config file at {}", config_file.as_str().unwrap()) },
             Err(e) => { println!("Error creating config file: {}", e) }
         }
