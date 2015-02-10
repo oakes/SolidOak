@@ -12,7 +12,7 @@ features = ["GTK_3_6"]
 
 [dependencies.neovim-rs]
 
-path = "../neovim-rs"
+neovim-rs = "0.0.1"
 
 [dependencies.rustc-serialize]
 
