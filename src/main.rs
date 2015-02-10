@@ -281,7 +281,7 @@ fn main() {
             args.push(arg.into_string().unwrap());
         }
         args.push_all(&["-u".to_string(), config_file.as_str().unwrap().to_string()]);
-        neovim::main_setup(args);
+        neovim::main_setup(&args);
         neovim::channel_from_fds(nvim_gui[0], gui_nvim[1]);
         neovim::main_loop();
     }
