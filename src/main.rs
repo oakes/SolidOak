@@ -146,26 +146,26 @@ fn gui_main(
 
     // connect to the signals
 
-    new_button.connect(gtk::signals::Clicked::new(&mut |&mut:| {
+    new_button.connect(gtk::signals::Clicked::new(&mut || {
         ::projects::new_project(&mut state, &mut project_tree);
     }));
-    import_button.connect(gtk::signals::Clicked::new(&mut |&mut:| {
+    import_button.connect(gtk::signals::Clicked::new(&mut || {
         ::projects::import_project(&mut state, &mut project_tree);
     }));
-    rename_button.connect(gtk::signals::Clicked::new(&mut |&mut:| {
+    rename_button.connect(gtk::signals::Clicked::new(&mut || {
         ::projects::rename_file(&mut state);
     }));
-    remove_button.connect(gtk::signals::Clicked::new(&mut |&mut:| {
+    remove_button.connect(gtk::signals::Clicked::new(&mut || {
         ::projects::remove_item(&mut state);
     }));
-    selection.connect(gtk::signals::Changed::new(&mut |&mut:| {
+    selection.connect(gtk::signals::Changed::new(&mut || {
         ::projects::save_selection(&mut state);
     }));
-    project_tree.connect(gtk::signals::RowCollapsed::new(&mut |&mut: iter_raw, _| {
+    project_tree.connect(gtk::signals::RowCollapsed::new(&mut |iter_raw, _| {
         let iter = gtk::TreeIter::wrap_pointer(iter_raw);
         ::projects::remove_expansion(&mut state, &iter);
     }));
-    project_tree.connect(gtk::signals::RowExpanded::new(&mut |&mut: iter_raw, _| {
+    project_tree.connect(gtk::signals::RowExpanded::new(&mut |iter_raw, _| {
         let iter = gtk::TreeIter::wrap_pointer(iter_raw);
         ::projects::add_expansion(&mut state, &iter);
     }));
@@ -226,8 +226,8 @@ fn main() {
     }
 
     // set $VIM to the data dir if it isn't already set
-    if ::std::os::getenv("VIM").is_none() {
-        ::std::os::setenv("VIM", data_dir.as_str().unwrap());
+    if ::std::env::var("VIM").is_none() {
+        ::std::env::set_var("VIM", data_dir.as_str().unwrap());
     }
 
     // create config file
@@ -276,7 +276,10 @@ fn main() {
         pty.child_setup();
 
         // start nvim
-        let mut args = ::std::os::args().clone();
+        let mut args = Vec::new();
+        for arg in ::std::env::args() {
+            args.push(arg.into_string().unwrap());
+        }
         args.push_all(&["-u".to_string(), config_file.as_str().unwrap().to_string()]);
         neovim::main_setup(args);
         neovim::channel_from_fds(nvim_gui[0], gui_nvim[1]);

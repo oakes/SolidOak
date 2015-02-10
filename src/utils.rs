@@ -88,7 +88,7 @@ struct Prefs {
 }
 
 pub fn get_home_dir() -> Path {
-    match ::std::os::homedir() {
+    match ::std::env::home_dir() {
         Some(p) => p,
         None => Path::new(".")
     }
@@ -126,12 +126,11 @@ pub fn get_selected_path(state: &State) -> Option<String> {
 pub fn write_prefs(state: &State) {
     let prefs = get_prefs(state);
 
-    let mut buffer: Vec<u8> = Vec::new();
+    let mut json_str = String::new();
     {
-        let mut encoder = json::Encoder::new_pretty(&mut buffer);
+        let mut encoder = json::Encoder::new_pretty(&mut json_str);
         prefs.encode(&mut encoder).ok().expect("Error encoding prefs.");
     }
-    let json_str = String::from_utf8(buffer).unwrap();
 
     let prefs_path = get_home_dir().join(DATA_DIR).join(PREFS_FILE);
     let mut f = fs::File::create(&prefs_path);
