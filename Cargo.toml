@@ -7,7 +7,7 @@ build = "build.rs"
 
 [dependencies.rgtk]
 
-path = "../rgtk"
+git = "https://github.com/oakes/rgtk"
 features = ["GTK_3_6"]
 
 [dependencies.neovim-rs]
