@@ -254,10 +254,10 @@ fn main() {
     let pid = unsafe { ffi::fork() };
 
     if pid > 0 { // the gui process
-        ::std::thread::Thread::spawn(move || {
-            // start communicating with nvim
-            nvim_attach(nvim_gui[1]);
+        // start communicating with nvim
+        nvim_attach(nvim_gui[1]);
 
+        ::std::thread::Thread::spawn(move || {
             // listen for bufread events
             nvim_execute(nvim_gui[1], "au BufRead * call rpcnotify(1, \"bufread\", bufname(\"\"))");
 
