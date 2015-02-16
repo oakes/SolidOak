@@ -78,6 +78,7 @@ pub struct State<'a> {
     pub tree_selection: &'a gtk::TreeSelection,
     pub rename_button: &'a gtk::Button,
     pub remove_button: &'a gtk::Button,
+    pub is_refreshing_tree: bool
 }
 
 #[derive(RustcDecodable, RustcEncodable)]

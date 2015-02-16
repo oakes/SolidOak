@@ -25,17 +25,6 @@ fn sort_string_paths(paths: &HashSet<String>) -> Vec<Path> {
     paths_vec
 }
 
-fn get_first_path(state: &::utils::State) -> Option<gtk::TreePath> {
-    let mut iter = gtk::TreeIter::new().unwrap();
-    let model = state.tree_store.get_model().unwrap();
-
-    if model.get_iter_first(&mut iter) {
-        model.get_path(&iter)
-    } else {
-        None
-    }
-}
-
 pub fn update_project_buttons(state: &::utils::State) {
     if let Some(path_str) = ::utils::get_selected_path(state) {
         let is_project = state.projects.contains(&path_str);
@@ -109,6 +98,8 @@ fn expand_nodes(
 }
 
 pub fn update_project_tree(state: &mut ::utils::State, tree: &mut gtk::TreeView) {
+    state.is_refreshing_tree = true;
+
     state.tree_store.clear();
 
     for path in sort_string_paths(&state.projects).iter() {
@@ -117,12 +108,7 @@ pub fn update_project_tree(state: &mut ::utils::State, tree: &mut gtk::TreeView)
 
     expand_nodes(state, tree, None);
 
-    let mut iter = gtk::TreeIter::new().unwrap();
-    if !state.tree_selection.get_selected(state.tree_model, &mut iter) {
-        if let Some(path) = get_first_path(state) {
-            tree.set_cursor(&path, None, false)
-        }
-    }
-
     update_project_buttons(state);
+
+    state.is_refreshing_tree = false;
 }

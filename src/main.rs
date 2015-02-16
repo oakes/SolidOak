@@ -14,12 +14,46 @@ mod utils;
 
 mod ffi {
     pub use libc::{c_int, c_uchar, c_void};
+    pub use libc::consts::os::extra::O_NONBLOCK;
+    pub use libc::consts::os::posix01::F_SETFL;
+    pub use libc::funcs::posix88::fcntl::fcntl;
     pub use libc::funcs::posix88::unistd::{close, pipe, read, write};
     pub use libc::types::os::arch::c95::size_t;
 
     extern "C" {
         pub fn fork () -> c_int;
         pub fn kill (pid: c_int, sig: c_int);
+    }
+}
+
+fn nvim_attach(fd: ffi::c_int) {
+    let mut arr = neovim::Array::new();
+    arr.add_integer(80);
+    arr.add_integer(24);
+    arr.add_boolean(true);
+    let msg = neovim::serialize_message(1, "ui_attach", &arr);
+    let msg_ptr = msg.as_slice().as_ptr() as *const ffi::c_void;
+    unsafe { ffi::write(fd, msg_ptr, msg.len() as ffi::size_t) };
+}
+
+fn nvim_execute(fd: ffi::c_int, command: &str) {
+    let mut arr = neovim::Array::new();
+    arr.add_string(command);
+    let msg = neovim::serialize_message(1, "vim_command", &arr);
+    let msg_ptr = msg.as_slice().as_ptr() as *const ffi::c_void;
+    unsafe { ffi::write(fd, msg_ptr, msg.len() as ffi::size_t) };
+}
+
+fn receive_message(fd: ffi::c_int) -> Option<neovim::Array> {
+    let mut buf : [ffi::c_uchar; 1024] = [0; 1024];
+    let n = unsafe { ffi::read(fd, buf.as_mut_ptr() as *mut ffi::c_void, 1024) };
+    if n < 0 {
+        return None;
+    }
+    unsafe {
+        let v = Vec::from_raw_buf(buf.as_ptr(), n as usize);
+        let s = String::from_utf8_unchecked(v);
+        Some(neovim::deserialize_message(&s))
     }
 }
 
@@ -36,6 +70,7 @@ fn gui_main(
     let width = 1242;
     let height = 768;
     let editor_height = ((height as f32) * 0.75) as i32;
+    let mut quit_app = false;
 
     // create the window
 
@@ -48,13 +83,13 @@ fn gui_main(
     window.set_window_position(gtk::WindowPosition::Center);
     window.set_default_size(width, height);
 
-    window.connect(gtk::signals::DeleteEvent::new(&mut |&: _| {
+    window.connect(gtk::signals::DeleteEvent::new(&mut |_| {
         unsafe {
             ffi::close(read_fd);
             ffi::close(write_fd);
             ffi::kill(pid, 15);
         }
-        gtk::main_quit();
+        quit_app = true;
         true
     }));
 
@@ -139,6 +174,7 @@ fn gui_main(
         tree_selection: &selection,
         rename_button: &rename_button,
         remove_button: &remove_button,
+        is_refreshing_tree: false
     };
 
     ::utils::read_prefs(&mut state);
@@ -159,7 +195,9 @@ fn gui_main(
         ::projects::remove_item(&mut state);
     }));
     selection.connect(gtk::signals::Changed::new(&mut || {
-        ::projects::save_selection(&mut state);
+        if !state.is_refreshing_tree {
+            ::projects::save_selection(&mut state);
+        }
     }));
     project_tree.connect(gtk::signals::RowCollapsed::new(&mut |iter_raw, _| {
         let iter = gtk::TreeIter::wrap_pointer(iter_raw);
@@ -173,37 +211,33 @@ fn gui_main(
     // show the window
 
     window.show_all();
-    gtk::main();
-}
 
-fn nvim_attach(fd: ffi::c_int) {
-    let mut arr = neovim::Array::new();
-    arr.add_integer(80);
-    arr.add_integer(24);
-    arr.add_boolean(true);
-    let msg = neovim::serialize_message(1, "ui_attach", &arr);
-    let msg_ptr = msg.as_slice().as_ptr() as *const ffi::c_void;
-    unsafe { ffi::write(fd, msg_ptr, msg.len() as ffi::size_t) };
-}
+    // loop over GUI events and respond to messages from nvim
 
-fn nvim_execute(fd: ffi::c_int, command: &str) {
-    let mut arr = neovim::Array::new();
-    arr.add_string(command);
-    let msg = neovim::serialize_message(1, "vim_command", &arr);
-    let msg_ptr = msg.as_slice().as_ptr() as *const ffi::c_void;
-    unsafe { ffi::write(fd, msg_ptr, msg.len() as ffi::size_t) };
-}
+    unsafe { ffi::fcntl(read_fd, ffi::F_SETFL, ffi::O_NONBLOCK) };
 
-fn receive_message(fd: ffi::c_int) -> Option<neovim::Array> {
-    let mut buf : [ffi::c_uchar; 1024] = [0; 1024];
-    let n = unsafe { ffi::read(fd, buf.as_mut_ptr() as *mut ffi::c_void, 1024) };
-    if n < 0 {
-        return None;
-    }
-    unsafe {
-        let v = Vec::from_raw_buf(buf.as_ptr(), n as usize);
-        let s = String::from_utf8_unchecked(v);
-        Some(neovim::deserialize_message(&s))
+    loop {
+        gtk::main_iteration_do(false);
+
+        if let Some(recv_arr) = receive_message(read_fd) {
+            if let Some(neovim::Object::String(event_name)) = recv_arr.get(1) {
+                match event_name.as_slice() {
+                    "bufenter" => {
+                        if let Some(neovim::Object::Array(event_args)) = recv_arr.get(2) {
+                            if let Some(neovim::Object::String(path_str)) = event_args.get(0) {
+                                state.selection = Some(path_str);
+                                ::ui::update_project_tree(&mut state, &mut project_tree);
+                            }
+                        }
+                    },
+                    _ => (),
+                }
+            }
+        }
+
+        if quit_app {
+            break;
+        }
     }
 }
 
@@ -257,17 +291,8 @@ fn main() {
         // start communicating with nvim
         nvim_attach(nvim_gui[1]);
 
-        ::std::thread::Thread::spawn(move || {
-            // listen for bufread events
-            nvim_execute(nvim_gui[1], "au BufRead * call rpcnotify(1, \"bufread\", bufname(\"\"))");
-
-            // receive messages
-            while let Some(recv_arr) = receive_message(gui_nvim[0]) {
-                if recv_arr.len() > 0 {
-                    println!("Received: {:?}", recv_arr);
-                }
-            }
-        });
+        // listen for bufenter events
+        nvim_execute(nvim_gui[1], "au BufEnter * call rpcnotify(1, \"bufenter\", bufname(\"\"))");
 
         // start the gui
         gui_main(&mut pty, gui_nvim[0], gui_nvim[1], pid);
