@@ -54,12 +54,14 @@ pub fn remove_item(state: &mut ::utils::State) {
     }
 }
 
-pub fn save_selection(state: &mut ::utils::State) {
-    let path = ::utils::get_selected_path(state);
-    if path.is_some() {
-        state.selection = path;
-        ::utils::write_prefs(state);
-        ::ui::update_project_buttons(state);
+pub fn set_selection(state: &mut ::utils::State, write_fd: ::ffi::c_int) {
+    if !state.is_refreshing_tree {
+        if let Some(ref path) = ::utils::get_selected_path(state) {
+            state.selection = Some(path.clone());
+            ::utils::write_prefs(state);
+            ::ui::update_project_buttons(state);
+            ::ffi::nvim_execute(write_fd, format!("e {}", path).as_slice());
+        }
     }
 }
 
