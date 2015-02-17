@@ -7,6 +7,8 @@ use rgtk::*;
 use std::collections::HashSet;
 use std::old_io::fs;
 use std::old_io::fs::PathExtensions;
+use std::old_io::timer;
+use std::time::duration::Duration;
 
 mod ffi;
 mod projects;
@@ -199,6 +201,8 @@ fn gui_main(
         if quit_app {
             break;
         }
+
+        timer::sleep(Duration::milliseconds(10));
     }
 }
 
