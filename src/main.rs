@@ -222,7 +222,7 @@ fn main() {
     }
 
     // set $VIM to the data dir if it isn't already set
-    if ::std::env::var("VIM").is_none() {
+    if ::std::env::var("VIM").is_err() {
         ::std::env::set_var("VIM", data_dir.as_str().unwrap());
     }
 
@@ -258,7 +258,7 @@ fn main() {
         // start nvim
         let mut args = Vec::new();
         for arg in ::std::env::args() {
-            args.push(arg.into_string().unwrap());
+            args.push(arg);
         }
         args.push_all(&["-u".to_string(), config_file.as_str().unwrap().to_string()]);
         neovim::main_setup(&args);
