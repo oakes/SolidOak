@@ -169,7 +169,6 @@ fn gui_main(
 
     // start communicating with nvim
 
-    ffi::nvim_attach(write_fd);
     ffi::nvim_execute(write_fd, "au BufEnter * call rpcnotify(1, \"bufenter\", bufname(\"\"))");
 
     // make read_fd non-blocking so we can check it while also checking for GUI events

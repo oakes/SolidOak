@@ -10,16 +10,6 @@ extern "C" {
     pub fn kill (pid: c_int, sig: c_int);
 }
 
-pub fn nvim_attach(fd: c_int) {
-    let mut arr = ::neovim::Array::new();
-    arr.add_integer(80);
-    arr.add_integer(24);
-    arr.add_boolean(true);
-    let msg = ::neovim::serialize_message(1, "ui_attach", &arr);
-    let msg_ptr = msg.as_slice().as_ptr() as *const c_void;
-    unsafe { write(fd, msg_ptr, msg.len() as size_t) };
-}
-
 pub fn nvim_execute(fd: c_int, command: &str) {
     let mut arr = ::neovim::Array::new();
     arr.add_string(command);
