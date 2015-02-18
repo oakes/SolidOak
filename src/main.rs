@@ -171,7 +171,7 @@ fn gui_main(
 
     // start communicating with nvim
 
-    ffi::nvim_execute(write_fd, "au BufEnter * call rpcnotify(1, \"bufenter\", bufname(\"\"))");
+    ffi::send_message(write_fd, "au BufEnter * call rpcnotify(1, \"bufenter\", bufname(\"\"))");
 
     // make read_fd non-blocking so we can check it while also checking for GUI events
 
@@ -182,7 +182,7 @@ fn gui_main(
     loop {
         gtk::main_iteration_do(false);
 
-        if let Some(recv_arr) = ffi::receive_message(read_fd) {
+        if let Some(recv_arr) = ffi::recv_message(read_fd) {
             if let Some(neovim::Object::String(event_name)) = recv_arr.get(1) {
                 match event_name.as_slice() {
                     "bufenter" => {

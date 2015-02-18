@@ -10,7 +10,7 @@ extern "C" {
     pub fn kill (pid: c_int, sig: c_int);
 }
 
-pub fn nvim_execute(fd: c_int, command: &str) {
+pub fn send_message(fd: c_int, command: &str) {
     let mut arr = ::neovim::Array::new();
     arr.add_string(command);
     let msg = ::neovim::serialize_message(1, "vim_command", &arr);
@@ -18,7 +18,7 @@ pub fn nvim_execute(fd: c_int, command: &str) {
     unsafe { write(fd, msg_ptr, msg.len() as size_t) };
 }
 
-pub fn receive_message(fd: c_int) -> Option<::neovim::Array> {
+pub fn recv_message(fd: c_int) -> Option<::neovim::Array> {
     let mut buf : [c_uchar; 1024] = [0; 1024];
     let n = unsafe { read(fd, buf.as_mut_ptr() as *mut c_void, 1024) };
     if n < 0 {

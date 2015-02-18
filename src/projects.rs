@@ -60,7 +60,7 @@ pub fn set_selection(state: &mut ::utils::State, write_fd: ::ffi::c_int) {
             state.selection = Some(path.clone());
             ::utils::write_prefs(state);
             ::ui::update_project_buttons(state);
-            ::ffi::nvim_execute(write_fd, format!("e {}", path).as_slice());
+            ::ffi::send_message(write_fd, format!("e {}", path).as_slice());
         }
     }
 }
