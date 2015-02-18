@@ -26,7 +26,7 @@ cargo build
 ```Shell
 brew tap oakes/gnome
 brew install oakes/gnome/gtk+3 oakes/gnome/vte3
-brew install libtool automake cmake pkg-config
+brew install libtool automake cmake pkg-config gettext
 cargo build
 ```
 
