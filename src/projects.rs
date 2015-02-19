@@ -44,13 +44,26 @@ pub fn import_project(state: &mut ::utils::State, tree: &mut gtk::TreeView) {
     }
 }
 
-pub fn rename_file(state: &mut ::utils::State) {
+pub fn rename_file(state: &mut ::utils::State, fd: ::ffi::c_int) {
     if let Some(_) = ::utils::get_selected_path(state) {
-        // TODO: show dialog with a text field
+        if let Some(dialog) = gtk::FileChooserDialog::new(
+            "Rename",
+            None,
+            gtk::FileChooserAction::Save
+        ) {
+            if let Some(gtk::ResponseType::Accept) = FromPrimitive::from_i32(dialog.run()) {
+                if let Some(filename) = dialog.get_filename() {
+                    state.selection = Some(filename.clone());
+                    ::utils::write_prefs(&state);
+                    ::ffi::send_message(fd, format!(":Move {}", filename).as_slice());
+                }
+            }
+            dialog.destroy();
+        }
     }
 }
 
-pub fn remove_item(state: &mut ::utils::State, tree: &mut gtk::TreeView, fd: ::ffi::c_int) {
+pub fn remove_item(state: &mut ::utils::State, fd: ::ffi::c_int) {
     if let Some(path) = ::utils::get_selected_path(state) {
         if let Some(dialog) = gtk::MessageDialog::new_with_markup(
             Some(state.window.clone()),
@@ -70,7 +83,6 @@ pub fn remove_item(state: &mut ::utils::State, tree: &mut gtk::TreeView, fd: ::f
                     ::ffi::send_message(fd, ":call delete(expand('%')) | bdelete!".as_slice());
                 }
                 ::utils::write_prefs(state);
-                ::ui::update_project_tree(state, tree);
             }
             dialog.destroy();
         }
@@ -80,9 +92,6 @@ pub fn remove_item(state: &mut ::utils::State, tree: &mut gtk::TreeView, fd: ::f
 pub fn set_selection(state: &mut ::utils::State, fd: ::ffi::c_int) {
     if !state.is_refreshing_tree {
         if let Some(ref path) = ::utils::get_selected_path(state) {
-            state.selection = Some(path.clone());
-            ::utils::write_prefs(state);
-            ::ui::update_project_buttons(state);
             ::ffi::send_message(fd, format!("e {}", path).as_slice());
         }
     }

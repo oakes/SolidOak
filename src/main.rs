@@ -142,6 +142,7 @@ fn gui_main(
 
     ::utils::read_prefs(&mut state);
     ::ui::update_project_tree(&mut state, &mut project_tree);
+    ::ui::update_project_buttons(&mut state);
     ::projects::set_selection(&mut state, write_fd);
 
     // connect to the signals
@@ -153,10 +154,10 @@ fn gui_main(
         ::projects::import_project(&mut state, &mut project_tree);
     }));
     rename_button.connect(gtk::signals::Clicked::new(&mut || {
-        ::projects::rename_file(&mut state);
+        ::projects::rename_file(&mut state, write_fd);
     }));
     remove_button.connect(gtk::signals::Clicked::new(&mut || {
-        ::projects::remove_item(&mut state, &mut project_tree, write_fd);
+        ::projects::remove_item(&mut state, write_fd);
     }));
     selection.connect(gtk::signals::Changed::new(&mut || {
         ::projects::set_selection(&mut state, write_fd);
@@ -172,7 +173,7 @@ fn gui_main(
 
     // start communicating with nvim
 
-    ffi::send_message(write_fd, "au BufEnter * call rpcnotify(1, \"bufenter\", bufname(\"\"))");
+    ffi::send_message(write_fd, "au BufEnter * call rpcnotify(1, 'bufenter', fnamemodify(bufname(''), ':p'))");
 
     // make read_fd non-blocking so we can check it while also checking for GUI events
 
@@ -190,13 +191,15 @@ fn gui_main(
                         if let Some(neovim::Object::Array(event_args)) = recv_arr.get(2) {
                             if let Some(neovim::Object::String(path_str)) = event_args.get(0) {
                                 state.selection = Some(path_str);
-                                ::ui::update_project_tree(&mut state, &mut project_tree);
+                                ::utils::write_prefs(&state);
                             }
                         }
                     },
                     _ => (),
                 }
             }
+            ::ui::update_project_tree(&mut state, &mut project_tree);
+            ::ui::update_project_buttons(&mut state);
         }
 
         if quit_app {

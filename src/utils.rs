@@ -42,6 +42,8 @@ pub static DATA_CONTENT : &'static [Resource] = &[
     Resource{path: &["indent", "c.vim"],
              data: include_str!("../resources/soak/indent/c.vim")},
 
+    Resource{path: &["plugin", "eunuch.vim"],
+             data: include_str!("../resources/soak/plugin/eunuch.vim")},
     Resource{path: &["plugin", "rust.vim"],
              data: include_str!("../resources/soak/plugin/rust.vim")},
 
