@@ -90,11 +90,12 @@ pub fn remove_item(state: &mut ::utils::State, tree: &mut gtk::TreeView, fd: ::f
     }
 }
 
-pub fn set_selection(state: &mut ::utils::State, fd: ::ffi::c_int) {
+pub fn set_selection(state: &mut ::utils::State, tree: &mut gtk::TreeView, fd: ::ffi::c_int) {
     if !state.is_refreshing_tree {
         if let Some(path) = ::utils::get_selected_path(state) {
             state.selection = Some(path.clone());
             ::utils::write_prefs(state);
+            ::ui::update_project_tree(state, tree);
             ::ffi::send_message(fd, format!("e {}", path).as_slice());
         }
     }

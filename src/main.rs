@@ -141,9 +141,7 @@ fn gui_main(
     };
 
     ::utils::read_prefs(&mut state);
-    ::ui::update_project_tree(&mut state, &mut project_tree);
-    ::ui::update_project_buttons(&mut state);
-    ::projects::set_selection(&mut state, write_fd);
+    ::projects::set_selection(&mut state, &mut project_tree, write_fd);
 
     // connect to the signals
 
@@ -160,7 +158,7 @@ fn gui_main(
         ::projects::remove_item(&mut state, &mut project_tree, write_fd);
     }));
     selection.connect(gtk::signals::Changed::new(&mut || {
-        ::projects::set_selection(&mut state, write_fd);
+        ::projects::set_selection(&mut state, &mut project_tree, write_fd);
     }));
     project_tree.connect(gtk::signals::RowCollapsed::new(&mut |iter_raw, _| {
         let iter = gtk::TreeIter::wrap_pointer(iter_raw);
@@ -199,7 +197,6 @@ fn gui_main(
                 }
             }
             ::ui::update_project_tree(&mut state, &mut project_tree);
-            ::ui::update_project_buttons(&mut state);
         }
 
         if quit_app {
