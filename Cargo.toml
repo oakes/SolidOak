@@ -16,4 +16,4 @@ neovim-rs = "0.0.4"
 
 [dependencies.rustc-serialize]
 
-rustc-serialize = "0.2.13"
+rustc-serialize = "0.2.*"
