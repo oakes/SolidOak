@@ -91,7 +91,9 @@ pub fn remove_item(state: &mut ::utils::State, fd: ::ffi::c_int) {
 
 pub fn set_selection(state: &mut ::utils::State, fd: ::ffi::c_int) {
     if !state.is_refreshing_tree {
-        if let Some(ref path) = ::utils::get_selected_path(state) {
+        if let Some(path) = ::utils::get_selected_path(state) {
+            state.selection = Some(path.clone());
+            ::utils::write_prefs(state);
             ::ffi::send_message(fd, format!("e {}", path).as_slice());
         }
     }
