@@ -157,7 +157,7 @@ fn gui_main(
         ::projects::rename_file(&mut state, write_fd);
     }));
     remove_button.connect(gtk::signals::Clicked::new(&mut || {
-        ::projects::remove_item(&mut state, write_fd);
+        ::projects::remove_item(&mut state, &mut project_tree, write_fd);
     }));
     selection.connect(gtk::signals::Changed::new(&mut || {
         ::projects::set_selection(&mut state, write_fd);

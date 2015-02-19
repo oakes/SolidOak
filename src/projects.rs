@@ -63,7 +63,7 @@ pub fn rename_file(state: &mut ::utils::State, fd: ::ffi::c_int) {
     }
 }
 
-pub fn remove_item(state: &mut ::utils::State, fd: ::ffi::c_int) {
+pub fn remove_item(state: &mut ::utils::State, tree: &mut gtk::TreeView, fd: ::ffi::c_int) {
     if let Some(path) = ::utils::get_selected_path(state) {
         if let Some(dialog) = gtk::MessageDialog::new_with_markup(
             Some(state.window.clone()),
@@ -79,10 +79,11 @@ pub fn remove_item(state: &mut ::utils::State, fd: ::ffi::c_int) {
             if let Some(gtk::ResponseType::Ok) = FromPrimitive::from_i32(dialog.run()) {
                 if state.projects.contains(&path) {
                     state.projects.remove(&path);
+                    ::utils::write_prefs(state);
+                    ::ui::update_project_tree(state, tree);
                 } else {
                     ::ffi::send_message(fd, ":call delete(expand('%')) | bdelete!".as_slice());
                 }
-                ::utils::write_prefs(state);
             }
             dialog.destroy();
         }
