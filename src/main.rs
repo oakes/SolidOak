@@ -141,6 +141,7 @@ fn gui_main(
     };
 
     ::utils::read_prefs(&mut state);
+    ::ui::update_project_tree(&mut state, &mut project_tree);
     ::projects::set_selection(&mut state, &mut project_tree, write_fd);
 
     // connect to the signals
