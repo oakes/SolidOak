@@ -121,12 +121,17 @@ fn gui_main(
     hbox.pack_start(&content, true, true, 0);
     window.add(&hbox);
 
+    // show the window
+
+    window.show_all();
+
     // populate the project tree
 
     let mut state = ::utils::State{
         projects: HashSet::new(),
         expansions: HashSet::new(),
         selection: None,
+        window: &window,
         tree_model: &model,
         tree_store: &store,
         tree_selection: &selection,
@@ -151,7 +156,7 @@ fn gui_main(
         ::projects::rename_file(&mut state);
     }));
     remove_button.connect(gtk::signals::Clicked::new(&mut || {
-        ::projects::remove_item(&mut state);
+        ::projects::remove_item(&mut state, &mut project_tree, write_fd);
     }));
     selection.connect(gtk::signals::Changed::new(&mut || {
         ::projects::set_selection(&mut state, write_fd);
@@ -164,10 +169,6 @@ fn gui_main(
         let iter = gtk::TreeIter::wrap_pointer(iter_raw);
         ::projects::add_expansion(&mut state, &iter);
     }));
-
-    // show the window
-
-    window.show_all();
 
     // start communicating with nvim
 

@@ -73,6 +73,7 @@ pub struct State<'a> {
     pub projects: HashSet<String>,
     pub expansions: HashSet<String>,
     pub selection: Option<String>,
+    pub window: &'a gtk::Window,
     pub tree_store: &'a gtk::TreeStore,
     pub tree_model: &'a gtk::TreeModel,
     pub tree_selection: &'a gtk::TreeSelection,

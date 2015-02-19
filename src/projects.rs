@@ -14,32 +14,34 @@ fn save_project(
 }
 
 pub fn new_project(state: &mut ::utils::State, tree: &mut gtk::TreeView) {
-    let chooser = gtk::FileChooserDialog::new(
+    if let Some(dialog) = gtk::FileChooserDialog::new(
         "New Project",
         None,
         gtk::FileChooserAction::Save
-    ).unwrap();
-    if let Some(gtk::ResponseType::Accept) = FromPrimitive::from_i32(chooser.run()) {
-        if let Some(filename) = chooser.get_filename() {
-            save_project(state, tree, filename);
-            // TODO: cargo new filename --bin
+    ) {
+        if let Some(gtk::ResponseType::Accept) = FromPrimitive::from_i32(dialog.run()) {
+            if let Some(filename) = dialog.get_filename() {
+                save_project(state, tree, filename);
+                // TODO: cargo new filename --bin
+            }
         }
+        dialog.destroy();
     }
-    chooser.destroy();
 }
 
 pub fn import_project(state: &mut ::utils::State, tree: &mut gtk::TreeView) {
-    let chooser = gtk::FileChooserDialog::new(
+    if let Some(dialog) = gtk::FileChooserDialog::new(
         "Import",
         None,
         gtk::FileChooserAction::SelectFolder
-    ).unwrap();
-    if let Some(gtk::ResponseType::Accept) = FromPrimitive::from_i32(chooser.run()) {
-        if let Some(filename) = chooser.get_filename() {
-            save_project(state, tree, filename);
+    ) {
+        if let Some(gtk::ResponseType::Accept) = FromPrimitive::from_i32(dialog.run()) {
+            if let Some(filename) = dialog.get_filename() {
+                save_project(state, tree, filename);
+            }
         }
+        dialog.destroy();
     }
-    chooser.destroy();
 }
 
 pub fn rename_file(state: &mut ::utils::State) {
@@ -48,19 +50,40 @@ pub fn rename_file(state: &mut ::utils::State) {
     }
 }
 
-pub fn remove_item(state: &mut ::utils::State) {
-    if let Some(_) = ::utils::get_selected_path(state) {
-        // TODO: show dialog with confirmation buttons
+pub fn remove_item(state: &mut ::utils::State, tree: &mut gtk::TreeView, fd: ::ffi::c_int) {
+    if let Some(path) = ::utils::get_selected_path(state) {
+        if let Some(dialog) = gtk::MessageDialog::new_with_markup(
+            Some(state.window.clone()),
+            gtk::DialogFlags::Modal,
+            gtk::MessageType::Question,
+            gtk::ButtonsType::OkCancel,
+            if state.projects.contains(&path) {
+                "Remove this project? It WILL NOT be deleted from the disk."
+            } else {
+                "Remove this file? It WILL be deleted from the disk."
+            }
+        ) {
+            if let Some(gtk::ResponseType::Ok) = FromPrimitive::from_i32(dialog.run()) {
+                if state.projects.contains(&path) {
+                    state.projects.remove(&path);
+                } else {
+                    ::ffi::send_message(fd, ":call delete(expand('%')) | bdelete!".as_slice());
+                }
+                ::utils::write_prefs(state);
+                ::ui::update_project_tree(state, tree);
+            }
+            dialog.destroy();
+        }
     }
 }
 
-pub fn set_selection(state: &mut ::utils::State, write_fd: ::ffi::c_int) {
+pub fn set_selection(state: &mut ::utils::State, fd: ::ffi::c_int) {
     if !state.is_refreshing_tree {
         if let Some(ref path) = ::utils::get_selected_path(state) {
             state.selection = Some(path.clone());
             ::utils::write_prefs(state);
             ::ui::update_project_buttons(state);
-            ::ffi::send_message(write_fd, format!("e {}", path).as_slice());
+            ::ffi::send_message(fd, format!("e {}", path).as_slice());
         }
     }
 }
