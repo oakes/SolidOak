@@ -42,10 +42,10 @@ fn gui_main(
     window.set_default_size(width, height);
 
     window.connect(gtk::signals::DeleteEvent::new(&mut |_| {
+        ffi::send_message(write_fd, "qall!");
         unsafe {
             ffi::close(read_fd);
             ffi::close(write_fd);
-            ffi::kill(pid, 15);
         }
         quit_app = true;
         true

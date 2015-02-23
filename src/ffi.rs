@@ -7,7 +7,6 @@ pub use libc::types::os::arch::c95::size_t;
 
 extern "C" {
     pub fn fork () -> c_int;
-    pub fn kill (pid: c_int, sig: c_int);
 }
 
 pub fn send_message(fd: c_int, command: &str) {
