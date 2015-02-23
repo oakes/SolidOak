@@ -240,6 +240,19 @@ fn main() {
         }
     }
 
+    // collect the args into a vector and add the config file path
+    let mut args_vec : Vec<String> = ::std::env::args().collect();
+    args_vec.push_all(&["-u".to_string(), config_file.as_str().unwrap().to_string()]);
+
+    // if the no window flag was used, start up neovim without a gui
+    let args_set : HashSet<String> = ::std::env::args().collect();
+    if args_set.contains(::utils::NO_WINDOW_FLAG) {
+        args_vec.retain(|arg| arg.as_slice() != ::utils::NO_WINDOW_FLAG);
+        neovim::main_setup(&args_vec);
+        neovim::main_loop();
+        return;
+    }
+
     // takes care of piping stdin/stdout between the gui and nvim
     let mut pty = gtk::VtePty::new().unwrap();
 
@@ -261,12 +274,7 @@ fn main() {
         pty.child_setup();
 
         // start nvim
-        let mut args = Vec::new();
-        for arg in ::std::env::args() {
-            args.push(arg);
-        }
-        args.push_all(&["-u".to_string(), config_file.as_str().unwrap().to_string()]);
-        neovim::main_setup(&args);
+        neovim::main_setup(&args_vec);
         neovim::channel_from_fds(nvim_gui[0], gui_nvim[1]);
         neovim::main_loop();
     }

@@ -7,6 +7,7 @@ pub static DATA_DIR : &'static str = ".soak";
 pub static CONFIG_FILE : &'static str = ".soakrc";
 pub static CONFIG_CONTENT : &'static str = include_str!("../resources/soakrc");
 pub static PREFS_FILE : &'static str = "prefs.json";
+pub static NO_WINDOW_FLAG : &'static str = "-nw";
 
 struct Resource {
     pub path: &'static [&'static str],
