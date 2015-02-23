@@ -68,7 +68,7 @@ pub static DATA_CONTENT : &'static [Resource] = &[
     Resource{path: &["filetype.vim"],
              data: include_str!("../resources/soak/filetype.vim")},
     Resource{path: &["mswin.vim"],
-             data: include_str!("../resources/soak/mswin.vim")},
+             data: include_str!("../resources/soak/mswin.vim")}
 ];
 
 pub struct State<'a> {

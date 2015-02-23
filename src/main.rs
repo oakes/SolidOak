@@ -170,7 +170,7 @@ fn gui_main(
         ::projects::add_expansion(&mut state, &iter);
     }));
 
-    // start communicating with nvim
+    // listen for bufenter events
 
     ffi::send_message(write_fd, "au BufEnter * call rpcnotify(1, 'bufenter', fnamemodify(bufname(''), ':p'))");
 
@@ -243,7 +243,7 @@ fn main() {
     // takes care of piping stdin/stdout between the gui and nvim
     let mut pty = gtk::VtePty::new().unwrap();
 
-    // two pairs of anonymous pipes for msgpack-rpc between the gui and nvim
+    // two anonymous pipes for msgpack-rpc between the gui and nvim
     let mut nvim_gui : [ffi::c_int; 2] = [0; 2]; // to nvim from gui
     let mut gui_nvim : [ffi::c_int; 2] = [0; 2]; // to gui from nvim
     unsafe {
