@@ -1,12 +1,30 @@
-pub use libc::{c_int, c_uchar, c_void};
-pub use libc::consts::os::extra::O_NONBLOCK;
-pub use libc::consts::os::posix01::F_SETFL;
-pub use libc::funcs::posix88::fcntl::fcntl;
-pub use libc::funcs::posix88::unistd::{close, pipe, read, write};
-pub use libc::types::os::arch::c95::size_t;
+use libc::{c_int, c_uchar, c_void};
+use libc::consts::os::extra::O_NONBLOCK;
+use libc::consts::os::posix01::F_SETFL;
+use libc::funcs::posix88::fcntl::fcntl;
+use libc::funcs::posix88::unistd::{close, pipe, read, write};
+use libc::types::os::arch::c95::size_t;
 
 extern "C" {
-    pub fn fork () -> c_int;
+    fn fork () -> c_int;
+}
+
+pub fn new_pipe() -> [c_int; 2] {
+    let mut fds : [c_int; 2] = [0; 2];
+    unsafe { pipe(fds.as_mut_ptr()) };
+    fds
+}
+
+pub fn fork_process() -> c_int {
+    unsafe { fork() }
+}
+
+pub fn set_non_blocking(fd: c_int) {
+    unsafe { fcntl(fd, F_SETFL, O_NONBLOCK) };
+}
+
+pub fn close_fd(fd: c_int) {
+    unsafe { close(fd) };
 }
 
 pub fn send_message(fd: c_int, command: &str) {

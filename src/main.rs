@@ -3,6 +3,7 @@ extern crate neovim;
 extern crate rgtk;
 extern crate "rustc-serialize" as rustc_serialize;
 
+use libc::c_int;
 use rgtk::*;
 use std::collections::HashSet;
 use std::io::Write;
@@ -19,9 +20,9 @@ mod utils;
 
 fn gui_main(
     pty: &mut gtk::VtePty,
-    read_fd: ffi::c_int,
-    write_fd: ffi::c_int,
-    pid: ffi::c_int)
+    read_fd: c_int,
+    write_fd: c_int,
+    pid: c_int)
 {
     gtk::init();
 
@@ -45,10 +46,8 @@ fn gui_main(
 
     window.connect(gtk::signals::DeleteEvent::new(&mut |_| {
         ffi::send_message(write_fd, "qall!");
-        unsafe {
-            ffi::close(read_fd);
-            ffi::close(write_fd);
-        }
+        ffi::close_fd(read_fd);
+        ffi::close_fd(write_fd);
         quit_app = true;
         true
     }));
@@ -178,7 +177,7 @@ fn gui_main(
 
     // make read_fd non-blocking so we can check it while also checking for GUI events
 
-    unsafe { ffi::fcntl(read_fd, ffi::F_SETFL, ffi::O_NONBLOCK) };
+    ffi::set_non_blocking(read_fd);
 
     // loop over GUI events and respond to messages from nvim
 
@@ -278,15 +277,11 @@ fn main() {
     let mut pty = gtk::VtePty::new().unwrap();
 
     // two anonymous pipes for msgpack-rpc between the gui and nvim
-    let mut nvim_gui : [ffi::c_int; 2] = [0; 2]; // to nvim from gui
-    let mut gui_nvim : [ffi::c_int; 2] = [0; 2]; // to gui from nvim
-    unsafe {
-        ffi::pipe(nvim_gui.as_mut_ptr());
-        ffi::pipe(gui_nvim.as_mut_ptr());
-    };
+    let nvim_gui = ffi::new_pipe(); // to nvim from gui
+    let gui_nvim = ffi::new_pipe(); // to gui from nvim
 
     // split into two processes
-    let pid = unsafe { ffi::fork() };
+    let pid = ffi::fork_process();
 
     if pid > 0 { // the gui process
         gui_main(&mut pty, gui_nvim[0], nvim_gui[1], pid);
