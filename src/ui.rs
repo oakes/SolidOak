@@ -37,11 +37,7 @@ pub fn update_project_buttons(state: &::utils::State) {
     }
 }
 
-fn add_node(
-    state: &::utils::State,
-    node: &Path,
-    parent: Option<&gtk::TreeIter>)
-{
+fn add_node(state: &::utils::State, node: &Path, parent: Option<&gtk::TreeIter>) {
     let mut iter = gtk::TreeIter::new().unwrap();
 
     if let Some(leaf_str) = node.filename_str() {

@@ -4,11 +4,7 @@ use std::fs::PathExt;
 use std::num::FromPrimitive;
 use std::path::Path;
 
-fn save_project(
-    state: &mut ::utils::State,
-    tree: &mut gtk::TreeView,
-    path: &String)
-{
+fn save_project(state: &mut ::utils::State, tree: &mut gtk::TreeView, path: &String) {
     state.projects.insert(path.clone());
     state.selection = Some(path.clone());
     ::utils::write_prefs(state);

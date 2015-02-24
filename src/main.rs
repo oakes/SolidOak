@@ -18,12 +18,7 @@ mod projects;
 mod ui;
 mod utils;
 
-fn gui_main(
-    pty: &mut gtk::VtePty,
-    read_fd: c_int,
-    write_fd: c_int,
-    pid: c_int)
-{
+fn gui_main(pty: &mut gtk::VtePty, read_fd: c_int, write_fd: c_int, pid: c_int) {
     gtk::init();
 
     // constants
