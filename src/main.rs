@@ -5,9 +5,11 @@ extern crate "rustc-serialize" as rustc_serialize;
 
 use rgtk::*;
 use std::collections::HashSet;
-use std::old_io::fs;
-use std::old_io::fs::PathExtensions;
+use std::io::Write;
+use std::fs;
+use std::fs::PathExt;
 use std::old_io::timer;
+use std::path::Path;
 use std::time::duration::Duration;
 
 mod ffi;
@@ -210,17 +212,27 @@ fn gui_main(
 
 fn main() {
     // create data dir
-    let home_dir = ::utils::get_home_dir();
+    let home_dir_str = ::utils::get_home_dir();
+    let home_dir = Path::new(&home_dir_str);
     let data_dir = home_dir.join(::utils::DATA_DIR);
     if !data_dir.exists() {
-        match fs::mkdir(&data_dir, ::std::old_io::USER_DIR) {
+        match fs::create_dir(&data_dir) {
             Ok(_) => {
                 for res in ::utils::DATA_CONTENT.iter() {
-                    let res_path = data_dir.join_many(res.path);
-                    ::std::old_io::fs::mkdir_recursive(&res_path.dir_path(), ::std::old_io::USER_DIR).ok();
-                    ::std::old_io::File::create(&res_path).write_all(res.data.as_bytes()).ok();
+                    let mut res_path = data_dir.clone();
+                    for part in res.path {
+                        res_path.push(part);
+                    }
+                    if let Some(parent) = res_path.parent() {
+                        fs::create_dir_all(parent).ok();
+                    }
+                    if let Some(mut f) = fs::File::create(&res_path).ok() {
+                        f.write_all(res.data.as_bytes()).ok();
+                    }
                 }
-                println!("Created data dir at {}", data_dir.as_str().unwrap());
+                if let Some(path) = data_dir.to_str() {
+                    println!("Created data dir at {}", path);
+                }
             },
             Err(e) => { println!("Error creating data dir: {}", e) }
         }
@@ -228,21 +240,30 @@ fn main() {
 
     // set $VIM to the data dir if it isn't already set
     if ::std::env::var("VIM").is_err() {
-        ::std::env::set_var("VIM", data_dir.as_str().unwrap());
+        if let Some(path) = data_dir.to_str() {
+            ::std::env::set_var("VIM", path);
+        }
     }
 
     // create config file
     let config_file = home_dir.join(::utils::CONFIG_FILE);
     if !config_file.exists() {
-        match ::std::old_io::File::create(&config_file).write_all(::utils::CONFIG_CONTENT.as_bytes()) {
-            Ok(_) => { println!("Created config file at {}", config_file.as_str().unwrap()) },
+        match fs::File::create(&config_file) {
+            Ok(mut f) => {
+                f.write_all(::utils::CONFIG_CONTENT.as_bytes()).ok();
+                if let Some(path) = config_file.to_str() {
+                    println!("Created config file at {}", path);
+                }
+            },
             Err(e) => { println!("Error creating config file: {}", e) }
         }
     }
 
     // collect the args into a vector and add the config file path
     let mut args_vec : Vec<String> = ::std::env::args().collect();
-    args_vec.push_all(&["-u".to_string(), config_file.as_str().unwrap().to_string()]);
+    if let Some(path) = config_file.to_str() {
+        args_vec.push_all(&["-u".to_string(), path.to_string()]);
+    }
 
     // if the no window flag was used, start up neovim without a gui
     let args_set : HashSet<String> = ::std::env::args().collect();

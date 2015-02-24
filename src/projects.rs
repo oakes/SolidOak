@@ -1,14 +1,15 @@
 use rgtk::*;
-use std::old_io::fs::PathExtensions;
+use std::fs::PathExt;
 use std::num::FromPrimitive;
+use std::path::Path;
 
 fn save_project(
     state: &mut ::utils::State,
     tree: &mut gtk::TreeView,
-    filename: String)
+    path: &String)
 {
-    state.projects.insert(filename.clone());
-    state.selection = Some(filename.clone());
+    state.projects.insert(path.clone());
+    state.selection = Some(path.clone());
     ::utils::write_prefs(state);
     ::ui::update_project_tree(state, tree);
 }
@@ -20,9 +21,9 @@ pub fn new_project(state: &mut ::utils::State, tree: &mut gtk::TreeView) {
         gtk::FileChooserAction::Save
     ) {
         if let Some(gtk::ResponseType::Accept) = FromPrimitive::from_i32(dialog.run()) {
-            if let Some(filename) = dialog.get_filename() {
-                save_project(state, tree, filename);
-                // TODO: cargo new filename --bin
+            if let Some(path) = dialog.get_filename() {
+                // TODO: cargo new hello_world --bin
+                save_project(state, tree, &path);
             }
         }
         dialog.destroy();
@@ -36,8 +37,8 @@ pub fn import_project(state: &mut ::utils::State, tree: &mut gtk::TreeView) {
         gtk::FileChooserAction::SelectFolder
     ) {
         if let Some(gtk::ResponseType::Accept) = FromPrimitive::from_i32(dialog.run()) {
-            if let Some(filename) = dialog.get_filename() {
-                save_project(state, tree, filename);
+            if let Some(path) = dialog.get_filename() {
+                save_project(state, tree, &path);
             }
         }
         dialog.destroy();
@@ -52,10 +53,10 @@ pub fn rename_file(state: &mut ::utils::State, fd: ::ffi::c_int) {
             gtk::FileChooserAction::Save
         ) {
             if let Some(gtk::ResponseType::Accept) = FromPrimitive::from_i32(dialog.run()) {
-                if let Some(filename) = dialog.get_filename() {
-                    state.selection = Some(filename.clone());
+                if let Some(path) = dialog.get_filename() {
+                    state.selection = Some(path.clone());
                     ::utils::write_prefs(&state);
-                    ::ffi::send_message(fd, format!(":Move {}", filename).as_slice());
+                    ::ffi::send_message(fd, format!(":Move {}", path).as_slice());
                 }
             }
             dialog.destroy();

@@ -1,7 +1,10 @@
 use rgtk::*;
 use rustc_serialize::{Encodable, json};
+use std::env;
 use std::collections::HashSet;
-use std::old_io::fs;
+use std::io::{Read, Write};
+use std::fs;
+use std::path::Path;
 
 pub static DATA_DIR : &'static str = ".soak";
 pub static CONFIG_FILE : &'static str = ".soakrc";
@@ -92,11 +95,13 @@ struct Prefs {
     selection: Option<String>
 }
 
-pub fn get_home_dir() -> Path {
-    match ::std::env::home_dir() {
-        Some(p) => p,
-        None => Path::new(".")
+pub fn get_home_dir() -> String {
+    if let Some(old_path) = env::home_dir() {
+        if let Some(path) = old_path.as_str() {
+            return path.to_string();
+        }
     }
+    ".".to_string()
 }
 
 fn get_prefs(state: &State) -> Prefs {
@@ -108,11 +113,8 @@ fn get_prefs(state: &State) -> Prefs {
 }
 
 pub fn are_siblings(path1: &String, path2: &String) -> bool {
-    let parent_path1 = Path::new(path1).dir_path();
-    let parent_path2 = Path::new(path2).dir_path();
-
-    let parent1 = parent_path1.as_str();
-    let parent2 = parent_path2.as_str();
+    let parent1 = Path::new(path1).parent();
+    let parent2 = Path::new(path2).parent();
 
     parent1.is_some() && parent2.is_some() &&
     parent1.unwrap() == parent2.unwrap()
@@ -137,41 +139,44 @@ pub fn write_prefs(state: &State) {
         prefs.encode(&mut encoder).ok().expect("Error encoding prefs.");
     }
 
-    let prefs_path = get_home_dir().join(DATA_DIR).join(PREFS_FILE);
-    let mut f = fs::File::create(&prefs_path);
-    match f.write_str(json_str.as_slice()) {
-        Ok(_) => {},
-        Err(e) => println!("Error writing prefs: {}", e)
-    };
+    let prefs_path = Path::new(&get_home_dir()).join(DATA_DIR).join(PREFS_FILE);
+    if let Some(mut f) = fs::File::create(&prefs_path).ok() {
+        match f.write(json_str.as_bytes()) {
+            Ok(_) => {},
+            Err(e) => println!("Error writing prefs: {}", e)
+        };
+    }
 }
 
 pub fn read_prefs(state: &mut State) {
-    let prefs_path = get_home_dir().join(DATA_DIR).join(PREFS_FILE);
-    let mut f = fs::File::open(&prefs_path);
-    let prefs_option : Option<Prefs> = match f.read_to_string() {
-        Ok(json_str) => {
-            match json::decode(json_str.as_slice()) {
-                Ok(object) => Some(object),
-                Err(e) => {
-                    println!("Error decoding prefs: {}", e);
-                    None
+    let prefs_path = Path::new(&get_home_dir()).join(DATA_DIR).join(PREFS_FILE);
+    if let Some(mut f) = fs::File::open(&prefs_path).ok() {
+        let mut json_str = String::new();
+        let prefs_option : Option<Prefs> = match f.read_to_string(&mut json_str) {
+            Ok(_) => {
+                match json::decode(json_str.as_slice()) {
+                    Ok(object) => Some(object),
+                    Err(e) => {
+                        println!("Error decoding prefs: {}", e);
+                        None
+                    }
                 }
+            },
+            Err(_) => None
+        };
+
+        if let Some(prefs) = prefs_option {
+            state.projects.clear();
+            for path in prefs.projects.iter() {
+                state.projects.insert(path.clone());
             }
-        },
-        Err(_) => None
-    };
 
-    if let Some(prefs) = prefs_option {
-        state.projects.clear();
-        for path in prefs.projects.iter() {
-            state.projects.insert(path.clone());
+            state.expansions.clear();
+            for path in prefs.expansions.iter() {
+                state.expansions.insert(path.clone());
+            }
+
+            state.selection = prefs.selection;
         }
-
-        state.expansions.clear();
-        for path in prefs.expansions.iter() {
-            state.expansions.insert(path.clone());
-        }
-
-        state.selection = prefs.selection;
     }
 }
