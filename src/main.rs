@@ -110,8 +110,8 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: c_int, write_fd: c_int, pid: c_int) 
     build_pane.pack_start(&build_term, true, true, 0);
 
     let mut content = gtk::Box::new(gtk::Orientation::Vertical, 0).unwrap();
-    content.pack_start(&editor_pane, false, true, 0);
-    content.pack_start(&build_pane, true, true, 0);
+    content.pack_start(&editor_pane, true, true, 0);
+    content.pack_start(&build_pane, false, true, 0);
 
     let mut hbox = gtk::Box::new(gtk::Orientation::Horizontal, 0).unwrap();
     hbox.pack_start(&project_pane, false, true, 0);
