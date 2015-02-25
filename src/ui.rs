@@ -18,8 +18,8 @@ fn sort_paths(paths: &Vec<Path>) -> Vec<Path> {
 
 fn sort_string_paths(paths: &HashSet<String>) -> Vec<Path> {
     let mut paths_vec = Vec::new();
-    for path in paths.iter() {
-        paths_vec.push(Path::new(path));
+    for path_str in paths.iter() {
+        paths_vec.push(Path::new(path_str));
     }
     paths_vec.sort_by(path_sorter);
     paths_vec

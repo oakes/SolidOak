@@ -6,6 +6,7 @@ extern crate "rustc-serialize" as rustc_serialize;
 use libc::c_int;
 use rgtk::*;
 use std::collections::HashSet;
+use std::env;
 use std::io::Write;
 use std::fs;
 use std::fs::PathExt;
@@ -224,8 +225,8 @@ fn main() {
                         f.write_all(res.data.as_bytes()).ok();
                     }
                 }
-                if let Some(path) = data_dir.to_str() {
-                    println!("Created data dir at {}", path);
+                if let Some(path_str) = data_dir.to_str() {
+                    println!("Created data dir at {}", path_str);
                 }
             },
             Err(e) => { println!("Error creating data dir: {}", e) }
@@ -233,9 +234,9 @@ fn main() {
     }
 
     // set $VIM to the data dir if it isn't already set
-    if ::std::env::var("VIM").is_err() {
-        if let Some(path) = data_dir.to_str() {
-            ::std::env::set_var("VIM", path);
+    if env::var("VIM").is_err() {
+        if let Some(path_str) = data_dir.to_str() {
+            env::set_var("VIM", path_str);
         }
     }
 
@@ -245,8 +246,8 @@ fn main() {
         match fs::File::create(&config_file) {
             Ok(mut f) => {
                 f.write_all(::utils::CONFIG_CONTENT.as_bytes()).ok();
-                if let Some(path) = config_file.to_str() {
-                    println!("Created config file at {}", path);
+                if let Some(path_str) = config_file.to_str() {
+                    println!("Created config file at {}", path_str);
                 }
             },
             Err(e) => { println!("Error creating config file: {}", e) }
@@ -254,13 +255,13 @@ fn main() {
     }
 
     // collect the args into a vector and add the config file path
-    let mut args_vec : Vec<String> = ::std::env::args().collect();
-    if let Some(path) = config_file.to_str() {
-        args_vec.push_all(&["-u".to_string(), path.to_string()]);
+    let mut args_vec : Vec<String> = env::args().collect();
+    if let Some(path_str) = config_file.to_str() {
+        args_vec.push_all(&["-u".to_string(), path_str.to_string()]);
     }
 
     // if the no window flag was used, start up neovim without a gui
-    let args_set : HashSet<String> = ::std::env::args().collect();
+    let args_set : HashSet<String> = env::args().collect();
     if args_set.contains(::utils::NO_WINDOW_FLAG) {
         args_vec.retain(|arg| arg.as_slice() != ::utils::NO_WINDOW_FLAG);
         neovim::main_setup(&args_vec);

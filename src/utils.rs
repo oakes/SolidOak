@@ -4,6 +4,7 @@ use std::env;
 use std::collections::HashSet;
 use std::io::{Read, Write};
 use std::fs;
+use std::fs::PathExt;
 use std::path::Path;
 
 pub static DATA_DIR : &'static str = ".soak";
@@ -112,12 +113,20 @@ fn get_prefs(state: &State) -> Prefs {
     }
 }
 
-pub fn are_siblings(path1: &String, path2: &String) -> bool {
-    let parent1 = Path::new(path1).parent();
-    let parent2 = Path::new(path2).parent();
+pub fn is_parent_path(parent_str: &String, child_str: &String) -> bool {
+    child_str.starts_with(parent_str.as_slice()) &&
+    Path::new(parent_str).parent() != Path::new(child_str).parent()
+}
 
-    parent1.is_some() && parent2.is_some() &&
-    parent1.unwrap() == parent2.unwrap()
+pub fn remove_expansions_for_path(state: &mut ::utils::State, path_str: &String) {
+    for expansion_str in state.expansions.clone().iter() {
+        if !Path::new(expansion_str).exists() ||
+            path_str == expansion_str ||
+            ::utils::is_parent_path(path_str, expansion_str)
+        {
+            state.expansions.remove(expansion_str);
+        }
+    }
 }
 
 pub fn get_selected_path(state: &State) -> Option<String> {
@@ -167,13 +176,13 @@ pub fn read_prefs(state: &mut State) {
 
         if let Some(prefs) = prefs_option {
             state.projects.clear();
-            for path in prefs.projects.iter() {
-                state.projects.insert(path.clone());
+            for path_str in prefs.projects.iter() {
+                state.projects.insert(path_str.clone());
             }
 
             state.expansions.clear();
-            for path in prefs.expansions.iter() {
-                state.expansions.insert(path.clone());
+            for path_str in prefs.expansions.iter() {
+                state.expansions.insert(path_str.clone());
             }
 
             state.selection = prefs.selection;
