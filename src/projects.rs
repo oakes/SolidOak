@@ -64,7 +64,7 @@ pub fn rename_file(state: &mut ::utils::State, fd: c_int) {
                 if let Some(path_str) = dialog.get_filename() {
                     state.selection = Some(path_str.clone());
                     ::utils::write_prefs(&state);
-                    ::ffi::send_message(fd, format!(":Move {}", path_str).as_slice());
+                    ::ffi::send_message(fd, format!("Move {}", path_str).as_slice());
                 }
             }
             dialog.destroy();
@@ -92,7 +92,7 @@ pub fn remove_item(state: &mut ::utils::State, tree: &mut gtk::TreeView, fd: c_i
                     ::utils::write_prefs(state);
                     ::ui::update_project_tree(state, tree);
                 } else {
-                    ::ffi::send_message(fd, ":call delete(expand('%')) | bdelete!".as_slice());
+                    ::ffi::send_message(fd, "call delete(expand('%')) | bdelete!".as_slice());
                 }
             }
             dialog.destroy();
