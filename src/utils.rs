@@ -5,6 +5,7 @@ use std::collections::HashSet;
 use std::io::{Read, Write};
 use std::fs;
 use std::fs::PathExt;
+use std::ops::Deref;
 use std::path::Path;
 
 pub static DATA_DIR : &'static str = ".soak";
@@ -97,9 +98,9 @@ struct Prefs {
 }
 
 pub fn get_home_dir() -> String {
-    if let Some(old_path) = env::home_dir() {
-        if let Some(path) = old_path.as_str() {
-            return path.to_string();
+    if let Some(path) = env::home_dir() {
+        if let Some(path_str) = path.deref().to_str() {
+            return path_str.to_string();
         }
     }
     ".".to_string()
