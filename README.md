@@ -23,10 +23,11 @@ cargo build
 
 ### OS X (homebrew)
 
+Install [XQuartz](http://xquartz.macosforge.org/landing/), then:
 ```Shell
-brew tap oakes/gnome
-brew install oakes/gnome/gtk+3 oakes/gnome/vte3
+brew install gtk+3 vte3 --without-x11
 brew install libtool automake cmake pkg-config gettext
+export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:/opt/X11/lib/pkgconfig
 cargo build
 ```
 
