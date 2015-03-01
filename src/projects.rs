@@ -1,8 +1,20 @@
 use libc::c_int;
 use rgtk::*;
+use std::fs::PathExt;
 use std::num::FromPrimitive;
 use std::path::Path;
 use std::process::Command;
+
+fn remove_expansions_for_path(state: &mut ::utils::State, path_str: &String) {
+    for expansion_str in state.expansions.clone().iter() {
+        if !Path::new(expansion_str).exists() ||
+            path_str == expansion_str ||
+            ::utils::is_parent_path(path_str, expansion_str)
+        {
+            state.expansions.remove(expansion_str);
+        }
+    }
+}
 
 fn save_project(state: &mut ::utils::State, tree: &mut gtk::TreeView, path_str: &String) {
     state.projects.insert(path_str.clone());
@@ -88,7 +100,7 @@ pub fn remove_item(state: &mut ::utils::State, tree: &mut gtk::TreeView, fd: c_i
             if let Some(gtk::ResponseType::Ok) = FromPrimitive::from_i32(dialog.run()) {
                 if state.projects.contains(&path_str) {
                     state.projects.remove(&path_str);
-                    ::utils::remove_expansions_for_path(state, &path_str);
+                    remove_expansions_for_path(state, &path_str);
                     ::utils::write_prefs(state);
                     ::ui::update_project_tree(state, tree);
                 } else {
@@ -113,7 +125,7 @@ pub fn set_selection(state: &mut ::utils::State, tree: &mut gtk::TreeView, fd: c
 
 pub fn remove_expansion(state: &mut ::utils::State, iter: &gtk::TreeIter) {
     if let Some(path_str) = state.tree_model.get_value(iter, 1).get_string() {
-        ::utils::remove_expansions_for_path(state, &path_str);
+        remove_expansions_for_path(state, &path_str);
         ::utils::write_prefs(state);
     }
 }
