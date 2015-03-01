@@ -7,9 +7,9 @@ use libc::c_int;
 use rgtk::*;
 use std::collections::HashSet;
 use std::env;
-use std::io::Write;
 use std::fs;
 use std::fs::PathExt;
+use std::io::Write;
 use std::old_io::timer;
 use std::path::Path;
 use std::time::duration::Duration;
@@ -169,7 +169,8 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: c_int, write_fd: c_int, pid: c_int) 
 
     // listen for bufenter events
 
-    native::send_message(write_fd, "au BufEnter * call rpcnotify(1, 'bufenter', fnamemodify(bufname(''), ':p'))");
+    let cmd = "au BufEnter * call rpcnotify(1, 'bufenter', fnamemodify(bufname(''), ':p'))";
+    native::send_message(write_fd, cmd);
 
     // make read_fd non-blocking so we can check it while also checking for GUI events
 
