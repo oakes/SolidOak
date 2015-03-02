@@ -19,9 +19,9 @@ fn create_builder() -> gtk::Box {
 
     let mut builder = gtk::Box::new(gtk::Orientation::Vertical, 0).unwrap();
     builder.add(&build_buttons);
-    builder.add(&build_term);
-    builder.set_size_request(-1, -1);
+    builder.pack_start(&build_term, true, true, 0);
 
+    builder.show_all();
     builder
 }
 
@@ -38,7 +38,6 @@ pub fn show_builder(state: &mut ::utils::State, build_pane: &mut gtk::Stack) {
                     } else {
                         build_pane.set_visible_child(builder);
                     }
-                    build_pane.show_all();
                 }
             }
         }
