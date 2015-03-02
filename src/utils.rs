@@ -104,9 +104,10 @@ struct Prefs {
 
 pub fn get_home_dir() -> PathBuf {
     if let Some(path) = env::home_dir() {
-        return path;
+        path
+    } else {
+        PathBuf::new(".")
     }
-    PathBuf::new(".")
 }
 
 fn get_prefs(state: &State) -> Prefs {
@@ -132,16 +133,24 @@ pub fn get_selected_path(state: &State) -> Option<String> {
     }
 }
 
-pub fn is_project_path(path: &Path) -> bool {
+fn is_project_path(path: &Path) -> bool {
     path.join("Cargo.toml").exists()
 }
 
-pub fn get_project_path(path: &Path) -> Option<PathBuf> {
-    if is_project_path(path) {
+fn is_project_root(state: &State, path: &Path) -> bool {
+    if let Some(path_str) = path.to_str() {
+        state.projects.contains(&path_str.to_string())
+    } else {
+        false
+    }
+}
+
+pub fn get_project_path(state: &State, path: &Path) -> Option<PathBuf> {
+    if is_project_path(path) || is_project_root(state, path) {
         Some(PathBuf::new(path))
     } else {
         if let Some(parent_path) = path.parent() {
-            get_project_path(parent_path.deref())
+            get_project_path(state, parent_path.deref())
         } else {
             None
         }

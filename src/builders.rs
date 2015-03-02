@@ -27,7 +27,7 @@ fn create_builder() -> gtk::Box {
 
 pub fn show_builder(state: &mut ::utils::State, build_pane: &mut gtk::Stack) {
     if let Some(ref path_str) = state.selection {
-        if let Some(ref path) = ::utils::get_project_path(Path::new(path_str)) {
+        if let Some(ref path) = ::utils::get_project_path(state, Path::new(path_str)) {
             if let Some(path_str) = path.to_str() {
                 if !state.builders.contains_key(path) {
                     state.builders.insert(path.clone(), create_builder());
