@@ -5,15 +5,16 @@ extern crate "rustc-serialize" as rustc_serialize;
 
 use libc::c_int;
 use rgtk::*;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::env;
 use std::fs;
 use std::fs::PathExt;
 use std::io::Write;
 use std::old_io::timer;
-use std::path::Path;
+use std::ops::Deref;
 use std::time::duration::Duration;
 
+mod builders;
 mod native;
 mod projects;
 mod ui;
@@ -22,24 +23,17 @@ mod utils;
 fn gui_main(pty: &mut gtk::VtePty, read_fd: c_int, write_fd: c_int, pid: c_int) {
     gtk::init();
 
-    // constants
-
-    let width = 1242;
-    let height = 768;
-    let editor_height = ((height as f32) * 0.75) as i32;
-    let mut quit_app = false;
-
     // create the window
 
     let title = format!("SolidOak {}.{}.{}",
                         option_env!("CARGO_PKG_VERSION_MAJOR").unwrap(),
                         option_env!("CARGO_PKG_VERSION_MINOR").unwrap(),
                         option_env!("CARGO_PKG_VERSION_PATCH").unwrap());
+    let mut quit_app = false;
     let mut window = gtk::Window::new(gtk::WindowType::TopLevel).unwrap();
     window.set_title(title.as_slice());
     window.set_window_position(gtk::WindowPosition::Center);
-    window.set_default_size(width, height);
-
+    window.set_default_size(utils::WINDOW_WIDTH, utils::WINDOW_HEIGHT);
     window.connect(gtk::signals::DeleteEvent::new(&mut |_| {
         native::send_message(write_fd, "qall!");
         native::close_fd(read_fd);
@@ -85,29 +79,11 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: c_int, write_fd: c_int, pid: c_int) 
     project_pane.pack_start(&scroll_pane, true, true, 0);
 
     let mut editor_pane = gtk::VteTerminal::new().unwrap();
-    editor_pane.set_size_request(-1, editor_height);
     editor_pane.set_pty(pty);
     editor_pane.watch_child(pid);
+    editor_pane.set_size_request(-1, (utils::EDITOR_HEIGHT_PCT * (utils::WINDOW_HEIGHT as f32)) as i32);
 
-    let run_button = gtk::Button::new_with_label("Run").unwrap();
-    let build_button = gtk::Button::new_with_label("Build").unwrap();
-    let test_button = gtk::Button::new_with_label("Test").unwrap();
-    let clean_button = gtk::Button::new_with_label("Clean").unwrap();
-    let stop_button = gtk::Button::new_with_label("Stop").unwrap();
-
-    let mut build_buttons = gtk::Box::new(gtk::Orientation::Horizontal, 0).unwrap();
-    build_buttons.set_size_request(-1, -1);
-    build_buttons.add(&run_button);
-    build_buttons.add(&build_button);
-    build_buttons.add(&test_button);
-    build_buttons.add(&clean_button);
-    build_buttons.add(&stop_button);
-
-    let build_term = gtk::VteTerminal::new().unwrap();
-
-    let mut build_pane = gtk::Box::new(gtk::Orientation::Vertical, 0).unwrap();
-    build_pane.pack_start(&build_buttons, false, true, 0);
-    build_pane.pack_start(&build_term, true, true, 0);
+    let mut build_pane = gtk::Stack::new().unwrap();
 
     let mut content = gtk::Box::new(gtk::Orientation::Vertical, 0).unwrap();
     content.pack_start(&editor_pane, true, true, 0);
@@ -127,6 +103,7 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: c_int, write_fd: c_int, pid: c_int) 
     let mut state = ::utils::State{
         projects: HashSet::new(),
         expansions: HashSet::new(),
+        builders: HashMap::new(),
         selection: None,
         window: &window,
         tree_model: &model,
@@ -196,6 +173,7 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: c_int, write_fd: c_int, pid: c_int) 
                 }
             }
             ::ui::update_project_tree(&mut state, &mut project_tree);
+            ::builders::show_builder(&mut state, &mut build_pane);
         }
 
         if quit_app {
@@ -208,9 +186,8 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: c_int, write_fd: c_int, pid: c_int) 
 
 fn main() {
     // create data dir
-    let home_dir_str = ::utils::get_home_dir();
-    let home_dir = Path::new(&home_dir_str);
-    let data_dir = home_dir.join(::utils::DATA_DIR);
+    let home_dir = ::utils::get_home_dir();
+    let data_dir = home_dir.deref().join(::utils::DATA_DIR);
     if !data_dir.exists() {
         match fs::create_dir(&data_dir) {
             Ok(_) => {
@@ -242,7 +219,7 @@ fn main() {
     }
 
     // create config file
-    let config_file = home_dir.join(::utils::CONFIG_FILE);
+    let config_file = home_dir.deref().join(::utils::CONFIG_FILE);
     if !config_file.exists() {
         match fs::File::create(&config_file) {
             Ok(mut f) => {

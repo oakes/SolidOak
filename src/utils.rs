@@ -1,11 +1,16 @@
 use rgtk::*;
 use rustc_serialize::{Encodable, json};
 use std::env;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::io::{Read, Write};
 use std::fs;
+use std::fs::PathExt;
 use std::ops::Deref;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+
+pub static WINDOW_WIDTH : i32 = 1242;
+pub static WINDOW_HEIGHT : i32 = 768;
+pub static EDITOR_HEIGHT_PCT : f32 = 0.60;
 
 pub static DATA_DIR : &'static str = ".soak";
 pub static CONFIG_FILE : &'static str = ".soakrc";
@@ -80,6 +85,7 @@ pub struct State<'a> {
     pub projects: HashSet<String>,
     pub expansions: HashSet<String>,
     pub selection: Option<String>,
+    pub builders: HashMap<PathBuf, gtk::Box>,
     pub window: &'a gtk::Window,
     pub tree_store: &'a gtk::TreeStore,
     pub tree_model: &'a gtk::TreeModel,
@@ -96,13 +102,11 @@ struct Prefs {
     selection: Option<String>
 }
 
-pub fn get_home_dir() -> String {
+pub fn get_home_dir() -> PathBuf {
     if let Some(path) = env::home_dir() {
-        if let Some(path_str) = path.deref().to_str() {
-            return path_str.to_string();
-        }
+        return path;
     }
-    ".".to_string()
+    PathBuf::new(".")
 }
 
 fn get_prefs(state: &State) -> Prefs {
@@ -128,6 +132,22 @@ pub fn get_selected_path(state: &State) -> Option<String> {
     }
 }
 
+pub fn is_project_path(path: &Path) -> bool {
+    path.join("Cargo.toml").exists()
+}
+
+pub fn get_project_path(path: &Path) -> Option<PathBuf> {
+    if is_project_path(path) {
+        Some(PathBuf::new(path))
+    } else {
+        if let Some(parent_path) = path.parent() {
+            get_project_path(parent_path.deref())
+        } else {
+            None
+        }
+    }
+}
+
 pub fn write_prefs(state: &State) {
     let prefs = get_prefs(state);
 
@@ -137,7 +157,7 @@ pub fn write_prefs(state: &State) {
         prefs.encode(&mut encoder).ok().expect("Error encoding prefs.");
     }
 
-    let prefs_path = Path::new(&get_home_dir()).join(DATA_DIR).join(PREFS_FILE);
+    let prefs_path = get_home_dir().deref().join(DATA_DIR).join(PREFS_FILE);
     if let Some(mut f) = fs::File::create(&prefs_path).ok() {
         match f.write(json_str.as_bytes()) {
             Ok(_) => {},
@@ -147,7 +167,7 @@ pub fn write_prefs(state: &State) {
 }
 
 pub fn read_prefs(state: &mut State) {
-    let prefs_path = Path::new(&get_home_dir()).join(DATA_DIR).join(PREFS_FILE);
+    let prefs_path = get_home_dir().deref().join(DATA_DIR).join(PREFS_FILE);
     if let Some(mut f) = fs::File::open(&prefs_path).ok() {
         let mut json_str = String::new();
         let prefs_option : Option<Prefs> = match f.read_to_string(&mut json_str) {
