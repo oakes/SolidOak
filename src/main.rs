@@ -233,16 +233,17 @@ fn main() {
     }
 
     // collect the args into a vector and add the config file path
-    let mut args_vec : Vec<String> = env::args().collect();
+    let mut args_vec_str : Vec<String> = env::args().collect();
     if let Some(path_str) = config_file.to_str() {
-        args_vec.push_all(&["-u".to_string(), path_str.to_string()]);
+        args_vec_str.push_all(&["-u".to_string(), path_str.to_string()]);
     }
 
     // if the no window flag was used, start up neovim without a gui
     let args_set : HashSet<String> = env::args().collect();
     if args_set.contains(::utils::NO_WINDOW_FLAG) {
-        args_vec.retain(|arg| arg.as_slice() != ::utils::NO_WINDOW_FLAG);
-        neovim::main_setup(&args_vec);
+        args_vec_str.retain(|arg| arg.as_slice() != ::utils::NO_WINDOW_FLAG);
+        let args_vec_slice : Vec<&str> = args_vec_str.iter().map(|s| s.as_slice()).collect();
+        neovim::main_setup(args_vec_slice.as_slice());
         neovim::main_loop();
         return;
     }
@@ -264,7 +265,8 @@ fn main() {
         pty.child_setup();
 
         // start nvim
-        neovim::main_setup(&args_vec);
+        let args_vec_slice : Vec<&str> = args_vec_str.iter().map(|s| s.as_slice()).collect();
+        neovim::main_setup(args_vec_slice.as_slice());
         neovim::channel_from_fds(nvim_gui[0], gui_nvim[1]);
         neovim::main_loop();
     }
