@@ -7,6 +7,7 @@ use libc::types::os::arch::c95::size_t;
 
 extern "C" {
     fn fork () -> c_int;
+    fn kill (pid: c_int, sig: c_int) -> c_int;
 }
 
 pub fn new_pipe() -> [c_int; 2] {
@@ -17,6 +18,10 @@ pub fn new_pipe() -> [c_int; 2] {
 
 pub fn fork_process() -> c_int {
     unsafe { fork() }
+}
+
+pub fn kill_process(pid: c_int) -> c_int {
+    unsafe { kill(pid, 9) }
 }
 
 pub fn set_non_blocking(fd: c_int) {

@@ -21,11 +21,38 @@ fn create_builder(project_path_str: &str) -> gtk::Box {
     builder.add(&build_buttons);
     builder.pack_start(&build_term, true, true, 0);
 
+    let current_pid = ::std::cell::Cell::new(-1);
+
     run_button.connect(gtk::signals::Clicked::new(&mut || {
         match build_term.fork_command(project_path_str, &["cargo", "run"]) {
-            Ok(_) => {},
+            Ok(pid) => current_pid.set(pid),
             Err(s) => println!("{}", s)
         }
+    }));
+    build_button.connect(gtk::signals::Clicked::new(&mut || {
+        match build_term.fork_command(project_path_str, &["cargo", "build", "--release"]) {
+            Ok(pid) => current_pid.set(pid),
+            Err(s) => println!("{}", s)
+        }
+    }));
+    test_button.connect(gtk::signals::Clicked::new(&mut || {
+        match build_term.fork_command(project_path_str, &["cargo", "test"]) {
+            Ok(pid) => current_pid.set(pid),
+            Err(s) => println!("{}", s)
+        }
+    }));
+    clean_button.connect(gtk::signals::Clicked::new(&mut || {
+        match build_term.fork_command(project_path_str, &["cargo", "clean"]) {
+            Ok(pid) => current_pid.set(pid),
+            Err(s) => println!("{}", s)
+        }
+    }));
+    stop_button.connect(gtk::signals::Clicked::new(&mut || {
+        let pid = current_pid.get();
+        if pid >= 0 {
+            ::native::kill_process(pid);
+        }
+        current_pid.set(-1);
     }));
 
     builder.show_all();
