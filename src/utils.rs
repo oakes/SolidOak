@@ -157,6 +157,14 @@ pub fn get_project_path(state: &State, path: &Path) -> Option<PathBuf> {
     }
 }
 
+pub fn get_selected_project_path(state: &State) -> Option<PathBuf> {
+    if let Some(path_str) = ::utils::get_selected_path(state) {
+        ::utils::get_project_path(state, Path::new(path_str.as_slice()))
+    } else {
+        None
+    }
+}
+
 pub fn write_prefs(state: &State) {
     let prefs = get_prefs(state);
 
