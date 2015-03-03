@@ -1,7 +1,7 @@
 use rgtk::*;
 use std::path::Path;
 
-fn create_builder(state: &::utils::State) -> gtk::Box {
+fn create_builder(project_path_str: &str) -> gtk::Box {
     let run_button = gtk::Button::new_with_label("Run").unwrap();
     let build_button = gtk::Button::new_with_label("Build").unwrap();
     let test_button = gtk::Button::new_with_label("Test").unwrap();
@@ -22,13 +22,9 @@ fn create_builder(state: &::utils::State) -> gtk::Box {
     builder.pack_start(&build_term, true, true, 0);
 
     run_button.connect(gtk::signals::Clicked::new(&mut || {
-        if let Some(project_path) = ::utils::get_selected_project_path(state) {
-            if let Some(project_path_str) = project_path.to_str() {
-                match build_term.fork_command(project_path_str, &["cargo", "run"]) {
-                    Ok(_) => {},
-                    Err(s) => println!("{}", s)
-                }
-            }
+        match build_term.fork_command(project_path_str, &["cargo", "run"]) {
+            Ok(_) => {},
+            Err(s) => println!("{}", s)
         }
     }));
 
@@ -41,8 +37,7 @@ pub fn show_builder(state: &mut ::utils::State, build_pane: &mut gtk::Stack) {
         if let Some(ref project_path) = ::utils::get_project_path(state, Path::new(path_str)) {
             if let Some(project_path_str) = project_path.to_str() {
                 if !state.builders.contains_key(project_path) {
-                    let builder = create_builder(state);
-                    state.builders.insert(project_path.clone(), builder);
+                    state.builders.insert(project_path.clone(), create_builder(project_path_str));
                 }
                 if let Some(builder) = state.builders.get(project_path) {
                     if builder.get_parent().is_none() {
