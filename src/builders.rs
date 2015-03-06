@@ -46,7 +46,7 @@ pub fn stop_builder(state: &mut ::utils::State) {
         if let Some(&mut(ref mut term, ref current_pid)) = state.builders.get_mut(&project_path) {
             let pid = current_pid.get();
             if pid >= 0 {
-                ::native::kill_process(pid);
+                ::ffi::kill_process(pid);
                 term.feed("===Finished===\r\n");
             }
             current_pid.set(-1);

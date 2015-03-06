@@ -33,7 +33,7 @@ cargo build
 
 ### Windows is not supported
 
-To support Windows, we would need to get rgtk and neovim-rs to build for it. Additionally, we would need to find a replacement for all the Posix-specific functions being used in `src/native.rs`.
+To support Windows, we would need to get rgtk and neovim-rs to build for it. Additionally, we would need to find a replacement for all the Posix-specific functions being used in `src/ffi.rs`.
 
 ## Licensing
 

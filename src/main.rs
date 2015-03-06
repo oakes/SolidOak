@@ -14,7 +14,7 @@ use std::ops::Deref;
 use std::time::duration::Duration;
 
 mod builders;
-mod native;
+mod ffi;
 mod projects;
 mod ui;
 mod utils;
@@ -34,9 +34,9 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: c_int, write_fd: c_int, pid: c_int) 
     window.set_window_position(gtk::WindowPosition::Center);
     window.set_default_size(utils::WINDOW_WIDTH, utils::WINDOW_HEIGHT);
     window.connect(gtk::signals::DeleteEvent::new(&mut |_| {
-        native::send_message(write_fd, "qall!");
-        native::close_fd(read_fd);
-        native::close_fd(write_fd);
+        ffi::send_message(write_fd, "qall!");
+        ffi::close_fd(read_fd);
+        ffi::close_fd(write_fd);
         quit_app = true;
         true
     }));
@@ -180,18 +180,18 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: c_int, write_fd: c_int, pid: c_int) 
     // listen for bufenter events
 
     let cmd = "au BufEnter * call rpcnotify(1, 'bufenter', fnamemodify(bufname(''), ':p'))";
-    native::send_message(write_fd, cmd);
+    ffi::send_message(write_fd, cmd);
 
     // make read_fd non-blocking so we can check it while also checking for GUI events
 
-    native::set_non_blocking(read_fd);
+    ffi::set_non_blocking(read_fd);
 
     // loop over GUI events and respond to messages from nvim
 
     loop {
         gtk::main_iteration_do(false);
 
-        if let Some(recv_arr) = native::recv_message(read_fd) {
+        if let Some(recv_arr) = ffi::recv_message(read_fd) {
             if let Some(neovim::Object::String(event_name)) = recv_arr.get(1) {
                 match event_name.as_slice() {
                     "bufenter" => {
@@ -285,11 +285,11 @@ fn main() {
     let mut pty = gtk::VtePty::new().unwrap();
 
     // two anonymous pipes for msgpack-rpc between the gui and nvim
-    let nvim_gui = native::new_pipe(); // to nvim from gui
-    let gui_nvim = native::new_pipe(); // to gui from nvim
+    let nvim_gui = ffi::new_pipe(); // to nvim from gui
+    let gui_nvim = ffi::new_pipe(); // to gui from nvim
 
     // split into two processes
-    let pid = native::fork_process();
+    let pid = ffi::fork_process();
 
     if pid > 0 { // the gui process
         gui_main(&mut pty, gui_nvim[0], nvim_gui[1], pid);
