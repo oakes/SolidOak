@@ -3,8 +3,7 @@ use rustc_serialize::{Encodable, json};
 use std::env;
 use std::collections::{HashMap, HashSet};
 use std::io::{Read, Write};
-use std::fs;
-use std::fs::PathExt;
+use std::fs::{self, PathExt};
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
 
