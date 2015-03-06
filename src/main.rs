@@ -57,7 +57,7 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: c_int, write_fd: c_int, pid: c_int) 
 
     let mut project_tree = gtk::TreeView::new().unwrap();
     let selection = project_tree.get_selection().unwrap();
-    let column_types = [ffi::glib::g_type_string, ffi::glib::g_type_string];
+    let column_types = [ffi::glib::G_TYPE_STRING, ffi::glib::G_TYPE_STRING];
     let store = gtk::TreeStore::new(&column_types).unwrap();
     let model = store.get_model().unwrap();
     project_tree.set_model(&model);
@@ -174,7 +174,7 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: c_int, write_fd: c_int, pid: c_int) 
         ::builders::run_builder(&mut state, &["cargo", "clean"]);
     }));
     stop_button.connect(gtk::signals::Clicked::new(&mut || {
-        ::builders::stop_builder(&state);
+        ::builders::stop_builder(&mut state);
     }));
 
     // listen for bufenter events

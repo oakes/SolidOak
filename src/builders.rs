@@ -31,19 +31,23 @@ pub fn run_builder(state: &mut ::utils::State, args: &[&str]) {
             if let Some(&mut(ref mut term, ref current_pid)) = state.builders.get_mut(&project_path) {
                 match term.fork_command(project_path_str.as_slice(), args) {
                     Ok(pid) => current_pid.set(pid),
-                    Err(s) => term.feed(s.as_slice())
+                    Err(s) => {
+                        term.feed(s.as_slice());
+                        term.feed("\r\n");
+                    }
                 }
             }
         }
     }
 }
 
-pub fn stop_builder(state: &::utils::State) {
+pub fn stop_builder(state: &mut ::utils::State) {
     if let Some(project_path) = ::utils::get_selected_project_path(&state) {
-        if let Some(&(_, ref current_pid)) = state.builders.get(&project_path) {
+        if let Some(&mut(ref mut term, ref current_pid)) = state.builders.get_mut(&project_path) {
             let pid = current_pid.get();
             if pid >= 0 {
                 ::native::kill_process(pid);
+                term.feed("===Finished===\r\n");
             }
             current_pid.set(-1);
         }
