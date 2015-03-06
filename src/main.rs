@@ -57,7 +57,7 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: c_int, write_fd: c_int, pid: c_int) 
 
     let mut project_tree = gtk::TreeView::new().unwrap();
     let selection = project_tree.get_selection().unwrap();
-    let column_types = [ffi::glib::G_TYPE_STRING, ffi::glib::G_TYPE_STRING];
+    let column_types = [glib::Type::String, glib::Type::String];
     let store = gtk::TreeStore::new(&column_types).unwrap();
     let model = store.get_model().unwrap();
     project_tree.set_model(&model);
