@@ -41,7 +41,7 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: c_int, write_fd: c_int, pid: c_int) 
         true
     }));
 
-    // create the panes
+    // create the project pane
 
     let new_button = gtk::Button::new_with_label("New Project").unwrap();
     let import_button = gtk::Button::new_with_label("Import").unwrap();
@@ -77,23 +77,41 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: c_int, write_fd: c_int, pid: c_int) 
     project_pane.pack_start(&project_buttons, false, true, 0);
     project_pane.pack_start(&scroll_pane, true, true, 0);
 
+    // create the editor pane
+
     let mut editor_pane = gtk::VteTerminal::new().unwrap();
     editor_pane.set_pty(pty);
     editor_pane.watch_child(pid);
     editor_pane.set_size_request(-1, (utils::EDITOR_HEIGHT_PCT * (utils::WINDOW_HEIGHT as f32)) as i32);
 
+    // create the build pane
+
+    let run_button = gtk::Button::new_with_label("Run").unwrap();
+    let build_button = gtk::Button::new_with_label("Build").unwrap();
+    let test_button = gtk::Button::new_with_label("Test").unwrap();
+    let clean_button = gtk::Button::new_with_label("Clean").unwrap();
+    let stop_button = gtk::Button::new_with_label("Stop").unwrap();
+
+    let mut build_buttons = gtk::Box::new(gtk::Orientation::Horizontal, 0).unwrap();
+    build_buttons.add(&run_button);
+    build_buttons.add(&build_button);
+    build_buttons.add(&test_button);
+    build_buttons.add(&clean_button);
+    build_buttons.add(&stop_button);
+
     let mut build_pane = gtk::Stack::new().unwrap();
+
+    // create and show the window
 
     let mut content = gtk::Box::new(gtk::Orientation::Vertical, 0).unwrap();
     content.pack_start(&editor_pane, true, true, 0);
+    content.pack_start(&build_buttons, false, true, 0);
     content.pack_start(&build_pane, false, true, 0);
 
     let mut hbox = gtk::Box::new(gtk::Orientation::Horizontal, 0).unwrap();
     hbox.pack_start(&project_pane, false, true, 0);
     hbox.pack_start(&content, true, true, 0);
     window.add(&hbox);
-
-    // show the window
 
     window.show_all();
 
@@ -141,6 +159,22 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: c_int, write_fd: c_int, pid: c_int) 
     project_tree.connect(gtk::signals::RowExpanded::new(&mut |iter_raw, _| {
         let iter = gtk::TreeIter::wrap_pointer(iter_raw);
         ::projects::add_expansion(&mut state, &iter);
+    }));
+
+    run_button.connect(gtk::signals::Clicked::new(&mut || {
+        ::builders::run_builder(&mut state, &["cargo", "run"]);
+    }));
+    build_button.connect(gtk::signals::Clicked::new(&mut || {
+        ::builders::run_builder(&mut state, &["cargo", "build", "--release"]);
+    }));
+    test_button.connect(gtk::signals::Clicked::new(&mut || {
+        ::builders::run_builder(&mut state, &["cargo", "test"]);
+    }));
+    clean_button.connect(gtk::signals::Clicked::new(&mut || {
+        ::builders::run_builder(&mut state, &["cargo", "clean"]);
+    }));
+    stop_button.connect(gtk::signals::Clicked::new(&mut || {
+        ::builders::stop_builder(&state);
     }));
 
     // listen for bufenter events

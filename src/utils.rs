@@ -1,5 +1,6 @@
 use rgtk::*;
 use rustc_serialize::{Encodable, json};
+use std::cell::Cell;
 use std::env;
 use std::collections::{HashMap, HashSet};
 use std::io::{Read, Write};
@@ -84,7 +85,7 @@ pub struct State<'a> {
     pub projects: HashSet<String>,
     pub expansions: HashSet<String>,
     pub selection: Option<String>,
-    pub builders: HashMap<PathBuf, gtk::Box>,
+    pub builders: HashMap<PathBuf, (gtk::VteTerminal, Cell<i32>)>,
     pub window: &'a gtk::Window,
     pub tree_store: &'a gtk::TreeStore,
     pub tree_model: &'a gtk::TreeModel,
@@ -153,6 +154,14 @@ pub fn get_project_path(state: &State, path: &Path) -> Option<PathBuf> {
         } else {
             None
         }
+    }
+}
+
+pub fn get_selected_project_path(state: &State) -> Option<PathBuf> {
+    if let Some(path_str) = get_selected_path(state) {
+        get_project_path(state, Path::new(&path_str))
+    } else {
+        None
     }
 }
 
