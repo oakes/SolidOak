@@ -1,24 +1,23 @@
 use rgtk::*;
 use std::cmp::Ordering;
 use std::collections::HashSet;
-use std::old_io::fs::{self, PathExtensions};
+use std::fs::{self, PathExt};
+use std::ops::Deref;
+use std::path::{Path, PathBuf};
 
-fn path_sorter(a: &Path, b: &Path) -> Ordering {
-    let leaf_a = a.filename_str();
-    let leaf_b = b.filename_str();
-    leaf_a.cmp(&leaf_b)
+fn path_sorter(a: &PathBuf, b: &PathBuf) -> Ordering {
+    if let Some(a_os_str) = a.deref().file_name() {
+        if let Some(b_os_str) = b.deref().file_name() {
+            return a_os_str.cmp(&b_os_str);
+        }
+    }
+    Ordering::Equal
 }
 
-fn sort_paths(paths: &Vec<Path>) -> Vec<Path> {
-    let mut paths_vec = paths.clone();
-    paths_vec.sort_by(path_sorter);
-    paths_vec
-}
-
-fn sort_string_paths(paths: &HashSet<String>) -> Vec<Path> {
+fn sort_string_paths(paths: &HashSet<String>) -> Vec<PathBuf> {
     let mut paths_vec = Vec::new();
     for path_str in paths.iter() {
-        paths_vec.push(Path::new(path_str));
+        paths_vec.push(PathBuf::new(path_str));
     }
     paths_vec.sort_by(path_sorter);
     paths_vec
@@ -27,7 +26,7 @@ fn sort_string_paths(paths: &HashSet<String>) -> Vec<Path> {
 pub fn update_project_buttons(state: &::utils::State) {
     if let Some(path_str) = ::utils::get_selected_path(state) {
         let is_project = state.projects.contains(&path_str);
-        let path = Path::new(path_str);
+        let path = Path::new(&path_str);
         state.rename_button.set_sensitive(!path.is_dir());
         state.remove_button.set_sensitive(!path.is_dir() || is_project);
     } else {
@@ -39,20 +38,31 @@ pub fn update_project_buttons(state: &::utils::State) {
 fn add_node(state: &::utils::State, node: &Path, parent: Option<&gtk::TreeIter>) {
     let mut iter = gtk::TreeIter::new().unwrap();
 
-    if let Some(leaf_str) = node.filename_str() {
-        if !leaf_str.starts_with(".") {
-            state.tree_store.append(&mut iter, parent);
-            state.tree_store.set_string(&iter, 0, leaf_str);
-            state.tree_store.set_string(&iter, 1, node.as_str().unwrap());
+    if let Some(full_path_str) = node.to_str() {
+        if let Some(leaf_os_str) = node.file_name() {
+            if let Some(leaf_str) = leaf_os_str.to_str() {
+                if !leaf_str.starts_with(".") {
+                    state.tree_store.append(&mut iter, parent);
+                    state.tree_store.set_string(&iter, 0, leaf_str);
+                    state.tree_store.set_string(&iter, 1, full_path_str);
 
-            if node.is_dir() {
-                match fs::readdir(node) {
-                    Ok(children) => {
-                        for child in sort_paths(&children).iter() {
-                            add_node(state, child, Some(&iter));
+                    if node.is_dir() {
+                        match fs::read_dir(node) {
+                            Ok(child_iter) => {
+                                let mut child_vec = Vec::new();
+                                for child in child_iter {
+                                    if let Ok(dir_entry) = child {
+                                        child_vec.push(dir_entry.path());
+                                    }
+                                }
+                                child_vec.sort_by(path_sorter);
+                                for child in child_vec.iter() {
+                                    add_node(state, child.deref(), Some(&iter));
+                                }
+                            },
+                            Err(e) => println!("Error updating tree: {}", e)
                         }
-                    },
-                    Err(e) => println!("Error updating tree: {}", e)
+                    }
                 }
             }
         }
