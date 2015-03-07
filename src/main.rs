@@ -193,16 +193,20 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: c_int, write_fd: c_int, pid: c_int) 
         ::ffi::send_message(write_fd, "redo");
     }));
     font_minus_button.connect(gtk::signals::Clicked::new(&mut || {
-        state.font_size -= 1;
-        ::utils::write_prefs(&state);
-        editor_pane.set_font_size(state.font_size);
-        ::builders::set_builders_font_size(&mut state);
+        if state.font_size > ::utils::MIN_FONT_SIZE {
+            state.font_size -= 1;
+            ::utils::write_prefs(&state);
+            editor_pane.set_font_size(state.font_size);
+            ::builders::set_builders_font_size(&mut state);
+        }
     }));
     font_plus_button.connect(gtk::signals::Clicked::new(&mut || {
-        state.font_size += 1;
-        ::utils::write_prefs(&state);
-        editor_pane.set_font_size(state.font_size);
-        ::builders::set_builders_font_size(&mut state);
+        if state.font_size < ::utils::MAX_FONT_SIZE {
+            state.font_size += 1;
+            ::utils::write_prefs(&state);
+            editor_pane.set_font_size(state.font_size);
+            ::builders::set_builders_font_size(&mut state);
+        }
     }));
     close_button.connect(gtk::signals::Clicked::new(&mut || {
         ::ffi::send_message(write_fd, "bd");

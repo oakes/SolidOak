@@ -11,6 +11,8 @@ use std::path::{Path, PathBuf};
 pub static WINDOW_WIDTH : i32 = 1242;
 pub static WINDOW_HEIGHT : i32 = 768;
 pub static EDITOR_HEIGHT_PCT : f32 = 0.60;
+pub static MIN_FONT_SIZE : i32 = 0;
+pub static MAX_FONT_SIZE : i32 = 50;
 
 pub static DATA_DIR : &'static str = ".soak";
 pub static CONFIG_FILE : &'static str = ".soakrc";
@@ -215,7 +217,10 @@ pub fn read_prefs(state: &mut State) {
             }
 
             state.selection = prefs.selection;
-            state.font_size = prefs.font_size;
+
+            if (prefs.font_size >= MIN_FONT_SIZE) && (prefs.font_size <= MAX_FONT_SIZE) {
+                state.font_size = prefs.font_size;
+            }
         }
     }
 }
