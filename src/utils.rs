@@ -85,6 +85,7 @@ pub struct State<'a> {
     pub projects: HashSet<String>,
     pub expansions: HashSet<String>,
     pub selection: Option<String>,
+    pub font_size: i32,
     pub builders: HashMap<PathBuf, (gtk::VteTerminal, Cell<i32>)>,
     pub window: &'a gtk::Window,
     pub tree_store: &'a gtk::TreeStore,
@@ -99,7 +100,8 @@ pub struct State<'a> {
 struct Prefs {
     projects: Vec<String>,
     expansions: Vec<String>,
-    selection: Option<String>
+    selection: Option<String>,
+    font_size: i32
 }
 
 pub fn get_home_dir() -> PathBuf {
@@ -114,7 +116,8 @@ fn get_prefs(state: &State) -> Prefs {
     Prefs {
         projects: state.projects.clone().into_iter().collect(),
         expansions: state.expansions.clone().into_iter().collect(),
-        selection: state.selection.clone()
+        selection: state.selection.clone(),
+        font_size: state.font_size
     }
 }
 
@@ -212,6 +215,7 @@ pub fn read_prefs(state: &mut State) {
             }
 
             state.selection = prefs.selection;
+            state.font_size = prefs.font_size;
         }
     }
 }

@@ -47,13 +47,15 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: c_int, write_fd: c_int, pid: c_int) 
     let import_button = gtk::Button::new_with_label("Import").unwrap();
     let rename_button = gtk::Button::new_with_label("Rename").unwrap();
     let remove_button = gtk::Button::new_with_label("Remove").unwrap();
+    let project_separator = gtk::Separator::new(gtk::Orientation::Horizontal).unwrap();
+    project_separator.set_size_request(10, -1);
 
     let mut project_buttons = gtk::Box::new(gtk::Orientation::Horizontal, 0).unwrap();
-    project_buttons.set_size_request(-1, -1);
     project_buttons.add(&new_button);
     project_buttons.add(&import_button);
     project_buttons.add(&rename_button);
     project_buttons.add(&remove_button);
+    project_buttons.add(&project_separator);
 
     let mut project_tree = gtk::TreeView::new().unwrap();
     let selection = project_tree.get_selection().unwrap();
@@ -73,11 +75,27 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: c_int, write_fd: c_int, pid: c_int) 
     project_tree.append_column(&column);
 
     let mut project_pane = gtk::Box::new(gtk::Orientation::Vertical, 0).unwrap();
-    project_pane.set_size_request(-1, -1);
     project_pane.pack_start(&project_buttons, false, true, 0);
     project_pane.pack_start(&scroll_pane, true, true, 0);
 
     // create the editor pane
+
+    let save_button = gtk::Button::new_with_label("Save").unwrap();
+    let undo_button = gtk::Button::new_with_label("Undo").unwrap();
+    let redo_button = gtk::Button::new_with_label("Redo").unwrap();
+    let font_minus_button = gtk::Button::new_with_label("Font -").unwrap();
+    let font_plus_button = gtk::Button::new_with_label("Font +").unwrap();
+    let editor_separator = gtk::Separator::new(gtk::Orientation::Horizontal).unwrap();
+    let close_button = gtk::Button::new_with_label("X").unwrap();
+
+    let mut editor_buttons = gtk::Box::new(gtk::Orientation::Horizontal, 0).unwrap();
+    editor_buttons.add(&save_button);
+    editor_buttons.add(&undo_button);
+    editor_buttons.add(&redo_button);
+    editor_buttons.add(&font_minus_button);
+    editor_buttons.add(&font_plus_button);
+    editor_buttons.pack_start(&editor_separator, true, false, 0);
+    editor_buttons.add(&close_button);
 
     let mut editor_pane = gtk::VteTerminal::new().unwrap();
     editor_pane.set_pty(pty);
@@ -104,6 +122,7 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: c_int, write_fd: c_int, pid: c_int) 
     // create and show the window
 
     let mut content = gtk::Box::new(gtk::Orientation::Vertical, 0).unwrap();
+    content.pack_start(&editor_buttons, false, true, 0);
     content.pack_start(&editor_pane, true, true, 0);
     content.pack_start(&build_buttons, false, true, 0);
     content.pack_start(&build_pane, false, true, 0);
@@ -122,6 +141,7 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: c_int, write_fd: c_int, pid: c_int) 
         expansions: HashSet::new(),
         builders: HashMap::new(),
         selection: None,
+        font_size: 12,
         window: &window,
         tree_model: &model,
         tree_store: &store,
@@ -134,6 +154,8 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: c_int, write_fd: c_int, pid: c_int) 
     ::utils::read_prefs(&mut state);
     ::ui::update_project_tree(&mut state, &mut project_tree);
     ::projects::set_selection(&mut state, &mut project_tree, write_fd);
+
+    editor_pane.set_font_size(state.font_size);
 
     // connect to the signals
 
@@ -159,6 +181,31 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: c_int, write_fd: c_int, pid: c_int) 
     project_tree.connect(gtk::signals::RowExpanded::new(&mut |iter_raw, _| {
         let iter = gtk::TreeIter::wrap_pointer(iter_raw);
         ::projects::add_expansion(&mut state, &iter);
+    }));
+
+    save_button.connect(gtk::signals::Clicked::new(&mut || {
+        ::ffi::send_message(write_fd, "w");
+    }));
+    undo_button.connect(gtk::signals::Clicked::new(&mut || {
+        ::ffi::send_message(write_fd, "undo");
+    }));
+    redo_button.connect(gtk::signals::Clicked::new(&mut || {
+        ::ffi::send_message(write_fd, "redo");
+    }));
+    font_minus_button.connect(gtk::signals::Clicked::new(&mut || {
+        state.font_size -= 1;
+        ::utils::write_prefs(&state);
+        editor_pane.set_font_size(state.font_size);
+        ::builders::set_builders_font_size(&mut state);
+    }));
+    font_plus_button.connect(gtk::signals::Clicked::new(&mut || {
+        state.font_size += 1;
+        ::utils::write_prefs(&state);
+        editor_pane.set_font_size(state.font_size);
+        ::builders::set_builders_font_size(&mut state);
+    }));
+    close_button.connect(gtk::signals::Clicked::new(&mut || {
+        ::ffi::send_message(write_fd, "bd");
     }));
 
     run_button.connect(gtk::signals::Clicked::new(&mut || {
@@ -207,6 +254,7 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: c_int, write_fd: c_int, pid: c_int) 
             }
             ::ui::update_project_tree(&mut state, &mut project_tree);
             ::builders::show_builder(&mut state, &mut build_pane);
+            ::builders::set_builders_font_size(&mut state);
         }
 
         if quit_app {

@@ -2,17 +2,13 @@ use rgtk::*;
 use std::cell::Cell;
 use std::path::Path;
 
-fn create_builder() -> (gtk::VteTerminal, Cell<i32>) {
-    let mut term = gtk::VteTerminal::new().unwrap();
-    term.show_all();
-    (term, Cell::new(-1))
-}
-
 pub fn show_builder(state: &mut ::utils::State, build_pane: &mut gtk::Stack) {
     if let Some(ref path_str) = state.selection {
         if let Some(ref project_path) = ::utils::get_project_path(state, Path::new(path_str)) {
             if !state.builders.contains_key(project_path) {
-                state.builders.insert(project_path.clone(), create_builder());
+                let mut term = gtk::VteTerminal::new().unwrap();
+                term.show_all();
+                state.builders.insert(project_path.clone(), (term, Cell::new(-1)));
             }
             if let Some(&(ref term, _)) = state.builders.get(project_path) {
                 if term.get_parent().is_none() {
@@ -51,5 +47,12 @@ pub fn stop_builder(state: &mut ::utils::State) {
             }
             current_pid.set(-1);
         }
+    }
+}
+
+pub fn set_builders_font_size(state: &mut ::utils::State) {
+    for (_, mut builder) in state.builders.iter_mut() {
+        let (ref mut term, _) : (gtk::VteTerminal, Cell<i32>) = *builder;
+        term.set_font_size(state.font_size);
     }
 }
