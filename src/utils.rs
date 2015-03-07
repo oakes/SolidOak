@@ -30,8 +30,6 @@ pub static DATA_CONTENT : &'static [Resource] = &[
 
     Resource{path: &["autoload", "rust.vim"],
              data: include_str!("../resources/soak/autoload/rust.vim")},
-    Resource{path: &["autoload", "paste.vim"],
-             data: include_str!("../resources/soak/autoload/paste.vim")},
 
     Resource{path: &["compiler", "rustc.vim"],
              data: include_str!("../resources/soak/compiler/rustc.vim")},
@@ -75,18 +73,15 @@ pub static DATA_CONTENT : &'static [Resource] = &[
     Resource{path: &["syntax_checkers", "rust", "rustc.vim"],
              data: include_str!("../resources/soak/syntax_checkers/rust/rustc.vim")},
 
-    Resource{path: &["evim.vim"],
-             data: include_str!("../resources/soak/evim.vim")},
     Resource{path: &["filetype.vim"],
-             data: include_str!("../resources/soak/filetype.vim")},
-    Resource{path: &["mswin.vim"],
-             data: include_str!("../resources/soak/mswin.vim")}
+             data: include_str!("../resources/soak/filetype.vim")}
 ];
 
 pub struct State<'a> {
     pub projects: HashSet<String>,
     pub expansions: HashSet<String>,
     pub selection: Option<String>,
+    pub easy_mode: bool,
     pub font_size: i32,
     pub builders: HashMap<PathBuf, (gtk::VteTerminal, Cell<i32>)>,
     pub window: &'a gtk::Window,
@@ -103,6 +98,7 @@ struct Prefs {
     projects: Vec<String>,
     expansions: Vec<String>,
     selection: Option<String>,
+    easy_mode: bool,
     font_size: i32
 }
 
@@ -119,6 +115,7 @@ fn get_prefs(state: &State) -> Prefs {
         projects: state.projects.clone().into_iter().collect(),
         expansions: state.expansions.clone().into_iter().collect(),
         selection: state.selection.clone(),
+        easy_mode: state.easy_mode,
         font_size: state.font_size
     }
 }
@@ -217,6 +214,7 @@ pub fn read_prefs(state: &mut State) {
             }
 
             state.selection = prefs.selection;
+            state.easy_mode = prefs.easy_mode;
 
             if (prefs.font_size >= MIN_FONT_SIZE) && (prefs.font_size <= MAX_FONT_SIZE) {
                 state.font_size = prefs.font_size;

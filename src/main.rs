@@ -85,6 +85,7 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: c_int, write_fd: c_int, pid: c_int) 
     let redo_button = gtk::Button::new_with_label("Redo").unwrap();
     let font_minus_button = gtk::Button::new_with_label("Font -").unwrap();
     let font_plus_button = gtk::Button::new_with_label("Font +").unwrap();
+    let mut easy_mode_button = gtk::ToggleButton::new_with_label("Easy Mode").unwrap();
     let editor_separator = gtk::Separator::new(gtk::Orientation::Horizontal).unwrap();
     let close_button = gtk::Button::new_with_label("X").unwrap();
 
@@ -94,6 +95,7 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: c_int, write_fd: c_int, pid: c_int) 
     editor_buttons.add(&redo_button);
     editor_buttons.add(&font_minus_button);
     editor_buttons.add(&font_plus_button);
+    editor_buttons.add(&easy_mode_button);
     editor_buttons.pack_start(&editor_separator, true, false, 0);
     editor_buttons.add(&close_button);
 
@@ -141,6 +143,7 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: c_int, write_fd: c_int, pid: c_int) 
         expansions: HashSet::new(),
         builders: HashMap::new(),
         selection: None,
+        easy_mode: true,
         font_size: 12,
         window: &window,
         tree_model: &model,
@@ -156,6 +159,8 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: c_int, write_fd: c_int, pid: c_int) 
     ::projects::set_selection(&mut state, &mut project_tree, write_fd);
 
     editor_pane.set_font_size(state.font_size);
+    easy_mode_button.set_active(state.easy_mode);
+    ::ffi::send_message(write_fd, if state.easy_mode { "set im" } else { "set noim" });
 
     // connect to the signals
 
@@ -207,6 +212,11 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: c_int, write_fd: c_int, pid: c_int) 
             editor_pane.set_font_size(state.font_size);
             ::builders::set_builders_font_size(&mut state);
         }
+    }));
+    easy_mode_button.connect(gtk::signals::Clicked::new(&mut || {
+        state.easy_mode = easy_mode_button.get_active();
+        ::utils::write_prefs(&state);
+        ::ffi::send_message(write_fd, if state.easy_mode { "set im" } else { "set noim" });
     }));
     close_button.connect(gtk::signals::Clicked::new(&mut || {
         ::ffi::send_message(write_fd, "bd");
