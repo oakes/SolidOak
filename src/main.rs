@@ -46,15 +46,12 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
     let import_button = gtk::Button::new_with_label("Import").unwrap();
     let rename_button = gtk::Button::new_with_label("Rename").unwrap();
     let remove_button = gtk::Button::new_with_label("Remove").unwrap();
-    let project_separator = gtk::Separator::new(gtk::Orientation::Horizontal).unwrap();
-    project_separator.set_size_request(10, -1);
 
     let mut project_buttons = gtk::Box::new(gtk::Orientation::Horizontal, 0).unwrap();
     project_buttons.add(&new_button);
     project_buttons.add(&import_button);
     project_buttons.add(&rename_button);
     project_buttons.add(&remove_button);
-    project_buttons.add(&project_separator);
 
     let mut project_tree = gtk::TreeView::new().unwrap();
     let selection = project_tree.get_selection().unwrap();
@@ -134,9 +131,9 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
     content.add1(&editor_pane);
     content.add2(&build_pane);
 
-    let mut hbox = gtk::Box::new(gtk::Orientation::Horizontal, 0).unwrap();
-    hbox.pack_start(&project_pane, false, true, 0);
-    hbox.pack_start(&content, true, true, 0);
+    let mut hbox = gtk::Paned::new(gtk::Orientation::Horizontal).unwrap();
+    hbox.add1(&project_pane);
+    hbox.add2(&content);
     window.add(&hbox);
 
     window.show_all();
