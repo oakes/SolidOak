@@ -3,7 +3,6 @@ extern crate neovim;
 extern crate rgtk;
 extern crate "rustc-serialize" as rustc_serialize;
 
-use libc::c_int;
 use rgtk::*;
 use std::collections::{HashMap, HashSet};
 use std::env;
@@ -19,7 +18,7 @@ mod projects;
 mod ui;
 mod utils;
 
-fn gui_main(pty: &mut gtk::VtePty, read_fd: c_int, write_fd: c_int, pid: c_int) {
+fn gui_main(pty: &mut gtk::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
     gtk::init();
 
     // create the window

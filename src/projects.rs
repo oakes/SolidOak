@@ -1,4 +1,3 @@
-use libc::c_int;
 use rgtk::*;
 use std::fs::PathExt;
 use std::num::FromPrimitive;
@@ -65,7 +64,7 @@ pub fn import_project(state: &mut ::utils::State, tree: &mut gtk::TreeView) {
     }
 }
 
-pub fn rename_file(state: &mut ::utils::State, fd: c_int) {
+pub fn rename_file(state: &mut ::utils::State, fd: i32) {
     if let Some(_) = ::utils::get_selected_path(state) {
         if let Some(dialog) = gtk::FileChooserDialog::new(
             "Rename",
@@ -84,7 +83,7 @@ pub fn rename_file(state: &mut ::utils::State, fd: c_int) {
     }
 }
 
-pub fn remove_item(state: &mut ::utils::State, tree: &mut gtk::TreeView, fd: c_int) {
+pub fn remove_item(state: &mut ::utils::State, tree: &mut gtk::TreeView, fd: i32) {
     if let Some(path_str) = ::utils::get_selected_path(state) {
         if let Some(dialog) = gtk::MessageDialog::new_with_markup(
             Some(state.window.clone()),
@@ -112,7 +111,7 @@ pub fn remove_item(state: &mut ::utils::State, tree: &mut gtk::TreeView, fd: c_i
     }
 }
 
-pub fn set_selection(state: &mut ::utils::State, tree: &mut gtk::TreeView, fd: c_int) {
+pub fn set_selection(state: &mut ::utils::State, tree: &mut gtk::TreeView, fd: i32) {
     if !state.is_refreshing_tree {
         if let Some(path_str) = ::utils::get_selected_path(state) {
             state.selection = Some(path_str.clone());
