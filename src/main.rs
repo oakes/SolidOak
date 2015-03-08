@@ -60,6 +60,7 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
     let model = store.get_model().unwrap();
     project_tree.set_model(&model);
     project_tree.set_headers_visible(false);
+    project_tree.set_can_focus(false);
 
     let mut scroll_pane = gtk::ScrolledWindow::new(None, None).unwrap();
     scroll_pane.add(&project_tree);
@@ -160,9 +161,10 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
     ::ui::update_project_tree(&mut state, &mut project_tree);
     ::projects::set_selection(&mut state, &mut project_tree, write_fd);
 
-    editor_term.set_font_size(state.font_size);
     easy_mode_button.set_active(state.easy_mode);
     ::ffi::send_message(write_fd, if state.easy_mode { "set im" } else { "set noim" });
+    editor_term.set_font_size(state.font_size);
+    editor_term.grab_focus();
 
     // connect to the signals
 
