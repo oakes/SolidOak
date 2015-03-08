@@ -10,7 +10,7 @@ use std::path::{Path, PathBuf};
 
 pub static WINDOW_WIDTH : i32 = 1242;
 pub static WINDOW_HEIGHT : i32 = 768;
-pub static EDITOR_HEIGHT_PCT : f32 = 0.60;
+pub static EDITOR_HEIGHT_PCT : f32 = 0.70;
 pub static MIN_FONT_SIZE : i32 = 0;
 pub static MAX_FONT_SIZE : i32 = 50;
 

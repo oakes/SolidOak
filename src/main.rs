@@ -98,10 +98,14 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
     editor_buttons.pack_start(&editor_separator, true, false, 0);
     editor_buttons.add(&close_button);
 
-    let mut editor_pane = gtk::VteTerminal::new().unwrap();
-    editor_pane.set_pty(pty);
-    editor_pane.watch_child(pid);
-    editor_pane.set_size_request(-1, (utils::EDITOR_HEIGHT_PCT * (utils::WINDOW_HEIGHT as f32)) as i32);
+    let mut editor_term = gtk::VteTerminal::new().unwrap();
+    editor_term.set_pty(pty);
+    editor_term.watch_child(pid);
+    editor_term.set_size_request(-1, (utils::EDITOR_HEIGHT_PCT * (utils::WINDOW_HEIGHT as f32)) as i32);
+
+    let mut editor_pane = gtk::Box::new(gtk::Orientation::Vertical, 0).unwrap();
+    editor_pane.pack_start(&editor_buttons, false, true, 0);
+    editor_pane.pack_start(&editor_term, true, true, 0);
 
     // create the build pane
 
@@ -118,15 +122,17 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
     build_buttons.add(&clean_button);
     build_buttons.add(&stop_button);
 
-    let mut build_pane = gtk::Stack::new().unwrap();
+    let mut build_terms = gtk::Stack::new().unwrap();
+
+    let mut build_pane = gtk::Box::new(gtk::Orientation::Vertical, 0).unwrap();
+    build_pane.pack_start(&build_buttons, false, true, 0);
+    build_pane.pack_start(&build_terms, true, true, 0);
 
     // create and show the window
 
-    let mut content = gtk::Box::new(gtk::Orientation::Vertical, 0).unwrap();
-    content.pack_start(&editor_buttons, false, true, 0);
-    content.pack_start(&editor_pane, true, true, 0);
-    content.pack_start(&build_buttons, false, true, 0);
-    content.pack_start(&build_pane, false, true, 0);
+    let mut content = gtk::Paned::new(gtk::Orientation::Vertical).unwrap();
+    content.add1(&editor_pane);
+    content.add2(&build_pane);
 
     let mut hbox = gtk::Box::new(gtk::Orientation::Horizontal, 0).unwrap();
     hbox.pack_start(&project_pane, false, true, 0);
@@ -157,7 +163,7 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
     ::ui::update_project_tree(&mut state, &mut project_tree);
     ::projects::set_selection(&mut state, &mut project_tree, write_fd);
 
-    editor_pane.set_font_size(state.font_size);
+    editor_term.set_font_size(state.font_size);
     easy_mode_button.set_active(state.easy_mode);
     ::ffi::send_message(write_fd, if state.easy_mode { "set im" } else { "set noim" });
 
@@ -200,7 +206,7 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
         if state.font_size > ::utils::MIN_FONT_SIZE {
             state.font_size -= 1;
             ::utils::write_prefs(&state);
-            editor_pane.set_font_size(state.font_size);
+            editor_term.set_font_size(state.font_size);
             ::builders::set_builders_font_size(&mut state);
         }
     }));
@@ -208,7 +214,7 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
         if state.font_size < ::utils::MAX_FONT_SIZE {
             state.font_size += 1;
             ::utils::write_prefs(&state);
-            editor_pane.set_font_size(state.font_size);
+            editor_term.set_font_size(state.font_size);
             ::builders::set_builders_font_size(&mut state);
         }
     }));
@@ -266,7 +272,7 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
                 }
             }
             ::ui::update_project_tree(&mut state, &mut project_tree);
-            ::builders::show_builder(&mut state, &mut build_pane);
+            ::builders::show_builder(&mut state, &mut build_terms);
             ::builders::set_builders_font_size(&mut state);
         }
 
