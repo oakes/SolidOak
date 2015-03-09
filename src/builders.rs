@@ -37,16 +37,27 @@ pub fn run_builder(state: &mut ::utils::State, args: &[&str]) {
     }
 }
 
+fn stop_process(term: &mut gtk::VteTerminal, current_pid: &Cell<i32>) {
+    let pid = current_pid.get();
+    if pid >= 0 {
+        ::ffi::kill_process(pid);
+        term.feed("===Finished===\r\n");
+        current_pid.set(-1);
+    }
+}
+
 pub fn stop_builder(state: &mut ::utils::State) {
     if let Some(project_path) = ::utils::get_selected_project_path(&state) {
         if let Some(&mut(ref mut term, ref current_pid)) = state.builders.get_mut(&project_path) {
-            let pid = current_pid.get();
-            if pid >= 0 {
-                ::ffi::kill_process(pid);
-                term.feed("===Finished===\r\n");
-            }
-            current_pid.set(-1);
+            stop_process(term, current_pid);
         }
+    }
+}
+
+pub fn stop_builders(state: &mut ::utils::State) {
+    for (_, mut builder) in state.builders.iter_mut() {
+        let (ref mut term, ref current_pid) : (gtk::VteTerminal, Cell<i32>) = *builder;
+        stop_process(term, current_pid);
     }
 }
 

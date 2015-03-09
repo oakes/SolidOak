@@ -230,15 +230,19 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
     }));
 
     run_button.connect(gtk::signals::Clicked::new(&mut || {
+        ::builders::stop_builder(&mut state);
         ::builders::run_builder(&mut state, &["cargo", "run"]);
     }));
     build_button.connect(gtk::signals::Clicked::new(&mut || {
+        ::builders::stop_builder(&mut state);
         ::builders::run_builder(&mut state, &["cargo", "build", "--release"]);
     }));
     test_button.connect(gtk::signals::Clicked::new(&mut || {
+        ::builders::stop_builder(&mut state);
         ::builders::run_builder(&mut state, &["cargo", "test"]);
     }));
     clean_button.connect(gtk::signals::Clicked::new(&mut || {
+        ::builders::stop_builder(&mut state);
         ::builders::run_builder(&mut state, &["cargo", "clean"]);
     }));
     stop_button.connect(gtk::signals::Clicked::new(&mut || {
@@ -284,6 +288,8 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
 
         timer::sleep(Duration::milliseconds(10));
     }
+
+    ::builders::stop_builders(&mut state);
 }
 
 fn main() {
