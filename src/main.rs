@@ -249,10 +249,10 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
         ::builders::stop_builder(&mut state);
     }));
 
-    // listen for bufenter events
+    // listen for events
 
-    let cmd = "au BufEnter * call rpcnotify(1, 'bufenter', fnamemodify(bufname(''), ':p'))";
-    ffi::send_message(write_fd, cmd);
+    ffi::send_message(write_fd, "au BufEnter * call rpcnotify(1, 'bufenter', fnamemodify(bufname(''), ':p'))");
+    ffi::send_message(write_fd, "au VimLeave * call rpcnotify(1, 'vimleave')");
 
     // make read_fd non-blocking so we can check it while also checking for GUI events
 
@@ -274,6 +274,7 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
                             }
                         }
                     },
+                    "vimleave" => { quit_app = true; }
                     _ => (),
                 }
             }
