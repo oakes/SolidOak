@@ -320,14 +320,6 @@ fn main() {
         }
     }
 
-    // set $RUST_SRC_PATH if it isn't already set
-    if env::var("RUST_SRC_PATH").is_err() {
-        let src_dir = data_dir.join("src").join("rust").join("src");
-        if let Some(path_str) = src_dir.to_str() {
-            env::set_var("RUST_SRC_PATH", path_str);
-        }
-    }
-
     // set $RACER_CMD_PATH if it isn't already set
     if env::var("RACER_CMD_PATH").is_err() {
         if let Some(path) = os::self_exe_name() {
