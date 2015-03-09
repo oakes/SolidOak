@@ -19,6 +19,7 @@ pub static CONFIG_FILE : &'static str = ".soakrc";
 pub static CONFIG_CONTENT : &'static str = include_str!("../resources/soakrc");
 pub static PREFS_FILE : &'static str = "prefs.json";
 pub static NO_WINDOW_FLAG : &'static str = "-nw";
+pub static RACER_FLAG : &'static str = "--racer";
 
 struct Resource {
     pub path: &'static [&'static str],
@@ -28,6 +29,8 @@ pub static DATA_CONTENT : &'static [Resource] = &[
     Resource{path: &["after", "syntax", "rust.vim"],
              data: include_str!("../resources/soak/after/syntax/rust.vim")},
 
+    Resource{path: &["autoload", "paste.vim"],
+             data: include_str!("../resources/soak/autoload/paste.vim")},
     Resource{path: &["autoload", "rust.vim"],
              data: include_str!("../resources/soak/autoload/rust.vim")},
 
@@ -54,6 +57,8 @@ pub static DATA_CONTENT : &'static [Resource] = &[
 
     Resource{path: &["plugin", "eunuch.vim"],
              data: include_str!("../resources/soak/plugin/eunuch.vim")},
+    Resource{path: &["plugin", "racer.vim"],
+             data: include_str!("../resources/soak/plugin/racer.vim")},
     Resource{path: &["plugin", "rust.vim"],
              data: include_str!("../resources/soak/plugin/rust.vim")},
 

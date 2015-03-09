@@ -1,5 +1,6 @@
 extern crate libc;
 extern crate neovim;
+extern crate racer;
 extern crate rgtk;
 extern crate "rustc-serialize" as rustc_serialize;
 
@@ -10,6 +11,8 @@ use std::fs::{self, PathExt};
 use std::io::Write;
 use std::old_io::timer;
 use std::ops::Deref;
+use std::os;
+use std::ffi::AsOsStr;
 use std::time::duration::Duration;
 
 mod builders;
@@ -310,10 +313,27 @@ fn main() {
         }
     }
 
-    // set $VIM to the data dir if it isn't already set
+    // set $VIM if it isn't already set
     if env::var("VIM").is_err() {
         if let Some(path_str) = data_dir.to_str() {
             env::set_var("VIM", path_str);
+        }
+    }
+
+    // set $RUST_SRC_PATH if it isn't already set
+    if env::var("RUST_SRC_PATH").is_err() {
+        let src_dir = data_dir.join("src").join("rust").join("src");
+        if let Some(path_str) = src_dir.to_str() {
+            env::set_var("RUST_SRC_PATH", path_str);
+        }
+    }
+
+    // set $RACER_CMD_PATH if it isn't already set
+    if env::var("RACER_CMD_PATH").is_err() {
+        if let Some(path) = os::self_exe_name() {
+            if let Some(path_str) = path.as_os_str().to_str() {
+                env::set_var("RACER_CMD_PATH", path_str);
+            }
         }
     }
 
@@ -331,18 +351,26 @@ fn main() {
         }
     }
 
-    // collect the args into a vector and add the config file path
-    let mut args_vec_str : Vec<String> = env::args().collect();
+    // collect the args into a set and vector
+    let args_set: HashSet<String> = env::args().collect();
+    let mut args_vec: Vec<String> = env::args().collect();
+
+    // if the racer flag was used, run racer
+    if args_set.contains(::utils::RACER_FLAG) {
+        args_vec.retain(|arg| arg.as_slice() != ::utils::RACER_FLAG);
+        racer::racer_main(&args_vec);
+        return;
+    }
+
+    // add the config file path
     if let Some(path_str) = config_file.to_str() {
-        args_vec_str.push_all(&["-u".to_string(), path_str.to_string()]);
+        args_vec.push_all(&["-u".to_string(), path_str.to_string()]);
     }
 
     // if the no window flag was used, start up neovim without a gui
-    let args_set : HashSet<String> = env::args().collect();
     if args_set.contains(::utils::NO_WINDOW_FLAG) {
-        args_vec_str.retain(|arg| arg.as_slice() != ::utils::NO_WINDOW_FLAG);
-        let args_vec_slice : Vec<&str> = args_vec_str.iter().map(|s| s.as_slice()).collect();
-        neovim::main_setup(args_vec_slice.as_slice());
+        args_vec.retain(|arg| arg.as_slice() != ::utils::NO_WINDOW_FLAG);
+        neovim::main_setup(&args_vec);
         neovim::main_loop();
         return;
     }
@@ -364,8 +392,7 @@ fn main() {
         pty.child_setup();
 
         // start nvim
-        let args_vec_slice : Vec<&str> = args_vec_str.iter().map(|s| s.as_slice()).collect();
-        neovim::main_setup(args_vec_slice.as_slice());
+        neovim::main_setup(&args_vec);
         neovim::channel_from_fds(nvim_gui[0], gui_nvim[1]);
         neovim::main_loop();
     }
