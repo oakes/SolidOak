@@ -1,3 +1,5 @@
+#![feature(collections, core, io, libc, old_io, os, path, path_ext, std_misc)]
+
 extern crate libc;
 extern crate neovim;
 extern crate racer;
