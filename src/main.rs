@@ -26,26 +26,7 @@ mod utils;
 fn gui_main(pty: &mut gtk::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
     gtk::init();
 
-    // create the window
-
-    let title = format!("SolidOak {}.{}.{}",
-                        option_env!("CARGO_PKG_VERSION_MAJOR").unwrap(),
-                        option_env!("CARGO_PKG_VERSION_MINOR").unwrap(),
-                        option_env!("CARGO_PKG_VERSION_PATCH").unwrap());
-    let mut quit_app = false;
-    let mut window = gtk::Window::new(gtk::WindowType::TopLevel).unwrap();
-    window.set_title(title.as_slice());
-    window.set_window_position(gtk::WindowPosition::Center);
-    window.set_default_size(utils::WINDOW_WIDTH, utils::WINDOW_HEIGHT);
-    window.connect(gtk::signals::DeleteEvent::new(&mut |_| {
-        ffi::send_message(write_fd, "qall!");
-        ffi::close_fd(read_fd);
-        ffi::close_fd(write_fd);
-        quit_app = true;
-        true
-    }));
-
-    // create the project pane
+    // create the left pane
 
     let new_button = gtk::Button::new_with_label("New Project").unwrap();
     let import_button = gtk::Button::new_with_label("Import").unwrap();
@@ -76,11 +57,11 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
     column.add_attribute(&cell, "text", 0);
     project_tree.append_column(&column);
 
-    let mut project_pane = gtk::Box::new(gtk::Orientation::Vertical, 0).unwrap();
-    project_pane.pack_start(&project_buttons, false, true, 0);
-    project_pane.pack_start(&scroll_pane, true, true, 0);
+    let mut left_pane = gtk::Box::new(gtk::Orientation::Vertical, 0).unwrap();
+    left_pane.pack_start(&project_buttons, false, true, 0);
+    left_pane.pack_start(&scroll_pane, true, true, 0);
 
-    // create the editor pane
+    // create the right pane
 
     let save_button = gtk::Button::new_with_label("Save").unwrap();
     let undo_button = gtk::Button::new_with_label("Undo").unwrap();
@@ -106,12 +87,6 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
     editor_term.watch_child(pid);
     editor_term.set_size_request(-1, (utils::EDITOR_HEIGHT_PCT * (utils::WINDOW_HEIGHT as f32)) as i32);
 
-    let mut editor_pane = gtk::Box::new(gtk::Orientation::Vertical, 0).unwrap();
-    editor_pane.pack_start(&editor_buttons, false, true, 0);
-    editor_pane.pack_start(&editor_term, true, true, 0);
-
-    // create the build pane
-
     let run_button = gtk::Button::new_with_label("Run").unwrap();
     let build_button = gtk::Button::new_with_label("Build").unwrap();
     let test_button = gtk::Button::new_with_label("Test").unwrap();
@@ -131,17 +106,38 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
     build_pane.pack_start(&build_buttons, false, true, 0);
     build_pane.pack_start(&build_terms, true, true, 0);
 
-    // create and show the window
+    let mut resizer = gtk::Paned::new(gtk::Orientation::Vertical).unwrap();
+    resizer.add1(&editor_term);
+    resizer.add2(&build_pane);
 
-    let mut content = gtk::Paned::new(gtk::Orientation::Vertical).unwrap();
-    content.add1(&editor_pane);
-    content.add2(&build_pane);
+    let mut right_pane = gtk::Box::new(gtk::Orientation::Vertical, 0).unwrap();
+    right_pane.pack_start(&editor_buttons, false, true, 0);
+    right_pane.pack_start(&resizer, true, true, 0);
 
-    let mut hbox = gtk::Paned::new(gtk::Orientation::Horizontal).unwrap();
-    hbox.add1(&project_pane);
-    hbox.add2(&content);
-    window.add(&hbox);
+    // create the window
 
+    let title = format!("SolidOak {}.{}.{}",
+                        option_env!("CARGO_PKG_VERSION_MAJOR").unwrap(),
+                        option_env!("CARGO_PKG_VERSION_MINOR").unwrap(),
+                        option_env!("CARGO_PKG_VERSION_PATCH").unwrap());
+    let mut quit_app = false;
+    let mut window = gtk::Window::new(gtk::WindowType::TopLevel).unwrap();
+    window.set_title(title.as_slice());
+    window.set_window_position(gtk::WindowPosition::Center);
+    window.set_default_size(utils::WINDOW_WIDTH, utils::WINDOW_HEIGHT);
+    window.connect(gtk::signals::DeleteEvent::new(&mut |_| {
+        ffi::send_message(write_fd, "qall!");
+        ffi::close_fd(read_fd);
+        ffi::close_fd(write_fd);
+        quit_app = true;
+        true
+    }));
+
+    let mut window_pane = gtk::Paned::new(gtk::Orientation::Horizontal).unwrap();
+    window_pane.add1(&left_pane);
+    window_pane.add2(&right_pane);
+
+    window.add(&window_pane);
     window.show_all();
 
     // populate the project tree
