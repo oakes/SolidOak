@@ -25,6 +25,9 @@ apt-get install libtool autoconf automake cmake libncurses5-dev g++ pkg-config u
 cargo build
 ```
 
+> Note:
+> `neovim` can get the correct version of `libuv` during the build, but only if a system one is not found.
+
 ### Linux (yum)
 
 
