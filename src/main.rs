@@ -1,4 +1,4 @@
-#![feature(collections, core, io, libc, old_io, os, path, path_ext, std_misc)]
+#![feature(collections, core, libc, old_io, path_ext, std_misc)]
 
 extern crate libc;
 extern crate neovim;
@@ -13,7 +13,6 @@ use std::fs::{self, PathExt};
 use std::io::Write;
 use std::old_io::timer;
 use std::ops::Deref;
-use std::os;
 use std::ffi::AsOsStr;
 use std::time::duration::Duration;
 
@@ -327,7 +326,7 @@ fn main() {
 
     // set $RACER_CMD_PATH if it isn't already set
     if env::var("RACER_CMD_PATH").is_err() {
-        if let Some(path) = os::self_exe_name() {
+        if let Ok(path) = env::current_exe() {
             if let Some(path_str) = path.as_os_str().to_str() {
                 env::set_var("RACER_CMD_PATH", path_str);
             }
