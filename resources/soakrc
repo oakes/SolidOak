@@ -6,4 +6,5 @@ set hidden
 set mouse=a
 set number
 set noswapfile
+set backspace=indent,eol,start
 syntax on
