@@ -324,12 +324,10 @@ fn main() {
         }
     }
 
-    // set $RACER_CMD_PATH if it isn't already set
-    if env::var("RACER_CMD_PATH").is_err() {
-        if let Ok(path) = env::current_exe() {
-            if let Some(path_str) = path.as_os_str().to_str() {
-                env::set_var("RACER_CMD_PATH", path_str);
-            }
+    // set $RACER_CMD_PATH
+    if let Ok(path) = env::current_exe() {
+        if let Some(path_str) = path.as_os_str().to_str() {
+            env::set_var("RACER_CMD_PATH", path_str);
         }
     }
 
