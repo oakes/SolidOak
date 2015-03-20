@@ -1,4 +1,4 @@
-#![feature(collections, core, libc, old_io, path_ext, std_misc)]
+#![feature(collections, core, libc, path_ext, std_misc, thread_sleep)]
 
 extern crate libc;
 extern crate neovim;
@@ -11,9 +11,9 @@ use std::collections::{HashMap, HashSet};
 use std::env;
 use std::fs::{self, PathExt};
 use std::io::Write;
-use std::old_io::timer;
 use std::ops::Deref;
 use std::ffi::AsOsStr;
+use std::thread;
 use std::time::duration::Duration;
 
 mod builders;
@@ -284,7 +284,7 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
             break;
         }
 
-        timer::sleep(Duration::milliseconds(10));
+        thread::sleep(Duration::milliseconds(10));
     }
 
     ::builders::stop_builders(&mut state);
