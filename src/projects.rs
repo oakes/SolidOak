@@ -23,63 +23,63 @@ fn save_project(state: &mut ::utils::State, tree: &mut gtk::TreeView, path_str: 
 }
 
 pub fn new_project(state: &mut ::utils::State, tree: &mut gtk::TreeView) {
-    if let Some(dialog) = gtk::FileChooserDialog::new(
+    let dialog = gtk::FileChooserDialog::new(
         "New Project",
         None,
-        gtk::FileChooserAction::Save
-    ) {
-        if let Some(gtk::ResponseType::Accept) = FromPrimitive::from_i32(dialog.run()) {
-            if let Some(path_str) = dialog.get_filename() {
-                let path = Path::new(path_str.as_slice());
-                if let Some(name_os_str) = path.file_name() {
-                    if let Some(name_str) = name_os_str.to_str() {
-                        if let Some(parent_path) = path.parent() {
-                            match Command::new("cargo").arg("new").arg(name_str).arg("--bin")
-                                .current_dir(parent_path).status()
-                            {
-                                Ok(_) => save_project(state, tree, &path_str),
-                                Err(e) => println!("Error creating {}: {}", name_str, e)
-                            }
+        gtk::FileChooserAction::Save,
+        [("Save", gtk::ResponseType::Ok), ("Cancel", gtk::ResponseType::Cancel)]
+    );
+    if let Some(gtk::ResponseType::Ok) = FromPrimitive::from_i32(dialog.run()) {
+        if let Some(path_str) = dialog.get_filename() {
+            let path = Path::new(path_str.as_slice());
+            if let Some(name_os_str) = path.file_name() {
+                if let Some(name_str) = name_os_str.to_str() {
+                    if let Some(parent_path) = path.parent() {
+                        match Command::new("cargo").arg("new").arg(name_str).arg("--bin")
+                            .current_dir(parent_path).status()
+                        {
+                            Ok(_) => save_project(state, tree, &path_str),
+                            Err(e) => println!("Error creating {}: {}", name_str, e)
                         }
                     }
                 }
             }
         }
-        dialog.destroy();
     }
+    dialog.destroy();
 }
 
 pub fn import_project(state: &mut ::utils::State, tree: &mut gtk::TreeView) {
-    if let Some(dialog) = gtk::FileChooserDialog::new(
+    let dialog = gtk::FileChooserDialog::new(
         "Import",
         None,
-        gtk::FileChooserAction::SelectFolder
-    ) {
-        if let Some(gtk::ResponseType::Accept) = FromPrimitive::from_i32(dialog.run()) {
-            if let Some(path_str) = dialog.get_filename() {
-                save_project(state, tree, &path_str);
-            }
+        gtk::FileChooserAction::SelectFolder,
+        [("Open", gtk::ResponseType::Ok), ("Cancel", gtk::ResponseType::Cancel)]
+    );
+    if let Some(gtk::ResponseType::Ok) = FromPrimitive::from_i32(dialog.run()) {
+        if let Some(path_str) = dialog.get_filename() {
+            save_project(state, tree, &path_str);
         }
-        dialog.destroy();
     }
+    dialog.destroy();
 }
 
 pub fn rename_file(state: &mut ::utils::State, fd: i32) {
     if let Some(_) = ::utils::get_selected_path(state) {
-        if let Some(dialog) = gtk::FileChooserDialog::new(
+        let dialog = gtk::FileChooserDialog::new(
             "Rename",
             None,
-            gtk::FileChooserAction::Save
-        ) {
-            if let Some(gtk::ResponseType::Accept) = FromPrimitive::from_i32(dialog.run()) {
-                if let Some(path_str) = dialog.get_filename() {
-                    state.selection = Some(path_str.clone());
-                    ::utils::write_prefs(&state);
-                    ::ffi::send_message(fd, format!("Move {}", path_str).as_slice());
-                }
+            gtk::FileChooserAction::Save,
+            [("Save", gtk::ResponseType::Ok), ("Cancel", gtk::ResponseType::Cancel)]
+        );
+        if let Some(gtk::ResponseType::Ok) = FromPrimitive::from_i32(dialog.run()) {
+            if let Some(path_str) = dialog.get_filename() {
+                state.selection = Some(path_str.clone());
+                ::utils::write_prefs(&state);
+                ::ffi::send_message(fd, format!("Move {}", path_str).as_slice());
             }
-            dialog.destroy();
         }
+        dialog.destroy();
     }
 }
 
