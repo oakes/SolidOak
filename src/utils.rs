@@ -21,7 +21,7 @@ pub static PREFS_FILE : &'static str = "prefs.json";
 pub static NO_WINDOW_FLAG : &'static str = "-nw";
 pub static RACER_FLAG : &'static str = "--racer";
 
-struct Resource {
+pub struct Resource {
     pub path: &'static [&'static str],
     pub data: &'static str,
 }
