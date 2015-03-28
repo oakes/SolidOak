@@ -20,4 +20,4 @@ git = "https://github.com/oakes/racer"
 
 [dependencies.rustc-serialize]
 
-rustc-serialize = "0.2.*"
+git = "https://github.com/rust-lang/rustc-serialize.git"
