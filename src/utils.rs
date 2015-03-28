@@ -111,7 +111,7 @@ pub fn get_home_dir() -> PathBuf {
     if let Some(path) = env::home_dir() {
         path
     } else {
-        PathBuf::new(".")
+        PathBuf::from(".")
     }
 }
 
@@ -154,7 +154,7 @@ fn is_project_root(state: &State, path: &Path) -> bool {
 
 pub fn get_project_path(state: &State, path: &Path) -> Option<PathBuf> {
     if is_project_path(path) || is_project_root(state, path) {
-        Some(PathBuf::new(path))
+        Some(PathBuf::from(path))
     } else {
         if let Some(parent_path) = path.parent() {
             get_project_path(state, parent_path.deref())

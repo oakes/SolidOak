@@ -17,7 +17,7 @@ fn path_sorter(a: &PathBuf, b: &PathBuf) -> Ordering {
 fn sort_string_paths(paths: &HashSet<String>) -> Vec<PathBuf> {
     let mut paths_vec = Vec::new();
     for path_str in paths.iter() {
-        paths_vec.push(PathBuf::new(path_str));
+        paths_vec.push(PathBuf::from(path_str));
     }
     paths_vec.sort_by(path_sorter);
     paths_vec

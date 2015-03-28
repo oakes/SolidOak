@@ -1,10 +1,10 @@
-#![feature(collections, core, libc, path_ext, std_misc, thread_sleep)]
+#![feature(collections, convert, core, libc, path_ext, std_misc, thread_sleep)]
 
 extern crate libc;
 extern crate neovim;
 extern crate racer;
 extern crate rgtk;
-extern crate "rustc-serialize" as rustc_serialize;
+extern crate rustc_serialize;
 
 use rgtk::*;
 use std::collections::{HashMap, HashSet};
