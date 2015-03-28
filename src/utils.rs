@@ -126,7 +126,8 @@ fn get_prefs(state: &State) -> Prefs {
 }
 
 pub fn is_parent_path(parent_str: &String, child_str: &String) -> bool {
-    child_str.starts_with(parent_str.as_slice()) &&
+    let parent_ref: &str = parent_str.as_ref();
+    child_str.starts_with(parent_ref) &&
     Path::new(parent_str).parent() != Path::new(child_str).parent()
 }
 
@@ -196,7 +197,7 @@ pub fn read_prefs(state: &mut State) {
         let mut json_str = String::new();
         let prefs_option : Option<Prefs> = match f.read_to_string(&mut json_str) {
             Ok(_) => {
-                match json::decode(json_str.as_slice()) {
+                match json::decode(json_str.as_ref()) {
                     Ok(object) => Some(object),
                     Err(e) => {
                         println!("Error decoding prefs: {}", e);

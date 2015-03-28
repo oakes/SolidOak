@@ -25,10 +25,10 @@ pub fn run_builder(state: &mut ::utils::State, args: &[&str]) {
     if let Some(project_path) = ::utils::get_selected_project_path(state) {
         if let Some(project_path_str) = project_path.to_str() {
             if let Some(&mut(ref mut term, ref current_pid)) = state.builders.get_mut(&project_path) {
-                match term.fork_command(project_path_str.as_slice(), args) {
+                match term.fork_command(project_path_str.as_ref(), args) {
                     Ok(pid) => current_pid.set(pid),
                     Err(s) => {
-                        term.feed(s.as_slice());
+                        term.feed(s.as_ref());
                         term.feed("\r\n");
                     }
                 }

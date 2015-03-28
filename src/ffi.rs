@@ -36,7 +36,8 @@ pub fn send_message(fd: c_int, command: &str) {
     let mut arr = ::neovim::Array::new();
     arr.add_string(command);
     let msg = ::neovim::serialize_message(1, "vim_command", &arr);
-    let msg_ptr = msg.as_slice().as_ptr() as *const c_void;
+    let msg_ref: &str = msg.as_ref();
+    let msg_ptr = msg_ref.as_ptr() as *const c_void;
     unsafe { write(fd, msg_ptr, msg.len() as size_t) };
 }
 

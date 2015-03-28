@@ -31,7 +31,8 @@ pub fn new_project(state: &mut ::utils::State, tree: &mut gtk::TreeView) {
     );
     if let Some(gtk::ResponseType::Ok) = FromPrimitive::from_i32(dialog.run()) {
         if let Some(path_str) = dialog.get_filename() {
-            let path = Path::new(path_str.as_slice());
+            let path_ref: &str = path_str.as_ref();
+            let path = Path::new(path_ref);
             if let Some(name_os_str) = path.file_name() {
                 if let Some(name_str) = name_os_str.to_str() {
                     if let Some(parent_path) = path.parent() {
@@ -76,7 +77,7 @@ pub fn rename_file(state: &mut ::utils::State, fd: i32) {
             if let Some(path_str) = dialog.get_filename() {
                 state.selection = Some(path_str.clone());
                 ::utils::write_prefs(&state);
-                ::ffi::send_message(fd, format!("Move {}", path_str).as_slice());
+                ::ffi::send_message(fd, format!("Move {}", path_str).as_ref());
             }
         }
         dialog.destroy();
@@ -103,7 +104,7 @@ pub fn remove_item(state: &mut ::utils::State, tree: &mut gtk::TreeView, fd: i32
                     ::utils::write_prefs(state);
                     ::ui::update_project_tree(state, tree);
                 } else {
-                    ::ffi::send_message(fd, "call delete(expand('%')) | bdelete!".as_slice());
+                    ::ffi::send_message(fd, "call delete(expand('%')) | bdelete!".as_ref());
                 }
             }
             dialog.destroy();
@@ -117,7 +118,7 @@ pub fn set_selection(state: &mut ::utils::State, tree: &mut gtk::TreeView, fd: i
             state.selection = Some(path_str.clone());
             ::utils::write_prefs(state);
             ::ui::update_project_tree(state, tree);
-            ::ffi::send_message(fd, format!("e {}", path_str).as_slice());
+            ::ffi::send_message(fd, format!("e {}", path_str).as_ref());
         }
     }
 }

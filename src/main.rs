@@ -121,7 +121,7 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
                         option_env!("CARGO_PKG_VERSION_PATCH").unwrap());
     let mut quit_app = false;
     let mut window = gtk::Window::new(gtk::WindowType::TopLevel).unwrap();
-    window.set_title(title.as_slice());
+    window.set_title(title.as_ref());
     window.set_window_position(gtk::WindowPosition::Center);
     window.set_default_size(utils::WINDOW_WIDTH, utils::WINDOW_HEIGHT);
     window.connect(gtk::signals::DeleteEvent::new(&mut |_| {
@@ -262,7 +262,7 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
 
         if let Some(recv_arr) = ffi::recv_message(read_fd) {
             if let Some(neovim::Object::String(event_name)) = recv_arr.get(1) {
-                match event_name.as_slice() {
+                match event_name.as_ref() {
                     "bufenter" => {
                         if let Some(neovim::Object::Array(event_args)) = recv_arr.get(2) {
                             if let Some(neovim::Object::String(path_str)) = event_args.get(0) {
@@ -351,7 +351,7 @@ fn main() {
 
     // if the racer flag was used, run racer
     if args_set.contains(::utils::RACER_FLAG) {
-        args_vec.retain(|arg| arg.as_slice() != ::utils::RACER_FLAG);
+        args_vec.retain(|arg| { let a: &str = arg.as_ref(); a != ::utils::RACER_FLAG });
         racer::racer_main(&args_vec);
         return;
     }
@@ -363,7 +363,7 @@ fn main() {
 
     // if the no window flag was used, start up neovim without a gui
     if args_set.contains(::utils::NO_WINDOW_FLAG) {
-        args_vec.retain(|arg| arg.as_slice() != ::utils::NO_WINDOW_FLAG);
+        args_vec.retain(|arg| { let a: &str = arg.as_ref(); a != ::utils::NO_WINDOW_FLAG });
         neovim::main_setup(&args_vec);
         neovim::main_loop();
         return;
