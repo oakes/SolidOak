@@ -7,16 +7,16 @@ build = "build.rs"
 
 [dependencies.rgtk]
 
-git = "https://github.com/oakes/rgtk"
+git = "https://github.com/oakes/rgtk.git"
 features = ["GTK_3_10"]
 
 [dependencies.neovim-rs]
 
-git = "https://github.com/oakes/neovim-rs"
+git = "https://github.com/oakes/neovim-rs.git"
 
 [dependencies.racer]
 
-git = "https://github.com/oakes/racer"
+git = "https://github.com/oakes/racer.git"
 
 [dependencies.rustc-serialize]
 
