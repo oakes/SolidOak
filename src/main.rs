@@ -295,25 +295,28 @@ fn main() {
     let data_dir = home_dir.deref().join(::utils::DATA_DIR);
     if !data_dir.exists() {
         match fs::create_dir(&data_dir) {
-            Ok(_) => {
-                for res in ::utils::DATA_CONTENT.iter() {
-                    let mut res_path = data_dir.clone();
-                    for part in res.path {
-                        res_path.push(part);
-                    }
-                    if let Some(parent) = res_path.parent() {
-                        fs::create_dir_all(parent).ok();
-                    }
-                    if let Some(mut f) = fs::File::create(&res_path).ok() {
-                        f.write_all(res.data.as_bytes()).ok();
-                    }
-                }
-                if let Some(path_str) = data_dir.to_str() {
-                    println!("Created data dir at {}", path_str);
-                }
-            },
-            Err(e) => { println!("Error creating data dir: {}", e) }
+            Ok(_) => {},
+            Err(e) => { panic!("Error creating data dir: {}", e) }
         }
+    }
+
+    // copy config files into data dir
+    for res in ::utils::DATA_CONTENT.iter() {
+        let mut res_path = data_dir.clone();
+        for part in res.path {
+            res_path.push(part);
+        }
+        if !res_path.exists() || res.always_copy {
+            if let Some(parent) = res_path.parent() {
+                fs::create_dir_all(parent).ok();
+            }
+            if let Some(mut f) = fs::File::create(&res_path).ok() {
+                f.write_all(res.data.as_bytes()).ok();
+            }
+        }
+    }
+    if let Some(path_str) = data_dir.to_str() {
+        println!("Created data dir at {}", path_str);
     }
 
     // set $VIM if it isn't already set
