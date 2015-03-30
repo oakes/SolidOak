@@ -2,7 +2,6 @@
 
 extern crate libc;
 extern crate neovim;
-extern crate racer;
 extern crate rgtk;
 extern crate rustc_serialize;
 
@@ -348,13 +347,6 @@ fn main() {
     // collect the args into a set and vector
     let args_set: HashSet<String> = env::args().collect();
     let mut args_vec: Vec<String> = env::args().collect();
-
-    // if the racer flag was used, run racer
-    if args_set.contains(::utils::RACER_FLAG) {
-        args_vec.retain(|arg| { let a: &str = arg.as_ref(); a != ::utils::RACER_FLAG });
-        racer::racer_main(&args_vec);
-        return;
-    }
 
     // add the config file path
     if let Some(path_str) = config_file.to_str() {

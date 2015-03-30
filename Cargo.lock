@@ -3,7 +3,6 @@ name = "solidoak"
 version = "0.1.0"
 dependencies = [
  "neovim-rs 0.0.12 (git+https://github.com/oakes/neovim-rs.git)",
- "racer 0.0.1 (git+https://github.com/oakes/racer.git)",
  "rgtk 0.0.1 (git+https://github.com/oakes/rgtk.git)",
  "rustc-serialize 0.3.10 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -87,11 +86,6 @@ source = "git+https://github.com/oakes/neovim-rs.git#228f2954f822334a8be44ae5639
 name = "pkg-config"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-
-[[package]]
-name = "racer"
-version = "0.0.1"
-source = "git+https://github.com/oakes/racer.git#1457620b9e952f0a70eceda94d364feff55fee96"
 
 [[package]]
 name = "rgtk"

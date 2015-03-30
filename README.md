@@ -10,10 +10,9 @@ SolidOak is a simple IDE for Rust. It's just a standalone executable that will r
 * An easy-to-use GUI written with [rgtk](https://github.com/jeremyletang/rgtk)
     - Buttons for common editing actions and a project tree that stays in sync with Neovim
     - You can bypass the GUI and run it as a console app by passing the `-nw` flag
-* An embedded copy of [Racer](https://github.com/phildawes/racer) for autocomplete
-    - To enable, you must clone the Rust source code and point Racer to it:
-    - `git clone https://github.com/rust-lang/rust.git ~/rust --depth 1 && export RUST_SRC_PATH=~/rust/src`
-    - Now try typing `std::io::` and then type Ctrl+x Ctrl+o to see a list of completions
+* Autocomplete via [Racer](https://github.com/phildawes/racer)
+    - For now, you need to install Racer separately as described in its README
+    - When binaries are released, it will be bundled
 
 ## Build Instructions
 

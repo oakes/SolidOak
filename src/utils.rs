@@ -19,7 +19,6 @@ pub static CONFIG_FILE : &'static str = ".soakrc";
 pub static CONFIG_CONTENT : &'static str = include_str!("../resources/soakrc");
 pub static PREFS_FILE : &'static str = "prefs.json";
 pub static NO_WINDOW_FLAG : &'static str = "-nw";
-pub static RACER_FLAG : &'static str = "--racer";
 
 pub struct Resource {
     pub path: &'static [&'static str],
