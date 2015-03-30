@@ -295,7 +295,11 @@ fn main() {
     let data_dir = home_dir.deref().join(::utils::DATA_DIR);
     if !data_dir.exists() {
         match fs::create_dir(&data_dir) {
-            Ok(_) => {},
+            Ok(_) => {
+                if let Some(path_str) = data_dir.to_str() {
+                    println!("Created data dir at {}", path_str);
+                }
+            },
             Err(e) => { panic!("Error creating data dir: {}", e) }
         }
     }
@@ -314,9 +318,6 @@ fn main() {
                 f.write_all(res.data.as_bytes()).ok();
             }
         }
-    }
-    if let Some(path_str) = data_dir.to_str() {
-        println!("Created data dir at {}", path_str);
     }
 
     // set $VIM if it isn't already set
