@@ -2,7 +2,7 @@
 
 ## Introduction
 
-SolidOak is a simple IDE for Rust. It's just a standalone executable that will run anywhere without being installed. Until Rust stabilizes, binaries will not be released so you'll need to build from source. It has the following features:
+SolidOak is a simple IDE for Rust. See [the website](https://sekao.net/solidoak/) for binary releases. It has the following features:
 
 * An embedded copy of [Neovim](https://github.com/neovim/neovim) as its text editor
     - On first launch, it will create ~/.soak and ~/.soakrc (equivalent to ~/.vim and ~/.vimrc)
@@ -11,8 +11,7 @@ SolidOak is a simple IDE for Rust. It's just a standalone executable that will r
     - Buttons for common editing actions and a project tree that stays in sync with Neovim
     - You can bypass the GUI and run it as a console app by passing the `-nw` flag
 * Autocomplete via [Racer](https://github.com/phildawes/racer)
-    - For now, you need to install Racer separately as described in its README
-    - When binaries are released, it will be bundled
+    - The binary releases come bundled with it, so no configuration is necessary
 
 ## Build Instructions
 
