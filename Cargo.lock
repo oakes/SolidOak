@@ -1,6 +1,6 @@
 [root]
 name = "solidoak"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "neovim-rs 0.0.12 (git+https://github.com/oakes/neovim-rs.git)",
  "rgtk 0.0.1 (git+https://github.com/oakes/rgtk.git)",
