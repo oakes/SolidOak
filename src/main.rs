@@ -1,4 +1,4 @@
-#![feature(collections, convert, core, libc, path_ext, std_misc, thread_sleep)]
+#![feature(collections, core, libc, path_ext, std_misc)]
 
 extern crate libc;
 extern crate neovim;
@@ -13,7 +13,6 @@ use std::io::Write;
 use std::ops::Deref;
 use std::ffi::AsOsStr;
 use std::thread;
-use std::time::duration::Duration;
 
 mod builders;
 mod ffi;
@@ -283,7 +282,7 @@ fn gui_main(pty: &mut gtk::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
             break;
         }
 
-        thread::sleep(Duration::milliseconds(10));
+        thread::sleep_ms(10);
     }
 
     ::builders::stop_builders(&mut state);
