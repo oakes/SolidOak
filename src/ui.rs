@@ -1,4 +1,5 @@
-use rgtk::*;
+use gtk::traits::*;
+use gtk::widgets;
 use std::cmp::Ordering;
 use std::collections::HashSet;
 use std::fs::{self, PathExt};
@@ -35,8 +36,8 @@ pub fn update_project_buttons(state: &::utils::State) {
     }
 }
 
-fn add_node(state: &::utils::State, node: &Path, parent: Option<&gtk::TreeIter>) {
-    let mut iter = gtk::TreeIter::new().unwrap();
+fn add_node(state: &::utils::State, node: &Path, parent: Option<&widgets::TreeIter>) {
+    let mut iter = widgets::TreeIter::new().unwrap();
 
     if let Some(full_path_str) = node.to_str() {
         if let Some(leaf_os_str) = node.file_name() {
@@ -71,10 +72,10 @@ fn add_node(state: &::utils::State, node: &Path, parent: Option<&gtk::TreeIter>)
 
 fn expand_nodes(
     state: &mut ::utils::State,
-    tree: &mut gtk::TreeView,
-    parent: Option<&gtk::TreeIter>)
+    tree: &mut widgets::TreeView,
+    parent: Option<&widgets::TreeIter>)
 {
-    let mut iter = gtk::TreeIter::new().unwrap();
+    let mut iter = widgets::TreeIter::new().unwrap();
 
     if state.tree_model.iter_children(&mut iter, parent) {
         loop {
@@ -102,7 +103,7 @@ fn expand_nodes(
     }
 }
 
-pub fn update_project_tree(state: &mut ::utils::State, tree: &mut gtk::TreeView) {
+pub fn update_project_tree(state: &mut ::utils::State, tree: &mut widgets::TreeView) {
     state.is_refreshing_tree = true;
 
     state.tree_store.clear();

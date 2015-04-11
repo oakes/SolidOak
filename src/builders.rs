@@ -1,12 +1,13 @@
-use rgtk::*;
+use gtk::traits::*;
+use gtk::widgets;
 use std::cell::Cell;
 use std::path::Path;
 
-pub fn show_builder(state: &mut ::utils::State, build_pane: &mut gtk::Stack) {
+pub fn show_builder(state: &mut ::utils::State, build_pane: &mut widgets::Stack) {
     if let Some(ref path_str) = state.selection {
         if let Some(ref project_path) = ::utils::get_project_path(state, Path::new(path_str)) {
             if !state.builders.contains_key(project_path) {
-                let mut term = gtk::VteTerminal::new().unwrap();
+                let mut term = widgets::VteTerminal::new().unwrap();
                 term.show_all();
                 state.builders.insert(project_path.clone(), (term, Cell::new(-1)));
             }
@@ -37,7 +38,7 @@ pub fn run_builder(state: &mut ::utils::State, args: &[&str]) {
     }
 }
 
-fn stop_process(term: &mut gtk::VteTerminal, current_pid: &Cell<i32>) {
+fn stop_process(term: &mut widgets::VteTerminal, current_pid: &Cell<i32>) {
     let pid = current_pid.get();
     if pid >= 0 {
         ::ffi::kill_process(pid);
@@ -56,14 +57,14 @@ pub fn stop_builder(state: &mut ::utils::State) {
 
 pub fn stop_builders(state: &mut ::utils::State) {
     for (_, mut builder) in state.builders.iter_mut() {
-        let (ref mut term, ref current_pid) : (gtk::VteTerminal, Cell<i32>) = *builder;
+        let (ref mut term, ref current_pid) : (widgets::VteTerminal, Cell<i32>) = *builder;
         stop_process(term, current_pid);
     }
 }
 
 pub fn set_builders_font_size(state: &mut ::utils::State) {
     for (_, mut builder) in state.builders.iter_mut() {
-        let (ref mut term, _) : (gtk::VteTerminal, Cell<i32>) = *builder;
+        let (ref mut term, _) : (widgets::VteTerminal, Cell<i32>) = *builder;
         term.set_font_size(state.font_size);
     }
 }

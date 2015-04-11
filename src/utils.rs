@@ -1,4 +1,4 @@
-use rgtk::*;
+use gtk::widgets;
 use rustc_serialize::{Encodable, json};
 use std::cell::Cell;
 use std::env;
@@ -110,13 +110,13 @@ pub struct State<'a> {
     pub selection: Option<String>,
     pub easy_mode: bool,
     pub font_size: i32,
-    pub builders: HashMap<PathBuf, (gtk::VteTerminal, Cell<i32>)>,
-    pub window: &'a gtk::Window,
-    pub tree_store: &'a gtk::TreeStore,
-    pub tree_model: &'a gtk::TreeModel,
-    pub tree_selection: &'a gtk::TreeSelection,
-    pub rename_button: &'a gtk::Button,
-    pub remove_button: &'a gtk::Button,
+    pub builders: HashMap<PathBuf, (widgets::VteTerminal, Cell<i32>)>,
+    pub window: &'a widgets::Window,
+    pub tree_store: &'a widgets::TreeStore,
+    pub tree_model: &'a widgets::TreeModel,
+    pub tree_selection: &'a widgets::TreeSelection,
+    pub rename_button: &'a widgets::Button,
+    pub remove_button: &'a widgets::Button,
     pub is_refreshing_tree: bool
 }
 
@@ -154,7 +154,7 @@ pub fn is_parent_path(parent_str: &String, child_str: &String) -> bool {
 }
 
 pub fn get_selected_path(state: &State) -> Option<String> {
-    let mut iter = gtk::TreeIter::new().unwrap();
+    let mut iter = widgets::TreeIter::new().unwrap();
 
     if state.tree_selection.get_selected(state.tree_model, &mut iter) {
         state.tree_model.get_value(&iter, 1).get_string()

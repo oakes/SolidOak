@@ -5,10 +5,14 @@ version = "0.1.1"
 authors = ["oakes <zsoakes@gmail.com>"]
 build = "build.rs"
 
-[dependencies.rgtk]
+[dependencies.gtk]
 
-git = "https://github.com/oakes/rgtk.git"
-features = ["GTK_3_10"]
+git = "https://github.com/oakes/gtk.git"
+features = ["gtk_3_10"]
+
+[dependencies.glib]
+
+git = "https://github.com/rust-gnome/glib"
 
 [dependencies.neovim-rs]
 

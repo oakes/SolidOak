@@ -1,4 +1,5 @@
-use rgtk::*;
+use gtk::traits::*;
+use gtk::{self, widgets};
 use std::fs::PathExt;
 use std::num::FromPrimitive;
 use std::path::Path;
@@ -15,15 +16,15 @@ fn remove_expansions_for_path(state: &mut ::utils::State, path_str: &String) {
     }
 }
 
-fn save_project(state: &mut ::utils::State, tree: &mut gtk::TreeView, path_str: &String) {
+fn save_project(state: &mut ::utils::State, tree: &mut widgets::TreeView, path_str: &String) {
     state.projects.insert(path_str.clone());
     state.selection = Some(path_str.clone());
     ::utils::write_prefs(state);
     ::ui::update_project_tree(state, tree);
 }
 
-pub fn new_project(state: &mut ::utils::State, tree: &mut gtk::TreeView) {
-    let dialog = gtk::FileChooserDialog::new(
+pub fn new_project(state: &mut ::utils::State, tree: &mut widgets::TreeView) {
+    let dialog = widgets::FileChooserDialog::new(
         "New Project",
         None,
         gtk::FileChooserAction::Save,
@@ -50,8 +51,8 @@ pub fn new_project(state: &mut ::utils::State, tree: &mut gtk::TreeView) {
     dialog.destroy();
 }
 
-pub fn import_project(state: &mut ::utils::State, tree: &mut gtk::TreeView) {
-    let dialog = gtk::FileChooserDialog::new(
+pub fn import_project(state: &mut ::utils::State, tree: &mut widgets::TreeView) {
+    let dialog = widgets::FileChooserDialog::new(
         "Import",
         None,
         gtk::FileChooserAction::SelectFolder,
@@ -67,7 +68,7 @@ pub fn import_project(state: &mut ::utils::State, tree: &mut gtk::TreeView) {
 
 pub fn rename_file(state: &mut ::utils::State, fd: i32) {
     if let Some(_) = ::utils::get_selected_path(state) {
-        let dialog = gtk::FileChooserDialog::new(
+        let dialog = widgets::FileChooserDialog::new(
             "Rename",
             None,
             gtk::FileChooserAction::Save,
@@ -84,9 +85,9 @@ pub fn rename_file(state: &mut ::utils::State, fd: i32) {
     }
 }
 
-pub fn remove_item(state: &mut ::utils::State, tree: &mut gtk::TreeView, fd: i32) {
+pub fn remove_item(state: &mut ::utils::State, tree: &mut widgets::TreeView, fd: i32) {
     if let Some(path_str) = ::utils::get_selected_path(state) {
-        if let Some(dialog) = gtk::MessageDialog::new_with_markup(
+        if let Some(dialog) = widgets::MessageDialog::new_with_markup(
             Some(state.window.clone()),
             gtk::DialogFlags::Modal,
             gtk::MessageType::Question,
@@ -112,7 +113,7 @@ pub fn remove_item(state: &mut ::utils::State, tree: &mut gtk::TreeView, fd: i32
     }
 }
 
-pub fn set_selection(state: &mut ::utils::State, tree: &mut gtk::TreeView, fd: i32) {
+pub fn set_selection(state: &mut ::utils::State, tree: &mut widgets::TreeView, fd: i32) {
     if !state.is_refreshing_tree {
         if let Some(path_str) = ::utils::get_selected_path(state) {
             state.selection = Some(path_str.clone());
@@ -123,14 +124,14 @@ pub fn set_selection(state: &mut ::utils::State, tree: &mut gtk::TreeView, fd: i
     }
 }
 
-pub fn remove_expansion(state: &mut ::utils::State, iter: &gtk::TreeIter) {
+pub fn remove_expansion(state: &mut ::utils::State, iter: &widgets::TreeIter) {
     if let Some(path_str) = state.tree_model.get_value(iter, 1).get_string() {
         remove_expansions_for_path(state, &path_str);
         ::utils::write_prefs(state);
     }
 }
 
-pub fn add_expansion(state: &mut ::utils::State, iter: &gtk::TreeIter) {
+pub fn add_expansion(state: &mut ::utils::State, iter: &widgets::TreeIter) {
     if let Some(path_str) = state.tree_model.get_value(iter, 1).get_string() {
         state.expansions.insert(path_str);
         ::utils::write_prefs(state);
