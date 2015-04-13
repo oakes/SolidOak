@@ -291,9 +291,9 @@ fn get_settings() -> Settings {
             rename: Some("n".to_string()),
             remove: Some("x".to_string()),
 
-            run: Some("a".to_string()),
+            run: Some("n".to_string()),
             build: Some("k".to_string()),
-            test: Some("v".to_string()),
+            test: Some("t".to_string()),
             clean: Some("l".to_string()),
             stop: Some("i".to_string()),
 
