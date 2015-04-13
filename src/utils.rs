@@ -278,23 +278,125 @@ pub fn read_prefs(state: &mut State) {
     }
 }
 
-pub fn read_settings() -> Option<Settings> {
+fn get_settings() -> Settings {
+    Settings {
+        keys: ::utils::KeySettings {
+            new_project: Some("p".to_string()),
+            import: Some("o".to_string()),
+            rename: Some("m".to_string()),
+            remove: Some("g".to_string()),
+
+            run: Some("r".to_string()),
+            build: Some("b".to_string()),
+            test: Some("t".to_string()),
+            clean: Some("l".to_string()),
+            stop: Some("i".to_string()),
+
+            save: Some("s".to_string()),
+            undo: Some("z".to_string()),
+            redo: Some("y".to_string()),
+            font_dec: Some("minus".to_string()),
+            font_inc: Some("equal".to_string()),
+            close: Some("w".to_string())
+        }
+    }
+}
+
+pub fn write_settings() {
     let settings_path = get_home_dir().deref().join(DATA_DIR).join(SETTINGS_FILE);
+    if settings_path.exists() { // don't overwrite existing file, so user can modify it
+        return;
+    }
+
+    let default_settings = get_settings();
+
+    let mut json_str = String::new();
+    {
+        let mut encoder = json::Encoder::new_pretty(&mut json_str);
+        default_settings.encode(&mut encoder).ok().expect("Error encoding settings.");
+    }
+
+    if let Some(mut f) = fs::File::create(&settings_path).ok() {
+        match f.write(json_str.as_bytes()) {
+            Ok(_) => {},
+            Err(e) => println!("Error writing settings: {}", e)
+        };
+    }
+}
+
+pub fn read_settings() -> Settings {
+    let default_settings = get_settings();
+    let settings_path = get_home_dir().deref().join(DATA_DIR).join(SETTINGS_FILE);
+
     if let Some(mut f) = fs::File::open(&settings_path).ok() {
         let mut json_str = String::new();
-        match f.read_to_string(&mut json_str) {
+        let settings_opt : Option<Settings> = match f.read_to_string(&mut json_str) {
             Ok(_) => {
                 match json::decode(json_str.as_ref()) {
                     Ok(object) => Some(object),
                     Err(e) => {
-                        println!("Error decoding prefs: {}", e);
+                        println!("Error decoding settings: {}", e);
                         None
                     }
                 }
             },
             Err(_) => None
+        };
+
+        if let Some(mut settings) = settings_opt {
+            let keys = default_settings.keys;
+
+            if let Some(key) = keys.new_project {
+                settings.keys.new_project = Some(settings.keys.new_project.unwrap_or(key));
+            }
+            if let Some(key) = keys.import {
+                settings.keys.import = Some(settings.keys.import.unwrap_or(key));
+            }
+            if let Some(key) = keys.rename {
+                settings.keys.rename = Some(settings.keys.rename.unwrap_or(key));
+            }
+            if let Some(key) = keys.remove {
+                settings.keys.remove = Some(settings.keys.remove.unwrap_or(key));
+            }
+
+            if let Some(key) = keys.run {
+                settings.keys.run = Some(settings.keys.run.unwrap_or(key));
+            }
+            if let Some(key) = keys.build {
+                settings.keys.build = Some(settings.keys.build.unwrap_or(key));
+            }
+            if let Some(key) = keys.test {
+                settings.keys.test = Some(settings.keys.test.unwrap_or(key));
+            }
+            if let Some(key) = keys.clean {
+                settings.keys.clean = Some(settings.keys.clean.unwrap_or(key));
+            }
+            if let Some(key) = keys.stop {
+                settings.keys.stop = Some(settings.keys.stop.unwrap_or(key))
+            }
+
+            if let Some(key) = keys.save {
+                settings.keys.save = Some(settings.keys.save.unwrap_or(key));
+            }
+            if let Some(key) = keys.undo {
+                settings.keys.undo = Some(settings.keys.undo.unwrap_or(key));
+            }
+            if let Some(key) = keys.redo {
+                settings.keys.redo = Some(settings.keys.redo.unwrap_or(key));
+            }
+            if let Some(key) = keys.font_dec {
+                settings.keys.font_dec = Some(settings.keys.font_dec.unwrap_or(key));
+            }
+            if let Some(key) = keys.font_inc {
+                settings.keys.font_inc = Some(settings.keys.font_inc.unwrap_or(key));
+            }
+            if let Some(key) = keys.close {
+                settings.keys.close = Some(settings.keys.close.unwrap_or(key));
+            }
+
+            return settings;
         }
-    } else {
-        None
     }
+
+    default_settings
 }

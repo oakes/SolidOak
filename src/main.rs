@@ -144,25 +144,25 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
     // set the shortcuts
 
     let mut shortcuts = HashMap::new();
-    let keys = ::utils::read_settings().unwrap().keys;
+    let settings = ::utils::read_settings();
 
-    shortcuts.insert(keys.new_project.unwrap_or("p".to_string()), &new_button);
-    shortcuts.insert(keys.import.unwrap_or("o".to_string()), &import_button);
-    shortcuts.insert(keys.rename.unwrap_or("m".to_string()), &rename_button);
-    shortcuts.insert(keys.remove.unwrap_or("g".to_string()), &remove_button);
+    if let Some(key) = settings.keys.new_project { shortcuts.insert(key, &new_button); }
+    if let Some(key) = settings.keys.import { shortcuts.insert(key, &import_button); }
+    if let Some(key) = settings.keys.rename { shortcuts.insert(key, &rename_button); }
+    if let Some(key) = settings.keys.remove { shortcuts.insert(key, &remove_button); }
 
-    shortcuts.insert(keys.run.unwrap_or("r".to_string()), &run_button);
-    shortcuts.insert(keys.build.unwrap_or("b".to_string()), &build_button);
-    shortcuts.insert(keys.test.unwrap_or("t".to_string()), &test_button);
-    shortcuts.insert(keys.clean.unwrap_or("l".to_string()), &clean_button);
-    shortcuts.insert(keys.stop.unwrap_or("i".to_string()), &stop_button);
+    if let Some(key) = settings.keys.run { shortcuts.insert(key, &run_button); }
+    if let Some(key) = settings.keys.build { shortcuts.insert(key, &build_button); }
+    if let Some(key) = settings.keys.test { shortcuts.insert(key, &test_button); }
+    if let Some(key) = settings.keys.clean { shortcuts.insert(key, &clean_button); }
+    if let Some(key) = settings.keys.stop { shortcuts.insert(key, &stop_button); }
 
-    shortcuts.insert(keys.save.unwrap_or("s".to_string()), &save_button);
-    shortcuts.insert(keys.undo.unwrap_or("z".to_string()), &undo_button);
-    shortcuts.insert(keys.redo.unwrap_or("y".to_string()), &redo_button);
-    shortcuts.insert(keys.font_dec.unwrap_or("minus".to_string()), &font_dec_button);
-    shortcuts.insert(keys.font_inc.unwrap_or("equal".to_string()), &font_inc_button);
-    shortcuts.insert(keys.close.unwrap_or("w".to_string()), &close_button);
+    if let Some(key) = settings.keys.save { shortcuts.insert(key, &save_button); }
+    if let Some(key) = settings.keys.undo { shortcuts.insert(key, &undo_button); }
+    if let Some(key) = settings.keys.redo { shortcuts.insert(key, &redo_button); }
+    if let Some(key) = settings.keys.font_dec { shortcuts.insert(key, &font_dec_button); }
+    if let Some(key) = settings.keys.font_inc { shortcuts.insert(key, &font_inc_button); }
+    if let Some(key) = settings.keys.close { shortcuts.insert(key, &close_button); }
 
     for (key_str, button) in shortcuts.iter() {
         button.set_tooltip_text(key_str.as_ref());
@@ -363,6 +363,7 @@ fn main() {
             }
         }
     }
+    ::utils::write_settings();
 
     // set $VIM if it isn't already set
     if env::var("VIM").is_err() {
