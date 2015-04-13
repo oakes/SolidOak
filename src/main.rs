@@ -2,6 +2,7 @@
 
 extern crate libc;
 extern crate neovim;
+extern crate gdk;
 extern crate glib;
 extern crate gtk;
 extern crate rustc_serialize;
@@ -66,8 +67,8 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
     let save_button = widgets::Button::new_with_label("Save").unwrap();
     let undo_button = widgets::Button::new_with_label("Undo").unwrap();
     let redo_button = widgets::Button::new_with_label("Redo").unwrap();
-    let font_minus_button = widgets::Button::new_with_label("Font -").unwrap();
-    let font_plus_button = widgets::Button::new_with_label("Font +").unwrap();
+    let font_dec_button = widgets::Button::new_with_label("Font -").unwrap();
+    let font_inc_button = widgets::Button::new_with_label("Font +").unwrap();
     let mut easy_mode_button = widgets::ToggleButton::new_with_label("Easy Mode").unwrap();
     let editor_separator = widgets::Separator::new(gtk::Orientation::Horizontal).unwrap();
     let close_button = widgets::Button::new_with_label("X").unwrap();
@@ -76,8 +77,8 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
     editor_buttons.add(&save_button);
     editor_buttons.add(&undo_button);
     editor_buttons.add(&redo_button);
-    editor_buttons.add(&font_minus_button);
-    editor_buttons.add(&font_plus_button);
+    editor_buttons.add(&font_dec_button);
+    editor_buttons.add(&font_inc_button);
     editor_buttons.add(&easy_mode_button);
     editor_buttons.pack_start(&editor_separator, true, false, 0);
     editor_buttons.add(&close_button);
@@ -139,6 +140,47 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
 
     window.add(&window_pane);
     window.show_all();
+
+    // set the shortcuts
+
+    let mut shortcuts = HashMap::new();
+    let keys = ::utils::read_settings().unwrap().keys;
+
+    shortcuts.insert(keys.new_project.unwrap_or("p".to_string()), &new_button);
+    shortcuts.insert(keys.import.unwrap_or("o".to_string()), &import_button);
+    shortcuts.insert(keys.rename.unwrap_or("m".to_string()), &rename_button);
+    shortcuts.insert(keys.remove.unwrap_or("g".to_string()), &remove_button);
+
+    shortcuts.insert(keys.run.unwrap_or("r".to_string()), &run_button);
+    shortcuts.insert(keys.build.unwrap_or("b".to_string()), &build_button);
+    shortcuts.insert(keys.test.unwrap_or("t".to_string()), &test_button);
+    shortcuts.insert(keys.clean.unwrap_or("l".to_string()), &clean_button);
+    shortcuts.insert(keys.stop.unwrap_or("i".to_string()), &stop_button);
+
+    shortcuts.insert(keys.save.unwrap_or("s".to_string()), &save_button);
+    shortcuts.insert(keys.undo.unwrap_or("z".to_string()), &undo_button);
+    shortcuts.insert(keys.redo.unwrap_or("y".to_string()), &redo_button);
+    shortcuts.insert(keys.font_dec.unwrap_or("minus".to_string()), &font_dec_button);
+    shortcuts.insert(keys.font_inc.unwrap_or("equal".to_string()), &font_inc_button);
+    shortcuts.insert(keys.close.unwrap_or("w".to_string()), &close_button);
+
+    for (key_str, button) in shortcuts.iter() {
+        button.set_tooltip_text(key_str.as_ref());
+    }
+
+    window.connect(signals::KeyPressEvent::new(&mut |key| {
+        let state = unsafe { (*key).state };
+        if state.contains(gdk::ModifierType::from_bits_truncate(1 << 28)) {
+            let keyval = unsafe { (*key).keyval };
+            if let Some(name_str) = gdk::keyval_name(keyval) {
+                if let Some(button) = shortcuts.get(&name_str) {
+                    button.clicked();
+                    return true;
+                }
+            }
+        }
+        false
+    }));
 
     // populate the project tree
 
@@ -202,7 +244,7 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
     redo_button.connect(signals::Clicked::new(&mut || {
         ::ffi::send_message(write_fd, "redo");
     }));
-    font_minus_button.connect(signals::Clicked::new(&mut || {
+    font_dec_button.connect(signals::Clicked::new(&mut || {
         if state.font_size > ::utils::MIN_FONT_SIZE {
             state.font_size -= 1;
             ::utils::write_prefs(&state);
@@ -210,7 +252,7 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
             ::builders::set_builders_font_size(&mut state);
         }
     }));
-    font_plus_button.connect(signals::Clicked::new(&mut || {
+    font_inc_button.connect(signals::Clicked::new(&mut || {
         if state.font_size < ::utils::MAX_FONT_SIZE {
             state.font_size += 1;
             ::utils::write_prefs(&state);

@@ -18,6 +18,7 @@ pub static DATA_DIR : &'static str = ".soak";
 pub static CONFIG_FILE : &'static str = ".soakrc";
 pub static CONFIG_CONTENT : &'static str = include_str!("../resources/soakrc");
 pub static PREFS_FILE : &'static str = "prefs.json";
+pub static SETTINGS_FILE : &'static str = "settings.json";
 pub static NO_WINDOW_FLAG : &'static str = "-nw";
 
 pub struct Resource {
@@ -127,6 +128,32 @@ struct Prefs {
     selection: Option<String>,
     easy_mode: bool,
     font_size: i32
+}
+
+#[derive(RustcDecodable, RustcEncodable)]
+pub struct KeySettings {
+    pub new_project: Option<String>,
+    pub import: Option<String>,
+    pub rename: Option<String>,
+    pub remove: Option<String>,
+
+    pub run: Option<String>,
+    pub build: Option<String>,
+    pub test: Option<String>,
+    pub clean: Option<String>,
+    pub stop: Option<String>,
+
+    pub save: Option<String>,
+    pub undo: Option<String>,
+    pub redo: Option<String>,
+    pub font_dec: Option<String>,
+    pub font_inc: Option<String>,
+    pub close: Option<String>
+}
+
+#[derive(RustcDecodable, RustcEncodable)]
+pub struct Settings {
+    pub keys: KeySettings
 }
 
 pub fn get_home_dir() -> PathBuf {
@@ -248,5 +275,26 @@ pub fn read_prefs(state: &mut State) {
                 state.font_size = prefs.font_size;
             }
         }
+    }
+}
+
+pub fn read_settings() -> Option<Settings> {
+    let settings_path = get_home_dir().deref().join(DATA_DIR).join(SETTINGS_FILE);
+    if let Some(mut f) = fs::File::open(&settings_path).ok() {
+        let mut json_str = String::new();
+        match f.read_to_string(&mut json_str) {
+            Ok(_) => {
+                match json::decode(json_str.as_ref()) {
+                    Ok(object) => Some(object),
+                    Err(e) => {
+                        println!("Error decoding prefs: {}", e);
+                        None
+                    }
+                }
+            },
+            Err(_) => None
+        }
+    } else {
+        None
     }
 }
