@@ -283,18 +283,18 @@ fn get_settings() -> Settings {
         keys: ::utils::KeySettings {
             new_project: Some("p".to_string()),
             import: Some("o".to_string()),
-            rename: Some("m".to_string()),
-            remove: Some("g".to_string()),
+            rename: Some("n".to_string()),
+            remove: Some("x".to_string()),
 
-            run: Some("r".to_string()),
-            build: Some("b".to_string()),
-            test: Some("t".to_string()),
+            run: Some("a".to_string()),
+            build: Some("k".to_string()),
+            test: Some("v".to_string()),
             clean: Some("l".to_string()),
             stop: Some("i".to_string()),
 
             save: Some("s".to_string()),
             undo: Some("z".to_string()),
-            redo: Some("y".to_string()),
+            redo: Some("r".to_string()),
             font_dec: Some("minus".to_string()),
             font_inc: Some("equal".to_string()),
             close: Some("w".to_string())
