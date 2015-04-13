@@ -14,6 +14,11 @@ pub static EDITOR_HEIGHT_PCT : f32 = 0.70;
 pub static MIN_FONT_SIZE : i32 = 0;
 pub static MAX_FONT_SIZE : i32 = 50;
 
+#[cfg(target_os = "macos")]
+pub static META_KEY : u32 = 1 << 28;
+#[cfg(not(target_os = "macos"))]
+pub static META_KEY : u32 = 1 << 2;
+
 pub static DATA_DIR : &'static str = ".soak";
 pub static CONFIG_FILE : &'static str = ".soakrc";
 pub static CONFIG_CONTENT : &'static str = include_str!("../resources/soakrc");

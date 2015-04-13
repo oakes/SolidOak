@@ -168,11 +168,9 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
         button.set_tooltip_text(key_str.as_ref());
     }
 
-    let command_key = gdk::ModifierType::from_bits_truncate(1 << 28);
-    let control_key = gdk::ModifierType::from_bits_truncate(1 << 2);
     window.connect(signals::KeyPressEvent::new(&mut |key| {
         let state = unsafe { (*key).state };
-        if state.contains(command_key) || state.contains(control_key) {
+        if state.contains(gdk::ModifierType::from_bits_truncate(::utils::META_KEY)) {
             let keyval = unsafe { (*key).keyval };
             if let Some(name_str) = gdk::keyval_name(keyval) {
                 if let Some(button) = shortcuts.get(&name_str) {
