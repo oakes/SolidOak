@@ -287,7 +287,7 @@ fn get_settings() -> Settings {
     Settings {
         keys: ::utils::KeySettings {
             new_project: Some("p".to_string()),
-            import: Some("o".to_string()),
+            import: Some("i".to_string()),
             rename: Some("n".to_string()),
             remove: Some("g".to_string()),
 
@@ -295,7 +295,7 @@ fn get_settings() -> Settings {
             build: Some("k".to_string()),
             test: Some("t".to_string()),
             clean: Some("l".to_string()),
-            stop: Some("i".to_string()),
+            stop: Some("h".to_string()),
 
             save: Some("s".to_string()),
             undo: Some("z".to_string()),
