@@ -289,7 +289,7 @@ fn get_settings() -> Settings {
             new_project: Some("p".to_string()),
             import: Some("o".to_string()),
             rename: Some("n".to_string()),
-            remove: Some("x".to_string()),
+            remove: Some("g".to_string()),
 
             run: Some("a".to_string()),
             build: Some("k".to_string()),
