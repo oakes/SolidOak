@@ -295,7 +295,7 @@ fn get_settings() -> Settings {
             build: Some("k".to_string()),
             test: Some("t".to_string()),
             clean: Some("l".to_string()),
-            stop: Some("h".to_string()),
+            stop: Some("j".to_string()),
 
             save: Some("s".to_string()),
             undo: Some("z".to_string()),
