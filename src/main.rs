@@ -34,7 +34,7 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
     let rename_button = widgets::Button::new_with_label("Rename").unwrap();
     let remove_button = widgets::Button::new_with_label("Remove").unwrap();
 
-    let mut project_buttons = widgets::Box::new(gtk::Orientation::Horizontal, 0).unwrap();
+    let project_buttons = widgets::Box::new(gtk::Orientation::Horizontal, 0).unwrap();
     project_buttons.add(&new_button);
     project_buttons.add(&import_button);
     project_buttons.add(&rename_button);
@@ -49,7 +49,7 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
     project_tree.set_headers_visible(false);
     project_tree.set_can_focus(false);
 
-    let mut scroll_pane = widgets::ScrolledWindow::new(None, None).unwrap();
+    let scroll_pane = widgets::ScrolledWindow::new(None, None).unwrap();
     scroll_pane.add(&project_tree);
 
     let column = widgets::TreeViewColumn::new().unwrap();
@@ -58,7 +58,7 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
     column.add_attribute(&cell, "text", 0);
     project_tree.append_column(&column);
 
-    let mut left_pane = widgets::Box::new(gtk::Orientation::Vertical, 0).unwrap();
+    let left_pane = widgets::Box::new(gtk::Orientation::Vertical, 0).unwrap();
     left_pane.pack_start(&project_buttons, false, true, 0);
     left_pane.pack_start(&scroll_pane, true, true, 0);
 
@@ -69,11 +69,11 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
     let redo_button = widgets::Button::new_with_label("Redo").unwrap();
     let font_dec_button = widgets::Button::new_with_label("Font -").unwrap();
     let font_inc_button = widgets::Button::new_with_label("Font +").unwrap();
-    let mut easy_mode_button = widgets::ToggleButton::new_with_label("Easy Mode").unwrap();
+    let easy_mode_button = widgets::ToggleButton::new_with_label("Easy Mode").unwrap();
     let editor_separator = widgets::Separator::new(gtk::Orientation::Horizontal).unwrap();
     let close_button = widgets::Button::new_with_label("X").unwrap();
 
-    let mut editor_buttons = widgets::Box::new(gtk::Orientation::Horizontal, 0).unwrap();
+    let editor_buttons = widgets::Box::new(gtk::Orientation::Horizontal, 0).unwrap();
     editor_buttons.add(&save_button);
     editor_buttons.add(&undo_button);
     editor_buttons.add(&redo_button);
@@ -103,15 +103,15 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
 
     let mut build_terms = widgets::Stack::new().unwrap();
 
-    let mut build_pane = widgets::Box::new(gtk::Orientation::Vertical, 0).unwrap();
+    let build_pane = widgets::Box::new(gtk::Orientation::Vertical, 0).unwrap();
     build_pane.pack_start(&build_buttons, false, true, 0);
     build_pane.pack_start(&build_terms, true, true, 0);
 
-    let mut resizer = widgets::Paned::new(gtk::Orientation::Vertical).unwrap();
+    let resizer = widgets::Paned::new(gtk::Orientation::Vertical).unwrap();
     resizer.add1(&editor_term);
     resizer.add2(&build_pane);
 
-    let mut right_pane = widgets::Box::new(gtk::Orientation::Vertical, 0).unwrap();
+    let right_pane = widgets::Box::new(gtk::Orientation::Vertical, 0).unwrap();
     right_pane.pack_start(&editor_buttons, false, true, 0);
     right_pane.pack_start(&resizer, true, true, 0);
 
@@ -122,7 +122,7 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
                         option_env!("CARGO_PKG_VERSION_MINOR").unwrap(),
                         option_env!("CARGO_PKG_VERSION_PATCH").unwrap());
     let mut quit_app = false;
-    let mut window = widgets::Window::new(gtk::WindowType::TopLevel).unwrap();
+    let window = widgets::Window::new(gtk::WindowType::TopLevel).unwrap();
     window.set_title(title.as_ref());
     window.set_window_position(gtk::WindowPosition::Center);
     window.set_default_size(utils::WINDOW_WIDTH, utils::WINDOW_HEIGHT);
@@ -134,7 +134,7 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
         true
     }));
 
-    let mut window_pane = widgets::Paned::new(gtk::Orientation::Horizontal).unwrap();
+    let window_pane = widgets::Paned::new(gtk::Orientation::Horizontal).unwrap();
     window_pane.add1(&left_pane);
     window_pane.add2(&right_pane);
 

@@ -10,7 +10,7 @@ pub fn show_builder(state: &mut ::utils::State, build_buttons: &mut widgets::Box
         if let Some(ref project_path) = ::utils::get_project_path(state, Path::new(path_str)) {
             if ::utils::is_project_root(state, project_path) {
                 if !state.builders.contains_key(project_path) {
-                    let mut term = widgets::VteTerminal::new().unwrap();
+                    let term = widgets::VteTerminal::new().unwrap();
                     term.show_all();
                     build_terms.add(&term);
                     state.builders.insert(project_path.clone(), (term, Cell::new(-1)));
