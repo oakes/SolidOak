@@ -18,7 +18,6 @@ fn remove_expansions_for_path(state: &mut ::utils::State, path_str: &String) {
 
 fn save_project(state: &mut ::utils::State, tree: &mut widgets::TreeView, path_str: &String) {
     state.projects.insert(path_str.clone());
-    state.selection = Some(path_str.clone());
     ::utils::write_prefs(state);
     ::ui::update_project_tree(state, tree);
 }
@@ -104,8 +103,9 @@ pub fn remove_item(state: &mut ::utils::State, tree: &mut widgets::TreeView, fd:
                     remove_expansions_for_path(state, &path_str);
                     ::utils::write_prefs(state);
                     ::ui::update_project_tree(state, tree);
+                    ::ffi::send_message(fd, "bd");
                 } else {
-                    ::ffi::send_message(fd, "call delete(expand('%')) | bdelete!".as_ref());
+                    ::ffi::send_message(fd, "call delete(expand('%')) | bdelete!");
                 }
             }
             dialog.destroy();

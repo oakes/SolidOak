@@ -319,7 +319,7 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
                 }
             }
             ::ui::update_project_tree(&mut state, &mut project_tree);
-            ::builders::show_builder(&mut state, &mut build_terms);
+            ::builders::show_builder(&mut state, &mut build_buttons, &mut build_terms);
             ::builders::set_builders_font_size(&mut state);
         }
 

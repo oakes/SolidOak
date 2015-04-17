@@ -3,22 +3,31 @@ use gtk::widgets;
 use std::cell::Cell;
 use std::path::Path;
 
-pub fn show_builder(state: &mut ::utils::State, build_pane: &mut widgets::Stack) {
+pub fn show_builder(state: &mut ::utils::State, build_buttons: &mut widgets::Box, build_terms: &mut widgets::Stack) {
+    let mut should_show = false;
+
     if let Some(ref path_str) = state.selection {
         if let Some(ref project_path) = ::utils::get_project_path(state, Path::new(path_str)) {
-            if !state.builders.contains_key(project_path) {
-                let mut term = widgets::VteTerminal::new().unwrap();
-                term.show_all();
-                state.builders.insert(project_path.clone(), (term, Cell::new(-1)));
-            }
-            if let Some(&(ref term, _)) = state.builders.get(project_path) {
-                if term.get_parent().is_none() {
-                    build_pane.add(term);
-                } else {
-                    build_pane.set_visible_child(term);
+            if ::utils::is_project_root(state, project_path) {
+                if !state.builders.contains_key(project_path) {
+                    let mut term = widgets::VteTerminal::new().unwrap();
+                    term.show_all();
+                    build_terms.add(&term);
+                    state.builders.insert(project_path.clone(), (term, Cell::new(-1)));
+                }
+                if let Some(&(ref term, _)) = state.builders.get(project_path) {
+                    build_terms.set_visible_child(term);
+                    should_show = true;
                 }
             }
         }
+    }
+
+    build_buttons.set_sensitive(should_show);
+    if should_show {
+        build_terms.show_all();
+    } else {
+        build_terms.hide();
     }
 }
 

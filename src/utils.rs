@@ -199,7 +199,7 @@ fn is_project_path(path: &Path) -> bool {
     path.join("Cargo.toml").exists()
 }
 
-fn is_project_root(state: &State, path: &Path) -> bool {
+pub fn is_project_root(state: &State, path: &Path) -> bool {
     if let Some(path_str) = path.to_str() {
         state.projects.contains(&path_str.to_string())
     } else {
