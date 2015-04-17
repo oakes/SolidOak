@@ -1,6 +1,5 @@
 use gtk::widgets;
 use rustc_serialize::{Encodable, json};
-use std::cell::Cell;
 use std::env;
 use std::collections::{HashMap, HashSet};
 use std::io::{Read, Write};
@@ -116,7 +115,7 @@ pub struct State<'a> {
     pub selection: Option<String>,
     pub easy_mode: bool,
     pub font_size: i32,
-    pub builders: HashMap<PathBuf, (widgets::VteTerminal, Cell<i32>)>,
+    pub builders: HashMap<PathBuf, (widgets::VteTerminal, i32)>,
     pub window: &'a widgets::Window,
     pub tree_store: &'a widgets::TreeStore,
     pub tree_model: &'a widgets::TreeModel,
