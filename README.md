@@ -7,7 +7,7 @@ SolidOak is a simple IDE for Rust. See [the website](https://sekao.net/solidoak/
 * An embedded copy of [Neovim](https://github.com/neovim/neovim) as its text editor
     - On first launch, it will create ~/.soak and ~/.soakrc (equivalent to ~/.vim and ~/.vimrc)
     - It starts off in "Easy Mode" (locked in insert mode) for Vim newbies, but you can toggle it off
-* An easy-to-use GUI written with [rgtk](https://github.com/jeremyletang/rgtk)
+* An easy-to-use GUI written with [rust-gnome](https://github.com/rust-gnome/gtk)
     - Buttons for common editing actions and a project tree that stays in sync with Neovim
     - You can bypass the GUI and run it as a console app by passing the `-nw` flag
 * Autocomplete via [Racer](https://github.com/phildawes/racer)
