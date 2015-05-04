@@ -2,38 +2,38 @@ use gtk::traits::*;
 use gtk::widgets;
 use std::path::Path;
 
-pub fn show_builder(state: &mut ::utils::State, build_buttons: &mut widgets::Box, build_terms: &mut widgets::Stack) {
+pub fn show_builder(ui: &mut ::utils::UI, prefs: &::utils::Prefs) {
     let mut should_show = false;
 
-    if let Some(ref path_str) = state.selection {
-        if let Some(ref project_path) = ::utils::get_project_path(state, Path::new(path_str)) {
-            if ::utils::is_project_root(state, project_path) {
-                if !state.builders.contains_key(project_path) {
+    if let Some(ref path_str) = prefs.selection {
+        if let Some(ref project_path) = ::utils::get_project_path(prefs, Path::new(path_str)) {
+            if ::utils::is_project_root(prefs, project_path) {
+                if !ui.builders.contains_key(project_path) {
                     let term = widgets::VteTerminal::new().unwrap();
                     term.show_all();
-                    build_terms.add(&term);
-                    state.builders.insert(project_path.clone(), (term, -1));
+                    ui.build_terms.add(&term);
+                    ui.builders.insert(project_path.clone(), (term, -1));
                 }
-                if let Some(&(ref term, _)) = state.builders.get(project_path) {
-                    build_terms.set_visible_child(term);
+                if let Some(&(ref term, _)) = ui.builders.get(project_path) {
+                    ui.build_terms.set_visible_child(term);
                     should_show = true;
                 }
             }
         }
     }
 
-    build_buttons.set_sensitive(should_show);
+    ui.build_buttons.set_sensitive(should_show);
     if should_show {
-        build_terms.show_all();
+        ui.build_terms.show_all();
     } else {
-        build_terms.hide();
+        ui.build_terms.hide();
     }
 }
 
-pub fn run_builder(state: &mut ::utils::State, args: &[&str]) {
-    if let Some(project_path) = ::utils::get_selected_project_path(state) {
+pub fn run_builder(ui: &mut ::utils::UI, prefs: &::utils::Prefs, args: &[&str]) {
+    if let Some(project_path) = ::utils::get_selected_project_path(ui, prefs) {
         if let Some(project_path_str) = project_path.to_str() {
-            if let Some(&mut(ref mut term, ref mut current_pid)) = state.builders.get_mut(&project_path) {
+            if let Some(&mut(ref mut term, ref mut current_pid)) = ui.builders.get_mut(&project_path) {
                 match term.fork_command(project_path_str.as_ref(), args) {
                     Ok(pid) => { *current_pid = pid },
                     Err(s) => {
@@ -54,24 +54,24 @@ fn stop_process(term: &mut widgets::VteTerminal, current_pid: &mut i32) {
     }
 }
 
-pub fn stop_builder(state: &mut ::utils::State) {
-    if let Some(project_path) = ::utils::get_selected_project_path(&state) {
-        if let Some(&mut(ref mut term, ref mut current_pid)) = state.builders.get_mut(&project_path) {
+pub fn stop_builder(ui: &mut ::utils::UI, prefs: &::utils::Prefs) {
+    if let Some(project_path) = ::utils::get_selected_project_path(ui, prefs) {
+        if let Some(&mut(ref mut term, ref mut current_pid)) = ui.builders.get_mut(&project_path) {
             stop_process(term, current_pid);
         }
     }
 }
 
-pub fn stop_builders(state: &mut ::utils::State) {
-    for (_, mut builder) in state.builders.iter_mut() {
+pub fn stop_builders(ui: &mut ::utils::UI) {
+    for (_, mut builder) in ui.builders.iter_mut() {
         let (ref mut term, ref mut current_pid) : (widgets::VteTerminal, i32) = *builder;
         stop_process(term, current_pid);
     }
 }
 
-pub fn set_builders_font_size(state: &mut ::utils::State) {
-    for (_, mut builder) in state.builders.iter_mut() {
+pub fn set_builders_font_size(ui: &mut ::utils::UI, prefs: &::utils::Prefs) {
+    for (_, mut builder) in ui.builders.iter_mut() {
         let (ref mut term, _) : (widgets::VteTerminal, i32) = *builder;
-        term.set_font_size(state.font_size);
+        term.set_font_size(prefs.font_size);
     }
 }

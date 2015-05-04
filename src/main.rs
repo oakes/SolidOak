@@ -1,4 +1,4 @@
-#![feature(collections, core, libc, path_ext, std_misc)]
+#![feature(collections, libc, path_ext)]
 
 extern crate libc;
 extern crate neovim;
@@ -7,15 +7,16 @@ extern crate glib;
 extern crate gtk;
 extern crate rustc_serialize;
 
-use glib::traits::Connect;
 use gtk::traits::*;
-use gtk::{signals, widgets};
+use gtk::{signal, widgets};
+use gtk::signal::TreeViewSignals;
+use std::cell::{Cell, RefCell};
 use std::collections::{HashMap, HashSet};
 use std::env;
 use std::fs::{self, PathExt};
 use std::io::Write;
-use std::ops::Deref;
-use std::ffi::AsOsStr;
+use std::ops::{Deref, DerefMut};
+use std::rc::Rc;
 use std::thread;
 
 mod builders;
@@ -40,7 +41,7 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
     project_buttons.add(&rename_button);
     project_buttons.add(&remove_button);
 
-    let mut project_tree = widgets::TreeView::new().unwrap();
+    let project_tree = widgets::TreeView::new().unwrap();
     let selection = project_tree.get_selection().unwrap();
     let column_types = [glib::Type::String, glib::Type::String];
     let store = widgets::TreeStore::new(&column_types).unwrap();
@@ -94,14 +95,14 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
     let clean_button = widgets::Button::new_with_label("Clean").unwrap();
     let stop_button = widgets::Button::new_with_label("Stop").unwrap();
 
-    let mut build_buttons = widgets::Box::new(gtk::Orientation::Horizontal, 0).unwrap();
+    let build_buttons = widgets::Box::new(gtk::Orientation::Horizontal, 0).unwrap();
     build_buttons.add(&run_button);
     build_buttons.add(&build_button);
     build_buttons.add(&test_button);
     build_buttons.add(&clean_button);
     build_buttons.add(&stop_button);
 
-    let mut build_terms = widgets::Stack::new().unwrap();
+    let build_terms = widgets::Stack::new().unwrap();
 
     let build_pane = widgets::Box::new(gtk::Orientation::Vertical, 0).unwrap();
     build_pane.pack_start(&build_buttons, false, true, 0);
@@ -117,22 +118,25 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
 
     // create the window
 
+    let quit_app = Cell::new(false);
+    let is_updating_tree = Rc::new(Cell::new(false));
+    let should_update_tree = Rc::new(Cell::new(false));
+
     let title = format!("SolidOak {}.{}.{}",
                         option_env!("CARGO_PKG_VERSION_MAJOR").unwrap(),
                         option_env!("CARGO_PKG_VERSION_MINOR").unwrap(),
                         option_env!("CARGO_PKG_VERSION_PATCH").unwrap());
-    let mut quit_app = false;
     let window = widgets::Window::new(gtk::WindowType::TopLevel).unwrap();
     window.set_title(title.as_ref());
     window.set_window_position(gtk::WindowPosition::Center);
     window.set_default_size(utils::WINDOW_WIDTH, utils::WINDOW_HEIGHT);
-    window.connect(signals::DeleteEvent::new(&mut |_| {
+    window.connect_delete_event(|_, _| {
         ffi::send_message(write_fd, "qall!");
         ffi::close_fd(read_fd);
         ffi::close_fd(write_fd);
-        quit_app = true;
-        true
-    }));
+        quit_app.set(true);
+        signal::Inhibit(true)
+    });
 
     let window_pane = widgets::Paned::new(gtk::Orientation::Horizontal).unwrap();
     window_pane.add1(&left_pane);
@@ -168,126 +172,156 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
         button.set_tooltip_text(key_str.as_ref());
     }
 
-    window.connect(signals::KeyPressEvent::new(&mut |key| {
-        let state = unsafe { (*key).state };
+    window.connect_key_press_event(|_, key| {
+        let state = (*key).state;
         if state.contains(gdk::ModifierType::from_bits_truncate(::utils::META_KEY)) {
-            let keyval = unsafe { (*key).keyval };
+            let keyval = (*key).keyval;
             if let Some(name_str) = gdk::keyval_name(keyval) {
                 if let Some(button) = shortcuts.get(&name_str) {
                     button.clicked();
-                    return true;
+                    return signal::Inhibit(true);
                 }
             }
         }
-        false
-    }));
+        signal::Inhibit(false)
+    });
 
     // populate the project tree
 
-    let mut state = ::utils::State{
-        projects: HashSet::new(),
-        expansions: HashSet::new(),
-        builders: HashMap::new(),
-        selection: None,
-        easy_mode: true,
-        font_size: 12,
+    let ui = Rc::new(RefCell::new(::utils::UI {
         window: &window,
+        tree: &project_tree,
         tree_model: &model,
         tree_store: &store,
         tree_selection: &selection,
         rename_button: &rename_button,
         remove_button: &remove_button,
-        is_refreshing_tree: false
-    };
+        editor_term: &mut editor_term,
+        builders: HashMap::new(),
+        build_buttons: &build_buttons,
+        build_terms: &build_terms
+    }));
+    let prefs = Rc::new(RefCell::new(::utils::read_prefs()));
 
-    ::utils::read_prefs(&mut state);
-    ::ui::update_project_tree(&mut state, &mut project_tree);
-    ::projects::set_selection(&mut state, &mut project_tree, write_fd);
+    {
+        let mut ui_ref = ui.deref().borrow_mut();
+        let mut prefs_ref = prefs.deref().borrow_mut();
 
-    easy_mode_button.set_active(state.easy_mode);
-    ::ffi::send_message(write_fd, if state.easy_mode { "set im" } else { "set noim" });
-    editor_term.set_font_size(state.font_size);
-    editor_term.grab_focus();
+        ::ui::update_project_tree(ui_ref.deref(), prefs_ref.deref());
+        ::projects::set_selection(ui_ref.deref(), prefs_ref.deref_mut(), write_fd);
+
+        easy_mode_button.set_active(prefs_ref.deref().easy_mode);
+        ::ffi::send_message(write_fd, if prefs_ref.deref().easy_mode { "set im" } else { "set noim" });
+        let font_size = prefs_ref.deref().font_size;
+        ui_ref.deref_mut().editor_term.set_font_size(font_size);
+        ui_ref.deref().editor_term.grab_focus();
+    }
 
     // connect to the signals
 
-    new_button.connect(signals::Clicked::new(&mut || {
-        ::projects::new_project(&mut state, &mut project_tree);
-    }));
-    import_button.connect(signals::Clicked::new(&mut || {
-        ::projects::import_project(&mut state, &mut project_tree);
-    }));
-    rename_button.connect(signals::Clicked::new(&mut || {
-        ::projects::rename_file(&mut state, write_fd);
-    }));
-    remove_button.connect(signals::Clicked::new(&mut || {
-        ::projects::remove_item(&mut state, &mut project_tree, write_fd);
-    }));
-    selection.connect(signals::Changed::new(&mut || {
-        ::projects::set_selection(&mut state, &mut project_tree, write_fd);
-    }));
-    project_tree.connect(signals::RowCollapsed::new(&mut |iter_raw, _| {
-        let iter = widgets::TreeIter::wrap_pointer(iter_raw);
-        ::projects::remove_expansion(&mut state, &iter);
-    }));
-    project_tree.connect(signals::RowExpanded::new(&mut |iter_raw, _| {
-        let iter = widgets::TreeIter::wrap_pointer(iter_raw);
-        ::projects::add_expansion(&mut state, &iter);
-    }));
+    new_button.connect_clicked(|_| {
+        ::projects::new_project(prefs.deref().borrow_mut().deref_mut());
+        should_update_tree.deref().set(true);
+    });
+    import_button.connect_clicked(|_| {
+        ::projects::import_project(prefs.deref().borrow_mut().deref_mut());
+        should_update_tree.deref().set(true);
+    });
+    rename_button.connect_clicked(|_| {
+        ::projects::rename_file(ui.deref().borrow().deref(), prefs.deref().borrow_mut().deref_mut(), write_fd);
+        should_update_tree.deref().set(true);
+    });
+    remove_button.connect_clicked(|_| {
+        ::projects::remove_item(ui.deref().borrow().deref(), prefs.deref().borrow_mut().deref_mut(), write_fd);
+        should_update_tree.deref().set(true);
+    });
 
-    save_button.connect(signals::Clicked::new(&mut || {
+    selection.connect_changed(|_| {
+        if !is_updating_tree.deref().get() {
+            ::projects::set_selection(ui.deref().borrow().deref(), prefs.deref().borrow_mut().deref_mut(), write_fd);
+        }
+    });
+    project_tree.connect_row_collapsed(|_, iter, _| {
+        if !is_updating_tree.deref().get() {
+            ::projects::remove_expansion(ui.deref().borrow().deref(), prefs.deref().borrow_mut().deref_mut(), &iter);
+        }
+    });
+    project_tree.connect_row_expanded(|_, iter, _| {
+        if !is_updating_tree.deref().get() {
+            ::projects::add_expansion(ui.deref().borrow().deref(), prefs.deref().borrow_mut().deref_mut(), &iter);
+        }
+    });
+
+    save_button.connect_clicked(|_| {
         ::ffi::send_message(write_fd, "w");
-    }));
-    undo_button.connect(signals::Clicked::new(&mut || {
+    });
+    undo_button.connect_clicked(|_| {
         ::ffi::send_message(write_fd, "undo");
-    }));
-    redo_button.connect(signals::Clicked::new(&mut || {
+    });
+    redo_button.connect_clicked(|_| {
         ::ffi::send_message(write_fd, "redo");
-    }));
-    font_dec_button.connect(signals::Clicked::new(&mut || {
-        if state.font_size > ::utils::MIN_FONT_SIZE {
-            state.font_size -= 1;
-            ::utils::write_prefs(&state);
-            editor_term.set_font_size(state.font_size);
-            ::builders::set_builders_font_size(&mut state);
+    });
+    font_dec_button.connect_clicked(|_| {
+        let mut ui_ref = ui.deref().borrow_mut();
+        let mut prefs_ref = prefs.deref().borrow_mut();
+        if prefs_ref.deref().font_size > ::utils::MIN_FONT_SIZE {
+            prefs_ref.deref_mut().font_size -= 1;
+            ::utils::write_prefs(prefs_ref.deref());
+            let font_size = prefs_ref.deref().font_size;
+            ui_ref.deref_mut().editor_term.set_font_size(font_size);
+            ::builders::set_builders_font_size(ui_ref.deref_mut(), prefs_ref.deref());
         }
-    }));
-    font_inc_button.connect(signals::Clicked::new(&mut || {
-        if state.font_size < ::utils::MAX_FONT_SIZE {
-            state.font_size += 1;
-            ::utils::write_prefs(&state);
-            editor_term.set_font_size(state.font_size);
-            ::builders::set_builders_font_size(&mut state);
+    });
+    font_inc_button.connect_clicked(|_| {
+        let mut ui_ref = ui.deref().borrow_mut();
+        let mut prefs_ref = prefs.deref().borrow_mut();
+        if prefs_ref.deref().font_size < ::utils::MAX_FONT_SIZE {
+            prefs_ref.deref_mut().font_size += 1;
+            ::utils::write_prefs(prefs_ref.deref());
+            let font_size = prefs_ref.deref().font_size;
+            ui_ref.deref_mut().editor_term.set_font_size(font_size);
+            ::builders::set_builders_font_size(ui_ref.deref_mut(), prefs_ref.deref());
         }
-    }));
-    easy_mode_button.connect(signals::Clicked::new(&mut || {
-        state.easy_mode = easy_mode_button.get_active();
-        ::utils::write_prefs(&state);
-        ::ffi::send_message(write_fd, if state.easy_mode { "set im" } else { "set noim" });
-    }));
-    close_button.connect(signals::Clicked::new(&mut || {
+    });
+    easy_mode_button.connect_clicked(|_| {
+        let mut prefs_ref = prefs.deref().borrow_mut();
+        prefs_ref.deref_mut().easy_mode = easy_mode_button.get_active();
+        ::utils::write_prefs(prefs_ref.deref());
+        ::ffi::send_message(write_fd, if prefs_ref.deref().easy_mode { "set im" } else { "set noim" });
+    });
+    close_button.connect_clicked(|_| {
         ::ffi::send_message(write_fd, "bd");
-    }));
+    });
 
-    run_button.connect(signals::Clicked::new(&mut || {
-        ::builders::stop_builder(&mut state);
-        ::builders::run_builder(&mut state, &["cargo", "run"]);
-    }));
-    build_button.connect(signals::Clicked::new(&mut || {
-        ::builders::stop_builder(&mut state);
-        ::builders::run_builder(&mut state, &["cargo", "build", "--release"]);
-    }));
-    test_button.connect(signals::Clicked::new(&mut || {
-        ::builders::stop_builder(&mut state);
-        ::builders::run_builder(&mut state, &["cargo", "test"]);
-    }));
-    clean_button.connect(signals::Clicked::new(&mut || {
-        ::builders::stop_builder(&mut state);
-        ::builders::run_builder(&mut state, &["cargo", "clean"]);
-    }));
-    stop_button.connect(signals::Clicked::new(&mut || {
-        ::builders::stop_builder(&mut state);
-    }));
+    run_button.connect_clicked(|_| {
+        let mut ui_ref = ui.deref().borrow_mut();
+        let prefs_ref = prefs.deref().borrow();
+        ::builders::stop_builder(ui_ref.deref_mut(), prefs_ref.deref());
+        ::builders::run_builder(ui_ref.deref_mut(), prefs_ref.deref(), &["cargo", "run"]);
+    });
+    build_button.connect_clicked(|_| {
+        let mut ui_ref = ui.deref().borrow_mut();
+        let prefs_ref = prefs.deref().borrow();
+        ::builders::stop_builder(ui_ref.deref_mut(), prefs_ref.deref());
+        ::builders::run_builder(ui_ref.deref_mut(), prefs_ref.deref(), &["cargo", "build", "--release"]);
+    });
+    test_button.connect_clicked(|_| {
+        let mut ui_ref = ui.deref().borrow_mut();
+        let prefs_ref = prefs.deref().borrow();
+        ::builders::stop_builder(ui_ref.deref_mut(), prefs_ref.deref());
+        ::builders::run_builder(ui_ref.deref_mut(), prefs_ref.deref(), &["cargo", "test"]);
+    });
+    clean_button.connect_clicked(|_| {
+        let mut ui_ref = ui.deref().borrow_mut();
+        let prefs_ref = prefs.deref().borrow();
+        ::builders::stop_builder(ui_ref.deref_mut(), prefs_ref.deref());
+        ::builders::run_builder(ui_ref.deref_mut(), prefs_ref.deref(), &["cargo", "clean"]);
+    });
+    stop_button.connect_clicked(|_| {
+        let mut ui_ref = ui.deref().borrow_mut();
+        let prefs_ref = prefs.deref().borrow();
+        ::builders::stop_builder(ui_ref.deref_mut(), prefs_ref.deref());
+    });
 
     // listen for events
 
@@ -304,33 +338,42 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
         gtk::main_iteration_do(false);
 
         if let Some(recv_arr) = ffi::recv_message(read_fd) {
+            let mut ui_ref = ui.deref().borrow_mut();
+            let mut prefs_ref = prefs.deref().borrow_mut();
             if let Some(neovim::Object::String(event_name)) = recv_arr.get(1) {
                 match event_name.as_ref() {
                     "bufenter" => {
                         if let Some(neovim::Object::Array(event_args)) = recv_arr.get(2) {
                             if let Some(neovim::Object::String(path_str)) = event_args.get(0) {
-                                state.selection = Some(path_str);
-                                ::utils::write_prefs(&state);
+                                prefs_ref.deref_mut().selection = Some(path_str);
+                                ::utils::write_prefs(prefs_ref.deref());
                             }
                         }
                     },
-                    "vimleave" => { quit_app = true; }
+                    "vimleave" => { quit_app.set(true); }
                     _ => (),
                 }
             }
-            ::ui::update_project_tree(&mut state, &mut project_tree);
-            ::builders::show_builder(&mut state, &mut build_buttons, &mut build_terms);
-            ::builders::set_builders_font_size(&mut state);
+            ::builders::show_builder(ui_ref.deref_mut(), prefs_ref.deref());
+            ::builders::set_builders_font_size(ui_ref.deref_mut(), prefs_ref.deref());
+            should_update_tree.deref().set(true);
         }
 
-        if quit_app {
+        if should_update_tree.deref().get() {
+            is_updating_tree.deref().set(true);
+            ::ui::update_project_tree(ui.deref().borrow().deref(), prefs.deref().borrow().deref());
+            is_updating_tree.deref().set(false);
+            should_update_tree.deref().set(false);
+        }
+
+        if quit_app.get() {
             break;
         }
 
         thread::sleep_ms(10);
     }
 
-    ::builders::stop_builders(&mut state);
+    ::builders::stop_builders(ui.deref().borrow_mut().deref_mut());
 }
 
 fn main() {

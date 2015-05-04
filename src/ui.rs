@@ -24,28 +24,28 @@ fn sort_string_paths(paths: &HashSet<String>) -> Vec<PathBuf> {
     paths_vec
 }
 
-pub fn update_project_buttons(state: &::utils::State) {
-    if let Some(path_str) = ::utils::get_selected_path(state) {
-        let is_project = state.projects.contains(&path_str);
+fn update_project_buttons(ui: &::utils::UI, prefs: &::utils::Prefs) {
+    if let Some(path_str) = ::utils::get_selected_path(ui) {
+        let is_project = prefs.projects.contains(&path_str);
         let path = Path::new(&path_str);
-        state.rename_button.set_sensitive(!path.is_dir());
-        state.remove_button.set_sensitive(!path.is_dir() || is_project);
+        ui.rename_button.set_sensitive(!path.is_dir());
+        ui.remove_button.set_sensitive(!path.is_dir() || is_project);
     } else {
-        state.rename_button.set_sensitive(false);
-        state.remove_button.set_sensitive(false);
+        ui.rename_button.set_sensitive(false);
+        ui.remove_button.set_sensitive(false);
     }
 }
 
-fn add_node(state: &::utils::State, node: &Path, parent: Option<&widgets::TreeIter>) {
+fn add_node(ui: &::utils::UI, node: &Path, parent: Option<&widgets::TreeIter>) {
     let mut iter = widgets::TreeIter::new().unwrap();
 
     if let Some(full_path_str) = node.to_str() {
         if let Some(leaf_os_str) = node.file_name() {
             if let Some(leaf_str) = leaf_os_str.to_str() {
                 if !leaf_str.starts_with(".") {
-                    state.tree_store.append(&mut iter, parent);
-                    state.tree_store.set_string(&iter, 0, leaf_str);
-                    state.tree_store.set_string(&iter, 1, full_path_str);
+                    ui.tree_store.append(&mut iter, parent);
+                    ui.tree_store.set_string(&iter, 0, leaf_str);
+                    ui.tree_store.set_string(&iter, 1, full_path_str);
 
                     if node.is_dir() {
                         match fs::read_dir(node) {
@@ -58,7 +58,7 @@ fn add_node(state: &::utils::State, node: &Path, parent: Option<&widgets::TreeIt
                                 }
                                 child_vec.sort_by(path_sorter);
                                 for child in child_vec.iter() {
-                                    add_node(state, child.deref(), Some(&iter));
+                                    add_node(ui, child.deref(), Some(&iter));
                                 }
                             },
                             Err(e) => println!("Error updating tree: {}", e)
@@ -70,51 +70,43 @@ fn add_node(state: &::utils::State, node: &Path, parent: Option<&widgets::TreeIt
     }
 }
 
-fn expand_nodes(
-    state: &mut ::utils::State,
-    tree: &mut widgets::TreeView,
-    parent: Option<&widgets::TreeIter>)
-{
+fn expand_nodes(ui: &::utils::UI, prefs: &::utils::Prefs, parent: Option<&widgets::TreeIter>) {
     let mut iter = widgets::TreeIter::new().unwrap();
 
-    if state.tree_model.iter_children(&mut iter, parent) {
+    if ui.tree_model.iter_children(&mut iter, parent) {
         loop {
-            if let Some(path_str) = state.tree_model.get_value(&iter, 1).get_string() {
-                if let Some(selection_str) = state.selection.clone() {
+            if let Some(path_str) = ui.tree_model.get_value(&iter, 1).get_string() {
+                if let Some(selection_str) = prefs.selection.clone() {
                     if path_str == selection_str {
-                        if let Some(path) = state.tree_model.get_path(&iter) {
-                            tree.set_cursor(&path, None, false);
+                        if let Some(path) = ui.tree_model.get_path(&iter) {
+                            ui.tree.set_cursor(&path, None, false);
                         }
                     }
                 }
 
-                if state.expansions.contains(&path_str) {
-                    if let Some(path) = state.tree_model.get_path(&iter) {
-                        tree.expand_row(&path, false);
-                        expand_nodes(state, tree, Some(&iter));
+                if prefs.expansions.contains(&path_str) {
+                    if let Some(path) = ui.tree_model.get_path(&iter) {
+                        ui.tree.expand_row(&path, false);
+                        expand_nodes(ui, prefs, Some(&iter));
                     }
                 }
             }
 
-            if !state.tree_model.iter_next(&mut iter) {
+            if !ui.tree_model.iter_next(&mut iter) {
                 break;
             }
         }
     }
 }
 
-pub fn update_project_tree(state: &mut ::utils::State, tree: &mut widgets::TreeView) {
-    state.is_refreshing_tree = true;
+pub fn update_project_tree(ui: &::utils::UI, prefs: &::utils::Prefs) {
+    ui.tree_store.clear();
 
-    state.tree_store.clear();
-
-    for path in sort_string_paths(&state.projects).iter() {
-        add_node(state, path, None);
+    for path in sort_string_paths(&prefs.projects).iter() {
+        add_node(ui, path, None);
     }
 
-    expand_nodes(state, tree, None);
+    expand_nodes(ui, prefs, None);
 
-    update_project_buttons(state);
-
-    state.is_refreshing_tree = false;
+    update_project_buttons(ui, prefs);
 }

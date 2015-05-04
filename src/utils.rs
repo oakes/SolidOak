@@ -109,29 +109,27 @@ pub static DATA_CONTENT : &'static [Resource] = &[
              always_copy: false}
 ];
 
-pub struct State<'a> {
-    pub projects: HashSet<String>,
-    pub expansions: HashSet<String>,
-    pub selection: Option<String>,
-    pub easy_mode: bool,
-    pub font_size: i32,
-    pub builders: HashMap<PathBuf, (widgets::VteTerminal, i32)>,
+pub struct UI<'a> {
     pub window: &'a widgets::Window,
+    pub tree: &'a widgets::TreeView,
     pub tree_store: &'a widgets::TreeStore,
     pub tree_model: &'a widgets::TreeModel,
     pub tree_selection: &'a widgets::TreeSelection,
     pub rename_button: &'a widgets::Button,
     pub remove_button: &'a widgets::Button,
-    pub is_refreshing_tree: bool
+    pub editor_term: &'a mut widgets::VteTerminal,
+    pub builders: HashMap<PathBuf, (widgets::VteTerminal, i32)>,
+    pub build_buttons: &'a widgets::Box,
+    pub build_terms: &'a widgets::Stack
 }
 
 #[derive(RustcDecodable, RustcEncodable)]
-struct Prefs {
-    projects: Vec<String>,
-    expansions: Vec<String>,
-    selection: Option<String>,
-    easy_mode: bool,
-    font_size: i32
+pub struct Prefs {
+    pub projects: HashSet<String>,
+    pub expansions: HashSet<String>,
+    pub selection: Option<String>,
+    pub easy_mode: bool,
+    pub font_size: i32
 }
 
 #[derive(RustcDecodable, RustcEncodable)]
@@ -168,27 +166,17 @@ pub fn get_home_dir() -> PathBuf {
     }
 }
 
-fn get_prefs(state: &State) -> Prefs {
-    Prefs {
-        projects: state.projects.clone().into_iter().collect(),
-        expansions: state.expansions.clone().into_iter().collect(),
-        selection: state.selection.clone(),
-        easy_mode: state.easy_mode,
-        font_size: state.font_size
-    }
-}
-
 pub fn is_parent_path(parent_str: &String, child_str: &String) -> bool {
     let parent_ref: &str = parent_str.as_ref();
     child_str.starts_with(parent_ref) &&
     Path::new(parent_str).parent() != Path::new(child_str).parent()
 }
 
-pub fn get_selected_path(state: &State) -> Option<String> {
+pub fn get_selected_path(ui: &UI) -> Option<String> {
     let mut iter = widgets::TreeIter::new().unwrap();
 
-    if state.tree_selection.get_selected(state.tree_model, &mut iter) {
-        state.tree_model.get_value(&iter, 1).get_string()
+    if ui.tree_selection.get_selected(ui.tree_model, &mut iter) {
+        ui.tree_model.get_value(&iter, 1).get_string()
     } else {
         None
     }
@@ -198,37 +186,35 @@ fn is_project_path(path: &Path) -> bool {
     path.join("Cargo.toml").exists()
 }
 
-pub fn is_project_root(state: &State, path: &Path) -> bool {
+pub fn is_project_root(prefs: &Prefs, path: &Path) -> bool {
     if let Some(path_str) = path.to_str() {
-        state.projects.contains(&path_str.to_string())
+        prefs.projects.contains(&path_str.to_string())
     } else {
         false
     }
 }
 
-pub fn get_project_path(state: &State, path: &Path) -> Option<PathBuf> {
-    if is_project_path(path) || is_project_root(state, path) {
+pub fn get_project_path(prefs: &Prefs, path: &Path) -> Option<PathBuf> {
+    if is_project_path(path) || is_project_root(prefs, path) {
         Some(PathBuf::from(path))
     } else {
         if let Some(parent_path) = path.parent() {
-            get_project_path(state, parent_path.deref())
+            get_project_path(prefs, parent_path.deref())
         } else {
             None
         }
     }
 }
 
-pub fn get_selected_project_path(state: &State) -> Option<PathBuf> {
-    if let Some(path_str) = get_selected_path(state) {
-        get_project_path(state, Path::new(&path_str))
+pub fn get_selected_project_path(ui: &UI, prefs: &Prefs) -> Option<PathBuf> {
+    if let Some(path_str) = get_selected_path(ui) {
+        get_project_path(prefs, Path::new(&path_str))
     } else {
         None
     }
 }
 
-pub fn write_prefs(state: &State) {
-    let prefs = get_prefs(state);
-
+pub fn write_prefs(prefs: &Prefs) {
     let mut json_str = String::new();
     {
         let mut encoder = json::Encoder::new_pretty(&mut json_str);
@@ -244,41 +230,31 @@ pub fn write_prefs(state: &State) {
     }
 }
 
-pub fn read_prefs(state: &mut State) {
+pub fn read_prefs() -> Prefs {
+    let default_prefs = Prefs {
+        projects: HashSet::new(),
+        expansions: HashSet::new(),
+        selection: None,
+        easy_mode: true,
+        font_size: 12
+    };
     let prefs_path = get_home_dir().deref().join(DATA_DIR).join(PREFS_FILE);
     if let Some(mut f) = fs::File::open(&prefs_path).ok() {
         let mut json_str = String::new();
-        let prefs_option : Option<Prefs> = match f.read_to_string(&mut json_str) {
+        match f.read_to_string(&mut json_str) {
             Ok(_) => {
                 match json::decode(json_str.as_ref()) {
-                    Ok(object) => Some(object),
+                    Ok(object) => object,
                     Err(e) => {
                         println!("Error decoding prefs: {}", e);
-                        None
+                        default_prefs
                     }
                 }
             },
-            Err(_) => None
-        };
-
-        if let Some(prefs) = prefs_option {
-            state.projects.clear();
-            for path_str in prefs.projects.iter() {
-                state.projects.insert(path_str.clone());
-            }
-
-            state.expansions.clear();
-            for path_str in prefs.expansions.iter() {
-                state.expansions.insert(path_str.clone());
-            }
-
-            state.selection = prefs.selection;
-            state.easy_mode = prefs.easy_mode;
-
-            if (prefs.font_size >= MIN_FONT_SIZE) && (prefs.font_size <= MAX_FONT_SIZE) {
-                state.font_size = prefs.font_size;
-            }
+            Err(_) => default_prefs
         }
+    } else {
+        default_prefs
     }
 }
 
