@@ -1,7 +1,7 @@
 [package]
 
 name = "solidoak"
-version = "0.1.3"
+version = "0.1.4"
 authors = ["oakes <zsoakes@gmail.com>"]
 build = "build.rs"
 
