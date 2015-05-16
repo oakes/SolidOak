@@ -173,7 +173,7 @@ pub fn is_parent_path(parent_str: &String, child_str: &String) -> bool {
 }
 
 pub fn get_selected_path(ui: &UI) -> Option<String> {
-    let mut iter = widgets::TreeIter::new().unwrap();
+    let mut iter = widgets::TreeIter::new();
 
     if ui.tree_selection.get_selected(ui.tree_model, &mut iter) {
         ui.tree_model.get_value(&iter, 1).get_string()

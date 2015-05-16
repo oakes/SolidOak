@@ -37,7 +37,7 @@ fn update_project_buttons(ui: &::utils::UI, prefs: &::utils::Prefs) {
 }
 
 fn add_node(ui: &::utils::UI, node: &Path, parent: Option<&widgets::TreeIter>) {
-    let mut iter = widgets::TreeIter::new().unwrap();
+    let mut iter = widgets::TreeIter::new();
 
     if let Some(full_path_str) = node.to_str() {
         if let Some(leaf_os_str) = node.file_name() {
@@ -71,7 +71,7 @@ fn add_node(ui: &::utils::UI, node: &Path, parent: Option<&widgets::TreeIter>) {
 }
 
 fn expand_nodes(ui: &::utils::UI, prefs: &::utils::Prefs, parent: Option<&widgets::TreeIter>) {
-    let mut iter = widgets::TreeIter::new().unwrap();
+    let mut iter = widgets::TreeIter::new();
 
     if ui.tree_model.iter_children(&mut iter, parent) {
         loop {

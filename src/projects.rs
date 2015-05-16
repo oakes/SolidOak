@@ -85,7 +85,7 @@ pub fn rename_file(ui: &::utils::UI, prefs: &mut ::utils::Prefs, fd: i32) {
 pub fn remove_item(ui: &::utils::UI, prefs: &mut ::utils::Prefs, fd: i32) {
     if let Some(path_str) = ::utils::get_selected_path(ui) {
         if let Some(dialog) = widgets::MessageDialog::new_with_markup(
-            Some(ui.window.clone()),
+            Some(&ui.window),
             gtk::DialogFlags::Modal,
             gtk::MessageType::Question,
             gtk::ButtonsType::OkCancel,
