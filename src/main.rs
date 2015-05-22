@@ -118,7 +118,7 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
 
     // create the window
 
-    let quit_app = Cell::new(false);
+    let quit_app = Rc::new(Cell::new(false));
     let is_updating_tree = Rc::new(Cell::new(false));
     let should_update_tree = Rc::new(Cell::new(false));
 
@@ -130,13 +130,16 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
     window.set_title(title.as_ref());
     window.set_window_position(gtk::WindowPosition::Center);
     window.set_default_size(utils::WINDOW_WIDTH, utils::WINDOW_HEIGHT);
-    window.connect_delete_event(|_, _| {
-        ffi::send_message(write_fd, "qall!");
-        ffi::close_fd(read_fd);
-        ffi::close_fd(write_fd);
-        quit_app.set(true);
-        signal::Inhibit(true)
-    });
+    {
+        let quit_app = quit_app.clone();
+        window.connect_delete_event(move |_, _| {
+            ffi::send_message(write_fd, "qall!");
+            ffi::close_fd(read_fd);
+            ffi::close_fd(write_fd);
+            quit_app.deref().set(true);
+            signal::Inhibit(true)
+        });
+    }
 
     let window_pane = widgets::Paned::new(gtk::Orientation::Horizontal).unwrap();
     window_pane.add1(&left_pane);
@@ -150,29 +153,27 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
     let mut shortcuts = HashMap::new();
     let settings = ::utils::read_settings();
 
-    if let Some(key) = settings.keys.new_project { shortcuts.insert(key, &new_button); }
-    if let Some(key) = settings.keys.import { shortcuts.insert(key, &import_button); }
-    if let Some(key) = settings.keys.rename { shortcuts.insert(key, &rename_button); }
-    if let Some(key) = settings.keys.remove { shortcuts.insert(key, &remove_button); }
-
-    if let Some(key) = settings.keys.run { shortcuts.insert(key, &run_button); }
-    if let Some(key) = settings.keys.build { shortcuts.insert(key, &build_button); }
-    if let Some(key) = settings.keys.test { shortcuts.insert(key, &test_button); }
-    if let Some(key) = settings.keys.clean { shortcuts.insert(key, &clean_button); }
-    if let Some(key) = settings.keys.stop { shortcuts.insert(key, &stop_button); }
-
-    if let Some(key) = settings.keys.save { shortcuts.insert(key, &save_button); }
-    if let Some(key) = settings.keys.undo { shortcuts.insert(key, &undo_button); }
-    if let Some(key) = settings.keys.redo { shortcuts.insert(key, &redo_button); }
-    if let Some(key) = settings.keys.font_dec { shortcuts.insert(key, &font_dec_button); }
-    if let Some(key) = settings.keys.font_inc { shortcuts.insert(key, &font_inc_button); }
-    if let Some(key) = settings.keys.close { shortcuts.insert(key, &close_button); }
+    if let Some(key) = settings.keys.new_project { shortcuts.insert(key, new_button.clone()); }
+    if let Some(key) = settings.keys.import { shortcuts.insert(key, import_button.clone()); }
+    if let Some(key) = settings.keys.rename { shortcuts.insert(key, rename_button.clone()); }
+    if let Some(key) = settings.keys.remove { shortcuts.insert(key, remove_button.clone()); }
+    if let Some(key) = settings.keys.run { shortcuts.insert(key, run_button.clone()); }
+    if let Some(key) = settings.keys.build { shortcuts.insert(key, build_button.clone()); }
+    if let Some(key) = settings.keys.test { shortcuts.insert(key, test_button.clone()); }
+    if let Some(key) = settings.keys.clean { shortcuts.insert(key, clean_button.clone()); }
+    if let Some(key) = settings.keys.stop { shortcuts.insert(key, stop_button.clone()); }
+    if let Some(key) = settings.keys.save { shortcuts.insert(key, save_button.clone()); }
+    if let Some(key) = settings.keys.undo { shortcuts.insert(key, undo_button.clone()); }
+    if let Some(key) = settings.keys.redo { shortcuts.insert(key, redo_button.clone()); }
+    if let Some(key) = settings.keys.font_dec { shortcuts.insert(key, font_dec_button.clone()); }
+    if let Some(key) = settings.keys.font_inc { shortcuts.insert(key, font_inc_button.clone()); }
+    if let Some(key) = settings.keys.close { shortcuts.insert(key, close_button.clone()); }
 
     for (key_str, button) in shortcuts.iter() {
         button.set_tooltip_text(key_str.as_ref());
     }
 
-    window.connect_key_press_event(|_, key| {
+    window.connect_key_press_event(move |_, key| {
         let state = (*key).state;
         if state.contains(gdk::ModifierType::from_bits_truncate(::utils::META_KEY)) {
             let keyval = (*key).keyval;
@@ -189,17 +190,17 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
     // populate the project tree
 
     let ui = Rc::new(RefCell::new(::utils::UI {
-        window: &window,
-        tree: &project_tree,
-        tree_model: &model,
-        tree_store: &store,
-        tree_selection: &selection,
-        rename_button: &rename_button,
-        remove_button: &remove_button,
-        editor_term: &mut editor_term,
+        window: window.clone(),
+        tree: project_tree.clone(),
+        tree_model: model.clone(),
+        tree_store: store.clone(),
+        tree_selection: selection.clone(),
+        rename_button: rename_button.clone(),
+        remove_button: remove_button.clone(),
+        editor_term: editor_term.clone(),
         builders: HashMap::new(),
-        build_buttons: &build_buttons,
-        build_terms: &build_terms
+        build_buttons: build_buttons.clone(),
+        build_terms: build_terms.clone()
     }));
     let prefs = Rc::new(RefCell::new(::utils::read_prefs()));
 
@@ -217,111 +218,172 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
         ui_ref.deref().editor_term.grab_focus();
     }
 
-    // connect to the signals
+    // connect to the signals (this code will make your eyes bleed)
 
-    new_button.connect_clicked(|_| {
-        ::projects::new_project(prefs.deref().borrow_mut().deref_mut());
-        should_update_tree.deref().set(true);
-    });
-    import_button.connect_clicked(|_| {
-        ::projects::import_project(prefs.deref().borrow_mut().deref_mut());
-        should_update_tree.deref().set(true);
-    });
-    rename_button.connect_clicked(|_| {
-        ::projects::rename_file(ui.deref().borrow().deref(), prefs.deref().borrow_mut().deref_mut(), write_fd);
-        should_update_tree.deref().set(true);
-    });
-    remove_button.connect_clicked(|_| {
-        ::projects::remove_item(ui.deref().borrow().deref(), prefs.deref().borrow_mut().deref_mut(), write_fd);
-        should_update_tree.deref().set(true);
-    });
-
-    selection.connect_changed(|_| {
-        if !is_updating_tree.deref().get() {
-            ::projects::set_selection(ui.deref().borrow().deref(), prefs.deref().borrow_mut().deref_mut(), write_fd);
-        }
-    });
-    project_tree.connect_row_collapsed(|_, iter, _| {
-        if !is_updating_tree.deref().get() {
-            ::projects::remove_expansion(ui.deref().borrow().deref(), prefs.deref().borrow_mut().deref_mut(), &iter);
-        }
-    });
-    project_tree.connect_row_expanded(|_, iter, _| {
-        if !is_updating_tree.deref().get() {
-            ::projects::add_expansion(ui.deref().borrow().deref(), prefs.deref().borrow_mut().deref_mut(), &iter);
-        }
-    });
-
-    save_button.connect_clicked(|_| {
+    {
+        let prefs = prefs.clone();
+        let should_update_tree = should_update_tree.clone();
+        new_button.connect_clicked(move |_| {
+            ::projects::new_project(prefs.deref().borrow_mut().deref_mut());
+            should_update_tree.deref().set(true);
+        });
+    }
+    {
+        let prefs = prefs.clone();
+        let should_update_tree = should_update_tree.clone();
+        import_button.connect_clicked(move |_| {
+            ::projects::import_project(prefs.deref().borrow_mut().deref_mut());
+            should_update_tree.deref().set(true);
+        });
+    }
+    {
+        let ui = ui.clone();
+        let prefs = prefs.clone();
+        let should_update_tree = should_update_tree.clone();
+        rename_button.connect_clicked(move |_| {
+            ::projects::rename_file(ui.deref().borrow().deref(), prefs.deref().borrow_mut().deref_mut(), write_fd);
+            should_update_tree.deref().set(true);
+        });
+    }
+    {
+        let ui = ui.clone();
+        let prefs = prefs.clone();
+        let should_update_tree = should_update_tree.clone();
+        remove_button.connect_clicked(move |_| {
+            ::projects::remove_item(ui.deref().borrow().deref(), prefs.deref().borrow_mut().deref_mut(), write_fd);
+            should_update_tree.deref().set(true);
+        });
+    }
+    {
+        let ui = ui.clone();
+        let prefs = prefs.clone();
+        let is_updating_tree = is_updating_tree.clone();
+        selection.connect_changed(move |_| {
+            if !is_updating_tree.deref().get() {
+                ::projects::set_selection(ui.deref().borrow().deref(), prefs.deref().borrow_mut().deref_mut(), write_fd);
+            }
+        });
+    }
+    {
+        let ui = ui.clone();
+        let prefs = prefs.clone();
+        let is_updating_tree = is_updating_tree.clone();
+        project_tree.connect_row_collapsed(move |_, iter, _| {
+            if !is_updating_tree.deref().get() {
+                ::projects::remove_expansion(ui.deref().borrow().deref(), prefs.deref().borrow_mut().deref_mut(), &iter);
+            }
+        });
+    }
+    {
+        let ui = ui.clone();
+        let prefs = prefs.clone();
+        let is_updating_tree = is_updating_tree.clone();
+        project_tree.connect_row_expanded(move |_, iter, _| {
+            if !is_updating_tree.deref().get() {
+                ::projects::add_expansion(ui.deref().borrow().deref(), prefs.deref().borrow_mut().deref_mut(), &iter);
+            }
+        });
+    }
+    save_button.connect_clicked(move |_| {
         ::ffi::send_message(write_fd, "w");
     });
-    undo_button.connect_clicked(|_| {
+    undo_button.connect_clicked(move |_| {
         ::ffi::send_message(write_fd, "undo");
     });
-    redo_button.connect_clicked(|_| {
+    redo_button.connect_clicked(move |_| {
         ::ffi::send_message(write_fd, "redo");
     });
-    font_dec_button.connect_clicked(|_| {
-        let mut ui_ref = ui.deref().borrow_mut();
-        let mut prefs_ref = prefs.deref().borrow_mut();
-        if prefs_ref.deref().font_size > ::utils::MIN_FONT_SIZE {
-            prefs_ref.deref_mut().font_size -= 1;
+    {
+        let ui = ui.clone();
+        let prefs = prefs.clone();
+        font_dec_button.connect_clicked(move |_| {
+            let mut ui_ref = ui.deref().borrow_mut();
+            let mut prefs_ref = prefs.deref().borrow_mut();
+            if prefs_ref.deref().font_size > ::utils::MIN_FONT_SIZE {
+                prefs_ref.deref_mut().font_size -= 1;
+                ::utils::write_prefs(prefs_ref.deref());
+                let font_size = prefs_ref.deref().font_size;
+                ui_ref.deref_mut().editor_term.set_font_size(font_size);
+                ::builders::set_builders_font_size(ui_ref.deref_mut(), prefs_ref.deref());
+            }
+        });
+    }
+    {
+        let ui = ui.clone();
+        let prefs = prefs.clone();
+        font_inc_button.connect_clicked(move |_| {
+            let mut ui_ref = ui.deref().borrow_mut();
+            let mut prefs_ref = prefs.deref().borrow_mut();
+            if prefs_ref.deref().font_size < ::utils::MAX_FONT_SIZE {
+                prefs_ref.deref_mut().font_size += 1;
+                ::utils::write_prefs(prefs_ref.deref());
+                let font_size = prefs_ref.deref().font_size;
+                ui_ref.deref_mut().editor_term.set_font_size(font_size);
+                ::builders::set_builders_font_size(ui_ref.deref_mut(), prefs_ref.deref());
+            }
+        });
+    }
+    {
+        let prefs = prefs.clone();
+        easy_mode_button.clone().connect_clicked(move |_| {
+            let mut prefs_ref = prefs.deref().borrow_mut();
+            prefs_ref.deref_mut().easy_mode = easy_mode_button.get_active();
             ::utils::write_prefs(prefs_ref.deref());
-            let font_size = prefs_ref.deref().font_size;
-            ui_ref.deref_mut().editor_term.set_font_size(font_size);
-            ::builders::set_builders_font_size(ui_ref.deref_mut(), prefs_ref.deref());
-        }
-    });
-    font_inc_button.connect_clicked(|_| {
-        let mut ui_ref = ui.deref().borrow_mut();
-        let mut prefs_ref = prefs.deref().borrow_mut();
-        if prefs_ref.deref().font_size < ::utils::MAX_FONT_SIZE {
-            prefs_ref.deref_mut().font_size += 1;
-            ::utils::write_prefs(prefs_ref.deref());
-            let font_size = prefs_ref.deref().font_size;
-            ui_ref.deref_mut().editor_term.set_font_size(font_size);
-            ::builders::set_builders_font_size(ui_ref.deref_mut(), prefs_ref.deref());
-        }
-    });
-    easy_mode_button.connect_clicked(|_| {
-        let mut prefs_ref = prefs.deref().borrow_mut();
-        prefs_ref.deref_mut().easy_mode = easy_mode_button.get_active();
-        ::utils::write_prefs(prefs_ref.deref());
-        ::ffi::send_message(write_fd, if prefs_ref.deref().easy_mode { "set im" } else { "set noim" });
-    });
-    close_button.connect_clicked(|_| {
+            ::ffi::send_message(write_fd, if prefs_ref.deref().easy_mode { "set im" } else { "set noim" });
+        });
+    }
+    close_button.connect_clicked(move |_| {
         ::ffi::send_message(write_fd, "bd");
     });
-
-    run_button.connect_clicked(|_| {
-        let mut ui_ref = ui.deref().borrow_mut();
-        let prefs_ref = prefs.deref().borrow();
-        ::builders::stop_builder(ui_ref.deref_mut(), prefs_ref.deref());
-        ::builders::run_builder(ui_ref.deref_mut(), prefs_ref.deref(), &["cargo", "run"]);
-    });
-    build_button.connect_clicked(|_| {
-        let mut ui_ref = ui.deref().borrow_mut();
-        let prefs_ref = prefs.deref().borrow();
-        ::builders::stop_builder(ui_ref.deref_mut(), prefs_ref.deref());
-        ::builders::run_builder(ui_ref.deref_mut(), prefs_ref.deref(), &["cargo", "build", "--release"]);
-    });
-    test_button.connect_clicked(|_| {
-        let mut ui_ref = ui.deref().borrow_mut();
-        let prefs_ref = prefs.deref().borrow();
-        ::builders::stop_builder(ui_ref.deref_mut(), prefs_ref.deref());
-        ::builders::run_builder(ui_ref.deref_mut(), prefs_ref.deref(), &["cargo", "test"]);
-    });
-    clean_button.connect_clicked(|_| {
-        let mut ui_ref = ui.deref().borrow_mut();
-        let prefs_ref = prefs.deref().borrow();
-        ::builders::stop_builder(ui_ref.deref_mut(), prefs_ref.deref());
-        ::builders::run_builder(ui_ref.deref_mut(), prefs_ref.deref(), &["cargo", "clean"]);
-    });
-    stop_button.connect_clicked(|_| {
-        let mut ui_ref = ui.deref().borrow_mut();
-        let prefs_ref = prefs.deref().borrow();
-        ::builders::stop_builder(ui_ref.deref_mut(), prefs_ref.deref());
-    });
+    {
+        let ui = ui.clone();
+        let prefs = prefs.clone();
+        run_button.connect_clicked(move |_| {
+            let mut ui_ref = ui.deref().borrow_mut();
+            let prefs_ref = prefs.deref().borrow();
+            ::builders::stop_builder(ui_ref.deref_mut(), prefs_ref.deref());
+            ::builders::run_builder(ui_ref.deref_mut(), prefs_ref.deref(), &["cargo", "run"]);
+        });
+    }
+    {
+        let ui = ui.clone();
+        let prefs = prefs.clone();
+        build_button.connect_clicked(move |_| {
+            let mut ui_ref = ui.deref().borrow_mut();
+            let prefs_ref = prefs.deref().borrow();
+            ::builders::stop_builder(ui_ref.deref_mut(), prefs_ref.deref());
+            ::builders::run_builder(ui_ref.deref_mut(), prefs_ref.deref(), &["cargo", "build", "--release"]);
+        });
+    }
+    {
+        let ui = ui.clone();
+        let prefs = prefs.clone();
+        test_button.connect_clicked(move |_| {
+            let mut ui_ref = ui.deref().borrow_mut();
+            let prefs_ref = prefs.deref().borrow();
+            ::builders::stop_builder(ui_ref.deref_mut(), prefs_ref.deref());
+            ::builders::run_builder(ui_ref.deref_mut(), prefs_ref.deref(), &["cargo", "test"]);
+        });
+    }
+    {
+        let ui = ui.clone();
+        let prefs = prefs.clone();
+        clean_button.connect_clicked(move |_| {
+            let mut ui_ref = ui.deref().borrow_mut();
+            let prefs_ref = prefs.deref().borrow();
+            ::builders::stop_builder(ui_ref.deref_mut(), prefs_ref.deref());
+            ::builders::run_builder(ui_ref.deref_mut(), prefs_ref.deref(), &["cargo", "clean"]);
+        });
+    }
+    {
+        let ui = ui.clone();
+        let prefs = prefs.clone();
+        stop_button.connect_clicked(move |_| {
+            let mut ui_ref = ui.deref().borrow_mut();
+            let prefs_ref = prefs.deref().borrow();
+            ::builders::stop_builder(ui_ref.deref_mut(), prefs_ref.deref());
+        });
+    }
 
     // listen for events
 
@@ -350,7 +412,7 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
                             }
                         }
                     },
-                    "vimleave" => { quit_app.set(true); }
+                    "vimleave" => { quit_app.deref().set(true); }
                     _ => (),
                 }
             }
@@ -366,7 +428,7 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
             should_update_tree.deref().set(false);
         }
 
-        if quit_app.get() {
+        if quit_app.deref().get() {
             break;
         }
 

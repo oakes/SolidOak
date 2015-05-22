@@ -109,18 +109,18 @@ pub static DATA_CONTENT : &'static [Resource] = &[
              always_copy: false}
 ];
 
-pub struct UI<'a> {
-    pub window: &'a widgets::Window,
-    pub tree: &'a widgets::TreeView,
-    pub tree_store: &'a widgets::TreeStore,
-    pub tree_model: &'a widgets::TreeModel,
-    pub tree_selection: &'a widgets::TreeSelection,
-    pub rename_button: &'a widgets::Button,
-    pub remove_button: &'a widgets::Button,
-    pub editor_term: &'a mut widgets::VteTerminal,
+pub struct UI {
+    pub window: widgets::Window,
+    pub tree: widgets::TreeView,
+    pub tree_store: widgets::TreeStore,
+    pub tree_model: widgets::TreeModel,
+    pub tree_selection: widgets::TreeSelection,
+    pub rename_button: widgets::Button,
+    pub remove_button: widgets::Button,
+    pub editor_term: widgets::VteTerminal,
     pub builders: HashMap<PathBuf, (widgets::VteTerminal, i32)>,
-    pub build_buttons: &'a widgets::Box,
-    pub build_terms: &'a widgets::Stack
+    pub build_buttons: widgets::Box,
+    pub build_terms: widgets::Stack
 }
 
 #[derive(RustcDecodable, RustcEncodable)]
@@ -175,7 +175,7 @@ pub fn is_parent_path(parent_str: &String, child_str: &String) -> bool {
 pub fn get_selected_path(ui: &UI) -> Option<String> {
     let mut iter = widgets::TreeIter::new();
 
-    if ui.tree_selection.get_selected(ui.tree_model, &mut iter) {
+    if ui.tree_selection.get_selected(&ui.tree_model, &mut iter) {
         ui.tree_model.get_value(&iter, 1).get_string()
     } else {
         None
