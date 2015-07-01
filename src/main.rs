@@ -1,4 +1,4 @@
-#![feature(collections, libc, path_ext)]
+#![feature(libc, path_ext)]
 
 extern crate libc;
 extern crate neovim;
@@ -519,7 +519,7 @@ fn main() {
 
     // add the config file path
     if let Some(path_str) = config_file.to_str() {
-        args_vec.push_all(&["-u".to_string(), path_str.to_string()]);
+        args_vec.extend(vec!["-u".to_string(), path_str.to_string()]);
     }
 
     // if the no window flag was used, start up neovim without a gui
