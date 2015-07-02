@@ -1,0 +1,14 @@
+[Desktop Entry]
+Type=Application
+Version=0.1.3
+Name=SolidOak
+GenericName=Integrated Development Environment
+GenericName[de]=Integrierte Entwicklungsumgebung
+TryExec=solidoak
+Exec=solidoak %u
+Comment=SolidOak is a simple IDE for Rust
+Comment[de]=SolidOak ist eine leichtgewichtige IDE für Rust
+Icon=solidoak
+Terminal=false
+Categories=Development;IDE;
+MimeType=text/rust;
