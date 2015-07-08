@@ -1,4 +1,3 @@
-#![feature(libc, path_ext)]
 
 extern crate libc;
 extern crate neovim;
@@ -13,7 +12,7 @@ use gtk::signal::TreeViewSignals;
 use std::cell::{Cell, RefCell};
 use std::collections::{HashMap, HashSet};
 use std::env;
-use std::fs::{self, PathExt};
+use std::fs::{self, metadata};
 use std::io::Write;
 use std::ops::{Deref, DerefMut};
 use std::rc::Rc;
@@ -26,8 +25,14 @@ mod ui;
 mod utils;
 
 fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
-    gtk::init();
-
+    let res=gtk::init();
+    match res {
+        Ok(_) => {
+        }
+        Err(e) => {
+            println!("error initializing gtk: {:?}", e);
+        }
+    }
     // create the left pane
 
     let new_button = widgets::Button::new_with_label("New Project").unwrap();
@@ -442,7 +447,7 @@ fn main() {
     // create data dir
     let home_dir = ::utils::get_home_dir();
     let data_dir = home_dir.deref().join(::utils::DATA_DIR);
-    if !data_dir.exists() {
+    if !metadata(&data_dir).map(|m| m.is_dir()).unwrap_or(false) {
         match fs::create_dir(&data_dir) {
             Ok(_) => {
                 if let Some(path_str) = data_dir.to_str() {
@@ -459,7 +464,7 @@ fn main() {
         for part in res.path {
             res_path.push(part);
         }
-        if !res_path.exists() || res.always_copy {
+        if !metadata(&res_path).is_ok() || res.always_copy {
             if let Some(parent) = res_path.parent() {
                 fs::create_dir_all(parent).ok();
             }
@@ -501,7 +506,7 @@ fn main() {
 
     // create config file
     let config_file = home_dir.deref().join(::utils::CONFIG_FILE);
-    if !config_file.exists() {
+    if !metadata(&config_file).map(|m| m.is_file()).unwrap_or(false) {
         match fs::File::create(&config_file) {
             Ok(mut f) => {
                 f.write_all(::utils::CONFIG_CONTENT.as_bytes()).ok();

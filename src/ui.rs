@@ -2,7 +2,8 @@ use gtk::traits::*;
 use gtk::widgets;
 use std::cmp::Ordering;
 use std::collections::HashSet;
-use std::fs::{self, PathExt};
+use std::fs::{self};
+use std::fs::metadata;
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
 
@@ -28,8 +29,8 @@ fn update_project_buttons(ui: &::utils::UI, prefs: &::utils::Prefs) {
     if let Some(path_str) = ::utils::get_selected_path(ui) {
         let is_project = prefs.projects.contains(&path_str);
         let path = Path::new(&path_str);
-        ui.rename_button.set_sensitive(!path.is_dir());
-        ui.remove_button.set_sensitive(!path.is_dir() || is_project);
+        ui.rename_button.set_sensitive(!metadata(path).map(|m| m.is_dir()).unwrap_or(false));
+        ui.remove_button.set_sensitive(!metadata(path).map(|m| m.is_dir()).unwrap_or(false) || is_project);
     } else {
         ui.rename_button.set_sensitive(false);
         ui.remove_button.set_sensitive(false);
@@ -47,7 +48,7 @@ fn add_node(ui: &::utils::UI, node: &Path, parent: Option<&widgets::TreeIter>) {
                     ui.tree_store.set_string(&iter, 0, leaf_str);
                     ui.tree_store.set_string(&iter, 1, full_path_str);
 
-                    if node.is_dir() {
+                    if metadata(node).map(|m| m.is_dir()).unwrap_or(false) {
                         match fs::read_dir(node) {
                             Ok(child_iter) => {
                                 let mut child_vec = Vec::new();
