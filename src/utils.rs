@@ -3,7 +3,7 @@ use rustc_serialize::{Encodable, json};
 use std::env;
 use std::collections::{HashMap, HashSet};
 use std::io::{Read, Write};
-use std::fs::{self, PathExt};
+use std::fs::{self, metadata};
 use std::ops::Deref;
 use std::path::{Path, PathBuf};
 
@@ -183,7 +183,7 @@ pub fn get_selected_path(ui: &UI) -> Option<String> {
 }
 
 fn is_project_path(path: &Path) -> bool {
-    path.join("Cargo.toml").exists()
+    metadata(path.join("Cargo.toml")).map(|m| m.is_file()).unwrap_or(false)
 }
 
 pub fn is_project_root(prefs: &Prefs, path: &Path) -> bool {
@@ -284,7 +284,7 @@ fn get_settings() -> Settings {
 
 pub fn write_settings() {
     let settings_path = get_home_dir().deref().join(DATA_DIR).join(SETTINGS_FILE);
-    if settings_path.exists() { // don't overwrite existing file, so user can modify it
+    if metadata(&settings_path).is_ok() { // don't overwrite existing file, so user can modify it
         return;
     }
 

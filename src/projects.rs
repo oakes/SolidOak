@@ -1,12 +1,12 @@
 use gtk::traits::*;
 use gtk::{self, widgets};
-use std::fs::PathExt;
 use std::path::Path;
+use std::fs::metadata;
 use std::process::Command;
 
 fn remove_expansions_for_path(prefs: &mut ::utils::Prefs, path_str: &String) {
     for expansion_str in prefs.expansions.clone().iter() {
-        if !Path::new(expansion_str).exists() ||
+        if !metadata(Path::new(expansion_str)).is_ok()||
             path_str == expansion_str ||
             ::utils::is_parent_path(path_str, expansion_str)
         {

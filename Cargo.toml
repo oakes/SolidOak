@@ -25,3 +25,7 @@ git = "https://github.com/oakes/neovim-rs"
 [dependencies.rustc-serialize]
 
 rustc-serialize = "0.3"
+
+[dependencies.libc]
+
+Libc = "0.1.8"
