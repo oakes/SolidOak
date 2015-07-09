@@ -1,4 +1,3 @@
-
 extern crate libc;
 extern crate neovim;
 extern crate gdk;
@@ -25,14 +24,13 @@ mod ui;
 mod utils;
 
 fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
-    let res=gtk::init();
-    match res {
-        Ok(_) => {
-        }
+    match gtk::init() {
+        Ok(_) => (),
         Err(e) => {
-            println!("error initializing gtk: {:?}", e);
+            panic!("Error initializing gtk: {:?}", e);
         }
     }
+
     // create the left pane
 
     let new_button = widgets::Button::new_with_label("New Project").unwrap();
@@ -418,7 +416,7 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
                         }
                     },
                     "vimleave" => { quit_app.deref().set(true); }
-                    _ => (),
+                    _ => ()
                 }
             }
             ::builders::show_builder(ui_ref.deref_mut(), prefs_ref.deref());
