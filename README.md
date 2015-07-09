@@ -15,9 +15,7 @@ SolidOak is a simple IDE for Rust. See [the website](https://sekao.net/solidoak/
 
 ## Build Instructions
 
-Notes:
-* Requires the nightly release of Rust due to the use of unstable features.
-* If neovim fails to build, try [cloning it directly](https://github.com/oakes/neovim) and running `make libnvim` to get more specific errors.
+Note: If neovim fails to build, try [cloning it directly](https://github.com/oakes/neovim) and running `make libnvim` to get more specific errors.
 
 ### Linux (apt-get)
 
