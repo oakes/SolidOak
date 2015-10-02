@@ -42,6 +42,14 @@ brew install libtool automake cmake pkg-config gettext
 cargo build
 ```
 
+### OS X (macports)
+
+```Shell
+port install gtk3 vte-2.90
+port install libtool automake cmake pkgconfig gettext
+cargo build
+```
+
 ### Windows is not supported
 
 To support Windows, we would need to get rgtk and neovim-rs to build for it. Additionally, we would need to find a replacement for all the Posix-specific functions being used in `src/ffi.rs`.
