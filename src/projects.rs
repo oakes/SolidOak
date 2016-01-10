@@ -86,7 +86,7 @@ pub fn remove_item(ui: &::utils::UI, prefs: &mut ::utils::Prefs, fd: i32) {
     if let Some(path_str) = ::utils::get_selected_path(ui) {
         if let Some(dialog) = widgets::MessageDialog::new_with_markup(
             Some(&ui.window),
-            gtk::DialogFlags::Modal,
+            gtk::DialogFlags::empty(),
             gtk::MessageType::Question,
             gtk::ButtonsType::OkCancel,
             if prefs.projects.contains(&path_str) {
@@ -119,14 +119,14 @@ pub fn set_selection(ui: &::utils::UI, prefs: &mut ::utils::Prefs, fd: i32) {
 }
 
 pub fn remove_expansion(ui: &::utils::UI, prefs: &mut ::utils::Prefs, iter: &widgets::TreeIter) {
-    if let Some(path_str) = ui.tree_model.get_value(iter, 1).get_string() {
+    if let Some(path_str) = unsafe { ui.tree_model.get_value(iter, 1).get_string() } {
         remove_expansions_for_path(prefs, &path_str);
         ::utils::write_prefs(prefs);
     }
 }
 
 pub fn add_expansion(ui: &::utils::UI, prefs: &mut ::utils::Prefs, iter: &widgets::TreeIter) {
-    if let Some(path_str) = ui.tree_model.get_value(iter, 1).get_string() {
+    if let Some(path_str) = unsafe { ui.tree_model.get_value(iter, 1).get_string() } {
         prefs.expansions.insert(path_str);
         ::utils::write_prefs(prefs);
     }

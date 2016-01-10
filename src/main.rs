@@ -129,7 +129,7 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
                         option_env!("CARGO_PKG_VERSION_MAJOR").unwrap(),
                         option_env!("CARGO_PKG_VERSION_MINOR").unwrap(),
                         option_env!("CARGO_PKG_VERSION_PATCH").unwrap());
-    let window = widgets::Window::new(gtk::WindowType::TopLevel).unwrap();
+    let window = widgets::Window::new(gtk::WindowType::Toplevel).unwrap();
     window.set_title(title.as_ref());
     window.set_window_position(gtk::WindowPosition::Center);
     window.set_default_size(utils::WINDOW_WIDTH, utils::WINDOW_HEIGHT);
@@ -501,6 +501,9 @@ fn main() {
             }
         }
     }
+
+	// set $TERM
+    env::set_var("TERM", "xterm-256color");
 
     // create config file
     let config_file = home_dir.deref().join(::utils::CONFIG_FILE);

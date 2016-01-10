@@ -38,13 +38,11 @@ fn update_project_buttons(ui: &::utils::UI, prefs: &::utils::Prefs) {
 }
 
 fn add_node(ui: &::utils::UI, node: &Path, parent: Option<&widgets::TreeIter>) {
-    let mut iter = widgets::TreeIter::new();
-
     if let Some(full_path_str) = node.to_str() {
         if let Some(leaf_os_str) = node.file_name() {
             if let Some(leaf_str) = leaf_os_str.to_str() {
                 if !leaf_str.starts_with(".") {
-                    ui.tree_store.append(&mut iter, parent);
+                    let iter = ui.tree_store.append(parent);
                     ui.tree_store.set_string(&iter, 0, leaf_str);
                     ui.tree_store.set_string(&iter, 1, full_path_str);
 
@@ -72,11 +70,9 @@ fn add_node(ui: &::utils::UI, node: &Path, parent: Option<&widgets::TreeIter>) {
 }
 
 fn expand_nodes(ui: &::utils::UI, prefs: &::utils::Prefs, parent: Option<&widgets::TreeIter>) {
-    let mut iter = widgets::TreeIter::new();
-
-    if ui.tree_model.iter_children(&mut iter, parent) {
+    if let Some(mut iter) = ui.tree_model.iter_children(parent) {
         loop {
-            if let Some(path_str) = ui.tree_model.get_value(&iter, 1).get_string() {
+            if let Some(path_str) = unsafe { ui.tree_model.get_value(&iter, 1).get_string() } {
                 if let Some(selection_str) = prefs.selection.clone() {
                     if path_str == selection_str {
                         if let Some(path) = ui.tree_model.get_path(&iter) {
