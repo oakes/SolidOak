@@ -550,6 +550,7 @@ fn main() {
         gui_main(&mut pty, gui_nvim[0], nvim_gui[1], pid);
     } else { // the nvim process
         // prepare this process to be piped into the gui
+        thread::sleep_ms(100);
         pty.child_setup();
 
         // start nvim
