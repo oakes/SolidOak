@@ -136,7 +136,8 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
     {
         let quit_app = quit_app.clone();
         window.connect_delete_event(move |_, _| {
-            ffi::send_message(write_fd, "qall!");
+            //ffi::send_message(write_fd, "qall!");
+            ffi::kill_process(pid);
             ffi::close_fd(read_fd);
             ffi::close_fd(write_fd);
             quit_app.deref().set(true);
