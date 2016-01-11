@@ -5,7 +5,7 @@ dependencies = [
  "gdk 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "glib 0.0.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "gtk 0.0.6 (git+https://github.com/oakes/gtk)",
- "libc 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "neovim-rs 0.1.0 (git+https://github.com/oakes/neovim-rs)",
  "rustc-serialize 0.3.16 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
@@ -200,11 +200,16 @@ version = "0.1.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
+name = "libc"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+
+[[package]]
 name = "neovim-rs"
 version = "0.1.0"
-source = "git+https://github.com/oakes/neovim-rs#9b218a2dc0168b014d6f26eb003d9e5319854822"
+source = "git+https://github.com/oakes/neovim-rs#61d61015c4e5a1aaf839dbfdd614177bfe49cc78"
 dependencies = [
- "libc 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.2.4 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]

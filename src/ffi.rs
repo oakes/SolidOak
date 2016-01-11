@@ -1,11 +1,6 @@
 use std::slice;
 
-use libc::{c_int, c_uchar, c_void};
-use libc::consts::os::extra::O_NONBLOCK;
-use libc::consts::os::posix01::F_SETFL;
-use libc::funcs::posix88::fcntl::fcntl;
-use libc::funcs::posix88::unistd::{close, pipe, read, write};
-use libc::types::os::arch::c95::size_t;
+use libc::{c_int, c_uchar, c_void, fcntl, close, pipe, read, write, size_t, O_NONBLOCK, F_SETFL};
 
 extern "C" {
     fn fork () -> c_int;
