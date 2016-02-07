@@ -16,6 +16,7 @@ use std::io::Write;
 use std::ops::{Deref, DerefMut};
 use std::rc::Rc;
 use std::thread;
+use std::time;
 
 mod builders;
 mod ffi;
@@ -435,7 +436,7 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
             break;
         }
 
-        thread::sleep_ms(10);
+        thread::sleep(time::Duration::from_millis(10));
     }
 
     ::builders::stop_builders(ui.deref().borrow_mut().deref_mut());
@@ -550,7 +551,7 @@ fn main() {
         gui_main(&mut pty, gui_nvim[0], nvim_gui[1], pid);
     } else { // the nvim process
         // prepare this process to be piped into the gui
-        thread::sleep_ms(100);
+        thread::sleep(time::Duration::from_millis(100));
         pty.child_setup();
 
         // start nvim
