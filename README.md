@@ -22,7 +22,7 @@ Note: If neovim fails to build, try [cloning it directly](https://github.com/oak
 ```Shell
 apt-get install libgtk-3-dev libglib2.0-dev libcairo2-dev libvte-2.90-dev
 apt-get install libtool autoconf automake cmake libncurses5-dev g++ pkg-config unzip
-cargo build
+cargo build --release
 ```
 
 ### Linux (yum)
@@ -31,7 +31,7 @@ cargo build
 ```Shell
 yum install gtk3-devel glib2-devel vte3-devel
 yum install autoconf automake cmake gcc gcc-c++ libtool ncurses-devel pkgconfig
-cargo build
+cargo build --release
 ```
 
 ### OS X (homebrew)
@@ -41,7 +41,7 @@ brew install gtk+3
 # NOTE: the next line must be run directly in this project, because it is a local file
 brew install vte3.rb
 brew install libtool automake cmake pkg-config gettext
-cargo build
+cargo build --release
 ```
 
 ### OS X (macports)
@@ -49,7 +49,7 @@ cargo build
 ```Shell
 port install gtk3 vte-2.90
 port install libtool automake cmake pkgconfig gettext
-cargo build
+cargo build --release
 ```
 
 ### Windows is not supported
