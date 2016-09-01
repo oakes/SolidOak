@@ -5,18 +5,9 @@ dependencies = [
  "gdk 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "glib 0.0.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "gtk 0.0.6 (git+https://github.com/oakes/gtk)",
- "libc 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.2.15 (registry+https://github.com/rust-lang/crates.io-index)",
  "neovim-rs 0.1.0 (git+https://github.com/oakes/neovim-rs)",
- "rustc-serialize 0.3.16 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "advapi32-sys"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "winapi 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "winapi-build 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rustc-serialize 0.3.19 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -28,7 +19,7 @@ dependencies = [
  "glib-sys 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "gobject-sys 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)",
- "pkg-config 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pkg-config 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -58,17 +49,13 @@ version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "libc 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)",
- "pkg-config 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pkg-config 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "gcc"
-version = "0.3.22"
+version = "0.3.35"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-dependencies = [
- "advapi32-sys 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "winapi 0.2.5 (registry+https://github.com/rust-lang/crates.io-index)",
-]
 
 [[package]]
 name = "gdk"
@@ -92,7 +79,7 @@ dependencies = [
  "glib-sys 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "gobject-sys 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)",
- "pkg-config 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pkg-config 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -108,7 +95,7 @@ dependencies = [
  "gobject-sys 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)",
  "pango-sys 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "pkg-config 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pkg-config 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -120,7 +107,7 @@ dependencies = [
  "glib-sys 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "gobject-sys 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)",
- "pkg-config 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pkg-config 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -141,7 +128,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "bitflags 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)",
- "pkg-config 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pkg-config 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -152,13 +139,13 @@ dependencies = [
  "bitflags 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "glib-sys 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)",
- "pkg-config 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pkg-config 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "gtk"
 version = "0.0.6"
-source = "git+https://github.com/oakes/gtk#3064a74b03ffb32d1248fff5d22614747ba1c05e"
+source = "git+https://github.com/oakes/gtk#4d6325be9c795918fec6b209c3936485d49b666c"
 dependencies = [
  "cairo-rs 0.0.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "cairo-sys-rs 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -178,12 +165,12 @@ dependencies = [
 [[package]]
 name = "gtk-sys"
 version = "0.2.1"
-source = "git+https://github.com/oakes/gtk#3064a74b03ffb32d1248fff5d22614747ba1c05e"
+source = "git+https://github.com/oakes/gtk#4d6325be9c795918fec6b209c3936485d49b666c"
 dependencies = [
  "atk-sys 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "bitflags 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "cairo-sys-rs 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "gcc 0.3.22 (registry+https://github.com/rust-lang/crates.io-index)",
+ "gcc 0.3.35 (registry+https://github.com/rust-lang/crates.io-index)",
  "gdk-pixbuf-sys 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "gdk-sys 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "gio-sys 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -191,7 +178,7 @@ dependencies = [
  "gobject-sys 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)",
  "pango-sys 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "pkg-config 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pkg-config 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -201,7 +188,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "libc"
-version = "0.2.6"
+version = "0.2.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
@@ -209,7 +196,7 @@ name = "neovim-rs"
 version = "0.1.0"
 source = "git+https://github.com/oakes/neovim-rs#61d61015c4e5a1aaf839dbfdd614177bfe49cc78"
 dependencies = [
- "libc 0.2.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "libc 0.2.15 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -231,26 +218,16 @@ dependencies = [
  "glib-sys 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "gobject-sys 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "libc 0.1.12 (registry+https://github.com/rust-lang/crates.io-index)",
- "pkg-config 0.3.6 (registry+https://github.com/rust-lang/crates.io-index)",
+ "pkg-config 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
 name = "pkg-config"
-version = "0.3.6"
+version = "0.3.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "rustc-serialize"
-version = "0.3.16"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-
-[[package]]
-name = "winapi"
-version = "0.2.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-
-[[package]]
-name = "winapi-build"
-version = "0.1.1"
+version = "0.3.19"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 

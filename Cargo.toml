@@ -7,8 +7,8 @@ build = "build.rs"
 [dependencies]
 rustc-serialize = "0.3"
 libc = "0.2"
-glib = "^0"
-gdk = "^0"
+glib = "0.0.7"
+gdk = "0.2.0"
 
 [dependencies.gtk]
 git = "https://github.com/oakes/gtk"
