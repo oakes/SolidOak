@@ -21,7 +21,7 @@ Note: If neovim fails to build, try [cloning it directly](https://github.com/oak
 
 ```Shell
 apt-get install libgtk-3-dev libglib2.0-dev libcairo2-dev libvte-2.91-dev
-apt-get install libtool autoconf automake cmake libncurses5-dev g++ pkg-config unzip
+apt-get install libtool-bin autoconf automake cmake libncurses5-dev g++ pkg-config unzip
 cargo build --release
 ```
 
