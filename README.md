@@ -29,7 +29,7 @@ cargo build --release
 
 
 ```Shell
-yum install gtk3-devel glib2-devel vte3-devel
+yum install gtk3-devel glib2-devel vte291-devel
 yum install autoconf automake cmake gcc gcc-c++ libtool ncurses-devel pkgconfig
 cargo build --release
 ```
