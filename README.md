@@ -37,9 +37,7 @@ cargo build --release
 ### OS X (homebrew)
 
 ```Shell
-brew install gtk+3
-# NOTE: the next line must be run directly in this project, because it is a local file
-brew install vte3.rb
+brew install gtk+3 vte3
 brew install libtool automake cmake pkg-config gettext
 cargo build --release
 ```
@@ -47,14 +45,14 @@ cargo build --release
 ### OS X (macports)
 
 ```Shell
-port install gtk3 vte-2.90
+port install gtk3 vte
 port install libtool automake cmake pkgconfig gettext
 cargo build --release
 ```
 
 ### Windows is not supported
 
-To support Windows, we would need to get rgtk and neovim-rs to build for it. Additionally, we would need to find a replacement for all the Posix-specific functions being used in `src/ffi.rs`.
+It should be possible to build for Windows, but I have not found time to try it yet. The [gtk bindings](https://github.com/gtk-rs/gtk) already build on Windows, but we may need to do some work to get [neovim-rs](https://github.com/oakes/neovim-rs) to build on it. Additionally, we would need to find a replacement for all the Posix-specific functions being used in `src/ffi.rs`.
 
 ## Licensing
 
