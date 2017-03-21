@@ -74,7 +74,7 @@ fn expand_nodes(ui: &::utils::UI, prefs: &::utils::Prefs, parent: Option<&widget
         loop {
             if let Some(path_str) = unsafe { ui.tree_model.get_value(&iter, 1).get_string() } {
                 if let Some(selection_str) = prefs.selection.clone() {
-                    if path_str == selection_str {
+                    if Path::new(&path_str) == Path::new(&selection_str) {
                         if let Some(path) = ui.tree_model.get_path(&iter) {
                             ui.tree.set_cursor(&path, None, false);
                         }
