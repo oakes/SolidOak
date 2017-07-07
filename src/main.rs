@@ -479,28 +479,6 @@ fn main() {
         }
     }
 
-    // set $RACER_CMD_PATH if it isn't already set
-    if env::var("RACER_CMD_PATH").is_err() {
-        if let Ok(path) = env::current_exe() {
-            if let Some(parent_path) = path.parent() {
-                if let Some(grandparent_path) = parent_path.parent() {
-                    if let Some(lib_str) = grandparent_path.join("lib").as_os_str().to_str() {
-                        if let Some(src_str) = grandparent_path.join("src").as_os_str().to_str() {
-                            if let Some(cmd_str) = parent_path.join("racer").as_os_str().to_str() {
-                                let s = format!(
-                                    "LD_LIBRARY_PATH={} DYLD_LIBRARY_PATH={} RUST_SRC_PATH={} {}",
-                                    lib_str, lib_str, src_str, cmd_str
-                                );
-                                let s_ref: &str = s.as_ref();
-                                env::set_var("RACER_CMD_PATH", s_ref);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
 	// set $TERM
     env::set_var("TERM", "xterm-256color");
 
