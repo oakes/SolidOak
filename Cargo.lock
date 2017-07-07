@@ -274,7 +274,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "vte-rs"
 version = "0.1.6"
-source = "git+https://github.com/oakes/vte-rs#394324b3304e9046edcabca8aee20e97acd99ca7"
+source = "git+https://github.com/oakes/vte-rs#5aa1263bba0e6211391d4995774fdc1046c4f9a0"
 dependencies = [
  "bitflags 0.8.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "gdk 0.5.3 (registry+https://github.com/rust-lang/crates.io-index)",
