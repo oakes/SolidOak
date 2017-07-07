@@ -21,4 +21,3 @@ git = "https://github.com/oakes/neovim-rs"
 [dependencies.vte-rs]
 git = "https://github.com/oakes/vte-rs"
 #path = "../vte-rs"
-features = ["v0_48"]
