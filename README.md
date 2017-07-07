@@ -10,8 +10,6 @@ SolidOak is a simple IDE for Rust. See [the website](https://sekao.net/solidoak/
 * An easy-to-use GUI written with [gtk-rs](https://github.com/gtk-rs/gtk)
     - Buttons for common editing actions and a project tree that stays in sync with Neovim
     - You can bypass the GUI and run it as a console app by passing the `-nw` flag
-* Autocomplete via [Racer](https://github.com/phildawes/racer)
-    - The binary releases come bundled with it, so no configuration is necessary
 
 ## Build Instructions
 
