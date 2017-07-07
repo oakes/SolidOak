@@ -52,7 +52,7 @@ cargo build --release
 
 ### Windows
 
-Building on Windows doesn't work yet; the following instructions are a work in progress.
+The following instructions are a work in progress. Building does not currently work because msys2 does not contain a package for vte.
 
 Install [MSYS2](http://www.msys2.org/) and run this in its shell:
 
