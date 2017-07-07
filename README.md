@@ -50,9 +50,23 @@ port install libtool automake cmake pkgconfig gettext
 cargo build --release
 ```
 
-### Windows is not supported
+### Windows
 
-It should be possible to build for Windows, but I have not found time to try it yet. The [gtk bindings](https://github.com/gtk-rs/gtk) already build on Windows, but we may need to do some work to get [neovim-rs](https://github.com/oakes/neovim-rs) to build on it. Additionally, we would need to find a replacement for all the Posix-specific functions being used in `src/ffi.rs`.
+Building on Windows doesn't work yet; the following instructions are a work in progress.
+
+Install [MSYS2](http://www.msys2.org/) and run this in its shell:
+
+```Shell
+pacman -S mingw-w64-x86_64-gtk3
+```
+
+In cmd.exe, install Rust's GNU toolchain and build:
+
+```Shell
+rustup install stable-gnu
+set RUSTUP_TOOLCHAIN=stable-x86_64-pc-windows-gnu
+cargo build --release
+```
 
 ## Licensing
 

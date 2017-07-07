@@ -1,6 +1,7 @@
-use std::slice;
+extern crate libc;
 
-use libc::{c_int, c_uchar, c_void, fcntl, close, pipe, read, write, size_t, O_NONBLOCK, F_SETFL};
+use std::slice;
+use libc::{c_int, c_uchar, c_void, close, pipe, read, write};
 
 extern "C" {
     fn fork () -> c_int;
@@ -9,6 +10,9 @@ extern "C" {
 
 pub fn new_pipe() -> [c_int; 2] {
     let mut fds : [c_int; 2] = [0; 2];
+    #[cfg(target_os="windows")]
+    unsafe { pipe(fds.as_mut_ptr(), 2048, libc::O_BINARY) };
+    #[cfg(not(target_os="windows"))]
     unsafe { pipe(fds.as_mut_ptr()) };
     fds
 }
@@ -22,7 +26,8 @@ pub fn kill_process(pid: c_int) -> c_int {
 }
 
 pub fn set_non_blocking(fd: c_int) {
-    unsafe { fcntl(fd, F_SETFL, O_NONBLOCK) };
+    #[cfg(not(target_os="windows"))]
+    unsafe { libc::fcntl(fd, libc::F_SETFL, libc::O_NONBLOCK) };
 }
 
 pub fn close_fd(fd: c_int) {
@@ -35,7 +40,11 @@ pub fn send_message(fd: c_int, command: &str) {
     let msg = ::neovim::serialize_message(1, "vim_command", &arr);
     let msg_ref: &str = msg.as_ref();
     let msg_ptr = msg_ref.as_ptr() as *const c_void;
-    unsafe { write(fd, msg_ptr, msg.len() as size_t) };
+    #[cfg(target_os="windows")]
+    let len = msg.len() as libc::c_uint;
+    #[cfg(not(target_os="windows"))]
+    let len = msg.len() as libc::size_t;
+    unsafe { write(fd, msg_ptr, len) };
 }
 
 pub fn recv_message(fd: c_int) -> Option<::neovim::Array> {
