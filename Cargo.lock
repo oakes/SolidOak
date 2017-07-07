@@ -1,6 +1,6 @@
 [root]
 name = "solidoak"
-version = "0.1.3"
+version = "0.2.0"
 dependencies = [
  "gdk 0.5.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "glib 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)",
