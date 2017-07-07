@@ -233,7 +233,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 [[package]]
 name = "neovim-rs"
 version = "0.1.0"
-source = "git+https://github.com/oakes/neovim-rs#6e03d33395ade663a5bc866f870c5ddd419e35e5"
+source = "git+https://github.com/oakes/neovim-rs#16df4fd97bd5c71f581ae064847b46d403fd52a3"
 dependencies = [
  "libc 0.2.24 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
