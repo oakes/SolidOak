@@ -3,6 +3,7 @@ extern crate libc;
 use std::slice;
 use libc::{c_int, c_uchar, c_void, close, pipe, read, write};
 
+#[cfg(not(target_os="windows"))]
 extern "C" {
     fn fork () -> c_int;
     fn kill (pid: c_int, sig: c_int) -> c_int;
@@ -18,11 +19,17 @@ pub fn new_pipe() -> [c_int; 2] {
 }
 
 pub fn fork_process() -> c_int {
-    unsafe { fork() }
+    #[cfg(target_os="windows")]
+    return 1;
+    #[cfg(not(target_os="windows"))]
+    return unsafe { fork() };
 }
 
 pub fn kill_process(pid: c_int) -> c_int {
-    unsafe { kill(pid, 9) }
+    #[cfg(target_os="windows")]
+    return 1;
+    #[cfg(not(target_os="windows"))]
+    return unsafe { kill(pid, 9) };
 }
 
 pub fn set_non_blocking(fd: c_int) {
