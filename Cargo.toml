@@ -7,17 +7,18 @@ build = "build.rs"
 [dependencies]
 rustc-serialize = "0.3"
 libc = "0.2"
-glib = "0.0.7"
-gdk = "0.2.0"
+glib = "0.1.3"
+gdk = "0.5.3"
 
 [dependencies.gtk]
-git = "https://github.com/oakes/gtk"
-#path = "../gtk"
+version = "0.1.3"
+features = ["v3_10"]
 
 [dependencies.neovim-rs]
 git = "https://github.com/oakes/neovim-rs"
 #path = "../neovim-rs"
 
-[features]
-gtk_3_10 = []
-gtk_3_14 = ["gtk_3_10"]
+[dependencies.vte-rs]
+git = "https://github.com/oakes/vte-rs"
+#path = "../vte-rs"
+features = ["v0_48"]

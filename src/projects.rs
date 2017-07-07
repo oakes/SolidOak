@@ -1,5 +1,6 @@
-use gtk::traits::*;
-use gtk::{self, widgets};
+extern crate gtk;
+
+use gtk::*;
 use std::path::Path;
 use std::fs::metadata;
 use std::process::Command;
@@ -21,27 +22,28 @@ fn save_project(prefs: &mut ::utils::Prefs, path_str: &String) {
 }
 
 pub fn new_project(prefs: &mut ::utils::Prefs) {
-    let dialog = widgets::FileChooserDialog::new(
-        "New Project",
+    let dialog = FileChooserDialog::new::<Dialog>(
+        Some("New Project"),
         None,
-        gtk::FileChooserAction::Save,
-        [("Save", gtk::ResponseType::Ok), ("Cancel", gtk::ResponseType::Cancel)]
+        gtk::FileChooserAction::Save
     );
-    if dialog.run() == gtk::ResponseType::Ok as i32 {
-        if let Some(path_str) = dialog.get_filename() {
-            let path_ref: &str = path_str.as_ref();
-            let path = Path::new(path_ref);
-            if let Some(name_os_str) = path.file_name() {
-                if let Some(name_str) = name_os_str.to_str() {
-                    if let Some(parent_path) = path.parent() {
-                        match Command::new("cargo").arg("new").arg(name_str).arg("--bin")
-                            .current_dir(parent_path).status()
-                        {
-                            Ok(_) => save_project(prefs, &path_str),
-                            Err(e) => println!("Error creating {}: {}", name_str, e)
+    dialog.add_button("Save", gtk::ResponseType::Ok.into());
+    dialog.add_button("Cancel", gtk::ResponseType::Cancel.into());
+    if dialog.run() == gtk::ResponseType::Ok.into() {
+        if let Some(path_buf) = dialog.get_filename() {
+	    if let Some(path_str) = path_buf.to_str() {
+                if let Some(name_os_str) = path_buf.file_name() {
+                    if let Some(name_str) = name_os_str.to_str() {
+                        if let Some(parent_path) = path_buf.parent() {
+                            match Command::new("cargo").arg("new").arg(name_str).arg("--bin")
+                                .current_dir(parent_path).status()
+                            {
+                                Ok(_) => save_project(prefs, &String::from(path_str)),
+                                Err(e) => println!("Error creating {}: {}", name_str, e)
+                            }
                         }
                     }
-                }
+	        }
             }
         }
     }
@@ -49,15 +51,18 @@ pub fn new_project(prefs: &mut ::utils::Prefs) {
 }
 
 pub fn import_project(prefs: &mut ::utils::Prefs) {
-    let dialog = widgets::FileChooserDialog::new(
-        "Import",
+    let dialog = FileChooserDialog::new::<Dialog>(
+        Some("Import"),
         None,
         gtk::FileChooserAction::SelectFolder,
-        [("Open", gtk::ResponseType::Ok), ("Cancel", gtk::ResponseType::Cancel)]
     );
-    if dialog.run() == gtk::ResponseType::Ok as i32 {
-        if let Some(path_str) = dialog.get_filename() {
-            save_project(prefs, &path_str);
+    dialog.add_button("Save", gtk::ResponseType::Ok.into());
+    dialog.add_button("Cancel", gtk::ResponseType::Cancel.into());
+    if dialog.run() == gtk::ResponseType::Ok.into() {
+        if let Some(path_buf) = dialog.get_filename() {
+	    if let Some(path_str) = path_buf.to_str() {
+                save_project(prefs, &String::from(path_str));
+	    }
         }
     }
     dialog.destroy();
@@ -65,17 +70,20 @@ pub fn import_project(prefs: &mut ::utils::Prefs) {
 
 pub fn rename_file(ui: &::utils::UI, prefs: &mut ::utils::Prefs, fd: i32) {
     if let Some(_) = ::utils::get_selected_path(ui) {
-        let dialog = widgets::FileChooserDialog::new(
-            "Rename",
+        let dialog = FileChooserDialog::new::<Dialog>(
+            Some("Rename"),
             None,
-            gtk::FileChooserAction::Save,
-            [("Save", gtk::ResponseType::Ok), ("Cancel", gtk::ResponseType::Cancel)]
+            gtk::FileChooserAction::Save
         );
-        if dialog.run() == gtk::ResponseType::Ok as i32 {
-            if let Some(path_str) = dialog.get_filename() {
-                prefs.selection = Some(path_str.clone());
-                ::utils::write_prefs(prefs);
-                ::ffi::send_message(fd, format!("Move {}", path_str).as_ref());
+        dialog.add_button("Save", gtk::ResponseType::Ok.into());
+        dialog.add_button("Cancel", gtk::ResponseType::Cancel.into());
+        if dialog.run() == gtk::ResponseType::Ok.into() {
+            if let Some(path_buf) = dialog.get_filename() {
+	        if let Some(path_str) = path_buf.to_str() {
+                    prefs.selection = Some(String::from(path_str));
+                    ::utils::write_prefs(prefs);
+                    ::ffi::send_message(fd, format!("Move {}", path_str).as_ref());
+		}
             }
         }
         dialog.destroy();
@@ -84,7 +92,7 @@ pub fn rename_file(ui: &::utils::UI, prefs: &mut ::utils::Prefs, fd: i32) {
 
 pub fn remove_item(ui: &::utils::UI, prefs: &mut ::utils::Prefs, fd: i32) {
     if let Some(path_str) = ::utils::get_selected_path(ui) {
-        if let Some(dialog) = widgets::MessageDialog::new_with_markup(
+        let dialog = MessageDialog::new(
             Some(&ui.window),
             gtk::DialogFlags::empty(),
             gtk::MessageType::Question,
@@ -94,19 +102,18 @@ pub fn remove_item(ui: &::utils::UI, prefs: &mut ::utils::Prefs, fd: i32) {
             } else {
                 "Remove this file? It WILL be deleted from the disk."
             }
-        ) {
-            if dialog.run() == gtk::ResponseType::Ok as i32 {
-                if prefs.projects.contains(&path_str) {
-                    prefs.projects.remove(&path_str);
-                    remove_expansions_for_path(prefs, &path_str);
-                    ::utils::write_prefs(prefs);
-                    ::ffi::send_message(fd, "bd");
-                } else {
-                    ::ffi::send_message(fd, "call delete(expand('%')) | bdelete!");
-                }
+        );
+        if dialog.run() == gtk::ResponseType::Ok.into() {
+            if prefs.projects.contains(&path_str) {
+                prefs.projects.remove(&path_str);
+                remove_expansions_for_path(prefs, &path_str);
+                ::utils::write_prefs(prefs);
+                ::ffi::send_message(fd, "bd");
+            } else {
+                ::ffi::send_message(fd, "call delete(expand('%')) | bdelete!");
             }
-            dialog.destroy();
         }
+        dialog.destroy();
     }
 }
 
@@ -118,15 +125,15 @@ pub fn set_selection(ui: &::utils::UI, prefs: &mut ::utils::Prefs, fd: i32) {
     }
 }
 
-pub fn remove_expansion(ui: &::utils::UI, prefs: &mut ::utils::Prefs, iter: &widgets::TreeIter) {
-    if let Some(path_str) = unsafe { ui.tree_model.get_value(iter, 1).get_string() } {
+pub fn remove_expansion(ui: &::utils::UI, prefs: &mut ::utils::Prefs, iter: &TreeIter) {
+    if let Some(path_str) = ::utils::iter_to_str(ui, iter) {
         remove_expansions_for_path(prefs, &path_str);
         ::utils::write_prefs(prefs);
     }
 }
 
-pub fn add_expansion(ui: &::utils::UI, prefs: &mut ::utils::Prefs, iter: &widgets::TreeIter) {
-    if let Some(path_str) = unsafe { ui.tree_model.get_value(iter, 1).get_string() } {
+pub fn add_expansion(ui: &::utils::UI, prefs: &mut ::utils::Prefs, iter: &TreeIter) {
+    if let Some(path_str) = ::utils::iter_to_str(ui, iter) {
         prefs.expansions.insert(path_str);
         ::utils::write_prefs(prefs);
     }

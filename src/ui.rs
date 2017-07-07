@@ -1,5 +1,4 @@
-use gtk::traits::*;
-use gtk::widgets;
+use gtk::*;
 use std::cmp::Ordering;
 use std::collections::HashSet;
 use std::fs::{self};
@@ -37,14 +36,13 @@ fn update_project_buttons(ui: &::utils::UI, prefs: &::utils::Prefs) {
     }
 }
 
-fn add_node(ui: &::utils::UI, node: &Path, parent: Option<&widgets::TreeIter>) {
+fn add_node(ui: &::utils::UI, node: &Path, parent: Option<&TreeIter>) {
     if let Some(full_path_str) = node.to_str() {
         if let Some(leaf_os_str) = node.file_name() {
             if let Some(leaf_str) = leaf_os_str.to_str() {
                 if !leaf_str.starts_with(".") {
                     let iter = ui.tree_store.append(parent);
-                    ui.tree_store.set_string(&iter, 0, leaf_str);
-                    ui.tree_store.set_string(&iter, 1, full_path_str);
+                    ui.tree_store.set(&iter, &[0, 1], &[&String::from(leaf_str), &String::from(full_path_str)]);
 
                     if metadata(node).map(|m| m.is_dir()).unwrap_or(false) {
                         match fs::read_dir(node) {
@@ -69,27 +67,27 @@ fn add_node(ui: &::utils::UI, node: &Path, parent: Option<&widgets::TreeIter>) {
     }
 }
 
-fn expand_nodes(ui: &::utils::UI, prefs: &::utils::Prefs, parent: Option<&widgets::TreeIter>) {
-    if let Some(mut iter) = ui.tree_model.iter_children(parent) {
+fn expand_nodes(ui: &::utils::UI, prefs: &::utils::Prefs, parent: Option<&TreeIter>) {
+    if let Some(mut iter) = ui.tree_store.iter_children(parent) {
         loop {
-            if let Some(path_str) = unsafe { ui.tree_model.get_value(&iter, 1).get_string() } {
+            if let Some(path_str) = ::utils::iter_to_str(ui, &iter) {
                 if let Some(selection_str) = prefs.selection.clone() {
                     if Path::new(&path_str) == Path::new(&selection_str) {
-                        if let Some(path) = ui.tree_model.get_path(&iter) {
+                        if let Some(path) = ui.tree_store.get_path(&iter) {
                             ui.tree.set_cursor(&path, None, false);
                         }
                     }
                 }
 
                 if prefs.expansions.contains(&path_str) {
-                    if let Some(path) = ui.tree_model.get_path(&iter) {
+                    if let Some(path) = ui.tree_store.get_path(&iter) {
                         ui.tree.expand_row(&path, false);
                         expand_nodes(ui, prefs, Some(&iter));
                     }
                 }
             }
 
-            if !ui.tree_model.iter_next(&mut iter) {
+            if !ui.tree_store.iter_next(&mut iter) {
                 break;
             }
         }

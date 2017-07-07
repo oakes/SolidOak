@@ -4,10 +4,10 @@ extern crate gdk;
 extern crate glib;
 extern crate gtk;
 extern crate rustc_serialize;
+extern crate vte;
 
-use gtk::traits::*;
-use gtk::{signal, widgets};
-use gtk::signal::TreeViewSignals;
+use gtk::*;
+use vte::{Pty, Terminal};
 use std::cell::{Cell, RefCell};
 use std::collections::{HashMap, HashSet};
 use std::env;
@@ -24,7 +24,7 @@ mod projects;
 mod ui;
 mod utils;
 
-fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
+fn gui_main(pty: &mut Pty, read_fd: i32, write_fd: i32, pid: i32) {
     match gtk::init() {
         Ok(_) => (),
         Err(e) => {
@@ -34,51 +34,50 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
 
     // create the left pane
 
-    let new_button = widgets::Button::new_with_label("New Project").unwrap();
-    let import_button = widgets::Button::new_with_label("Import").unwrap();
-    let rename_button = widgets::Button::new_with_label("Rename").unwrap();
-    let remove_button = widgets::Button::new_with_label("Remove").unwrap();
+    let new_button = Button::new_with_label("New Project");
+    let import_button = Button::new_with_label("Import");
+    let rename_button = Button::new_with_label("Rename");
+    let remove_button = Button::new_with_label("Remove");
 
-    let project_buttons = widgets::Box::new(gtk::Orientation::Horizontal, 0).unwrap();
+    let project_buttons = Box::new(gtk::Orientation::Horizontal, 0);
     project_buttons.add(&new_button);
     project_buttons.add(&import_button);
     project_buttons.add(&rename_button);
     project_buttons.add(&remove_button);
 
-    let project_tree = widgets::TreeView::new().unwrap();
-    let selection = project_tree.get_selection().unwrap();
+    let project_tree = TreeView::new();
+    let selection = project_tree.get_selection();
     let column_types = [glib::Type::String, glib::Type::String];
-    let store = widgets::TreeStore::new(&column_types).unwrap();
-    let model = store.get_model().unwrap();
-    project_tree.set_model(&model);
+    let store = TreeStore::new(&column_types);
+    project_tree.set_model(&store);
     project_tree.set_headers_visible(false);
     project_tree.set_can_focus(false);
 
-    let scroll_pane = widgets::ScrolledWindow::new(None, None).unwrap();
+    let scroll_pane = ScrolledWindow::new(None, None);
     scroll_pane.add(&project_tree);
 
-    let column = widgets::TreeViewColumn::new().unwrap();
-    let cell = widgets::CellRendererText::new().unwrap();
+    let column = TreeViewColumn::new();
+    let cell = CellRendererText::new();
     column.pack_start(&cell, true);
     column.add_attribute(&cell, "text", 0);
     project_tree.append_column(&column);
 
-    let left_pane = widgets::Box::new(gtk::Orientation::Vertical, 0).unwrap();
+    let left_pane = Box::new(gtk::Orientation::Vertical, 0);
     left_pane.pack_start(&project_buttons, false, true, 0);
     left_pane.pack_start(&scroll_pane, true, true, 0);
 
     // create the right pane
 
-    let save_button = widgets::Button::new_with_label("Save").unwrap();
-    let undo_button = widgets::Button::new_with_label("Undo").unwrap();
-    let redo_button = widgets::Button::new_with_label("Redo").unwrap();
-    let font_dec_button = widgets::Button::new_with_label("Font -").unwrap();
-    let font_inc_button = widgets::Button::new_with_label("Font +").unwrap();
-    let easy_mode_button = widgets::ToggleButton::new_with_label("Easy Mode").unwrap();
-    let editor_separator = widgets::Separator::new(gtk::Orientation::Horizontal).unwrap();
-    let close_button = widgets::Button::new_with_label("X").unwrap();
+    let save_button = Button::new_with_label("Save");
+    let undo_button = Button::new_with_label("Undo");
+    let redo_button = Button::new_with_label("Redo");
+    let font_dec_button = Button::new_with_label("Font -");
+    let font_inc_button = Button::new_with_label("Font +");
+    let easy_mode_button = ToggleButton::new_with_label("Easy Mode");
+    let editor_separator = Separator::new(gtk::Orientation::Horizontal);
+    let close_button = Button::new_with_label("X");
 
-    let editor_buttons = widgets::Box::new(gtk::Orientation::Horizontal, 0).unwrap();
+    let editor_buttons = Box::new(gtk::Orientation::Horizontal, 0);
     editor_buttons.add(&save_button);
     editor_buttons.add(&undo_button);
     editor_buttons.add(&redo_button);
@@ -88,35 +87,35 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
     editor_buttons.pack_start(&editor_separator, true, false, 0);
     editor_buttons.add(&close_button);
 
-    let mut editor_term = widgets::VteTerminal::new().unwrap();
-    editor_term.set_pty(pty);
+    let editor_term = Terminal::new();
+    editor_term.set_pty(Some(pty));
     editor_term.watch_child(pid);
     editor_term.set_size_request(-1, (utils::EDITOR_HEIGHT_PCT * (utils::WINDOW_HEIGHT as f32)) as i32);
 
-    let run_button = widgets::Button::new_with_label("Run").unwrap();
-    let build_button = widgets::Button::new_with_label("Build").unwrap();
-    let test_button = widgets::Button::new_with_label("Test").unwrap();
-    let clean_button = widgets::Button::new_with_label("Clean").unwrap();
-    let stop_button = widgets::Button::new_with_label("Stop").unwrap();
+    let run_button = Button::new_with_label("Run");
+    let build_button = Button::new_with_label("Build");
+    let test_button = Button::new_with_label("Test");
+    let clean_button = Button::new_with_label("Clean");
+    let stop_button = Button::new_with_label("Stop");
 
-    let build_buttons = widgets::Box::new(gtk::Orientation::Horizontal, 0).unwrap();
+    let build_buttons = Box::new(gtk::Orientation::Horizontal, 0);
     build_buttons.add(&run_button);
     build_buttons.add(&build_button);
     build_buttons.add(&test_button);
     build_buttons.add(&clean_button);
     build_buttons.add(&stop_button);
 
-    let build_terms = widgets::Stack::new().unwrap();
+    let build_terms = Stack::new();
 
-    let build_pane = widgets::Box::new(gtk::Orientation::Vertical, 0).unwrap();
+    let build_pane = Box::new(gtk::Orientation::Vertical, 0);
     build_pane.pack_start(&build_buttons, false, true, 0);
     build_pane.pack_start(&build_terms, true, true, 0);
 
-    let resizer = widgets::Paned::new(gtk::Orientation::Vertical).unwrap();
+    let resizer = Paned::new(gtk::Orientation::Vertical);
     resizer.add1(&editor_term);
     resizer.add2(&build_pane);
 
-    let right_pane = widgets::Box::new(gtk::Orientation::Vertical, 0).unwrap();
+    let right_pane = Box::new(gtk::Orientation::Vertical, 0);
     right_pane.pack_start(&editor_buttons, false, true, 0);
     right_pane.pack_start(&resizer, true, true, 0);
 
@@ -130,9 +129,9 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
                         option_env!("CARGO_PKG_VERSION_MAJOR").unwrap(),
                         option_env!("CARGO_PKG_VERSION_MINOR").unwrap(),
                         option_env!("CARGO_PKG_VERSION_PATCH").unwrap());
-    let window = widgets::Window::new(gtk::WindowType::Toplevel).unwrap();
+    let window = Window::new(gtk::WindowType::Toplevel);
     window.set_title(title.as_ref());
-    window.set_window_position(gtk::WindowPosition::Center);
+    window.set_position(gtk::WindowPosition::Center);
     window.set_default_size(utils::WINDOW_WIDTH, utils::WINDOW_HEIGHT);
     {
         let quit_app = quit_app.clone();
@@ -141,11 +140,11 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
             ffi::close_fd(read_fd);
             ffi::close_fd(write_fd);
             quit_app.deref().set(true);
-            signal::Inhibit(true)
+            Inhibit(true)
         });
     }
 
-    let window_pane = widgets::Paned::new(gtk::Orientation::Horizontal).unwrap();
+    let window_pane = Paned::new(gtk::Orientation::Horizontal);
     window_pane.add1(&left_pane);
     window_pane.add2(&right_pane);
 
@@ -178,17 +177,17 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
     }
 
     window.connect_key_press_event(move |_, key| {
-        let state = (*key).state;
+        let state = key.get_state();
         if state.contains(gdk::ModifierType::from_bits_truncate(::utils::META_KEY)) {
-            let keyval = (*key).keyval;
+            let keyval = key.get_keyval();
             if let Some(name_str) = gdk::keyval_name(keyval) {
                 if let Some(button) = shortcuts.get(&name_str) {
                     button.clicked();
-                    return signal::Inhibit(true);
+                    return Inhibit(true);
                 }
             }
         }
-        signal::Inhibit(false)
+        Inhibit(false)
     });
 
     // populate the project tree
@@ -196,7 +195,6 @@ fn gui_main(pty: &mut widgets::VtePty, read_fd: i32, write_fd: i32, pid: i32) {
     let ui = Rc::new(RefCell::new(::utils::UI {
         window: window.clone(),
         tree: project_tree.clone(),
-        tree_model: model.clone(),
         tree_store: store.clone(),
         tree_selection: selection.clone(),
         rename_button: rename_button.clone(),
@@ -538,7 +536,7 @@ fn main() {
     }
 
     // takes care of piping stdin/stdout between the gui and nvim
-    let mut pty = widgets::VtePty::new().unwrap();
+    let mut pty = Pty::new();
 
     // two anonymous pipes for msgpack-rpc between the gui and nvim
     let nvim_gui = ffi::new_pipe(); // to nvim from gui

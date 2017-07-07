@@ -1,4 +1,5 @@
-use gtk::widgets;
+use gtk::*;
+use vte::Terminal;
 use rustc_serialize::{Encodable, json};
 use std::env;
 use std::collections::{HashMap, HashSet};
@@ -110,17 +111,16 @@ pub static DATA_CONTENT : &'static [Resource] = &[
 ];
 
 pub struct UI {
-    pub window: widgets::Window,
-    pub tree: widgets::TreeView,
-    pub tree_store: widgets::TreeStore,
-    pub tree_model: widgets::TreeModel,
-    pub tree_selection: widgets::TreeSelection,
-    pub rename_button: widgets::Button,
-    pub remove_button: widgets::Button,
-    pub editor_term: widgets::VteTerminal,
-    pub builders: HashMap<PathBuf, (widgets::VteTerminal, i32)>,
-    pub build_buttons: widgets::Box,
-    pub build_terms: widgets::Stack
+    pub window: Window,
+    pub tree: TreeView,
+    pub tree_store: TreeStore,
+    pub tree_selection: TreeSelection,
+    pub rename_button: Button,
+    pub remove_button: Button,
+    pub editor_term: Terminal,
+    pub builders: HashMap<PathBuf, (Terminal, i32)>,
+    pub build_buttons: Box,
+    pub build_terms: Stack
 }
 
 #[derive(RustcDecodable, RustcEncodable)]
@@ -172,9 +172,13 @@ pub fn is_parent_path(parent_str: &String, child_str: &String) -> bool {
     Path::new(parent_str).parent() != Path::new(child_str).parent()
 }
 
+pub fn iter_to_str(ui: &UI, iter: &TreeIter) -> Option<String> {
+    ui.tree_store.get_value(iter, 1).get::<String>()
+}
+
 pub fn get_selected_path(ui: &UI) -> Option<String> {
     if let Some((model, iter)) = ui.tree_selection.get_selected() {
-        unsafe { model.get_value(&iter, 1).get_string() }
+        model.get_value(&iter, 1).get::<String>()
     } else {
         None
     }

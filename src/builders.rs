@@ -1,5 +1,5 @@
-use gtk::traits::*;
-use gtk::widgets;
+use gtk::*;
+use vte::Terminal;
 use std::path::Path;
 
 pub fn show_builder(ui: &mut ::utils::UI, prefs: &::utils::Prefs) {
@@ -9,7 +9,7 @@ pub fn show_builder(ui: &mut ::utils::UI, prefs: &::utils::Prefs) {
         if let Some(ref project_path) = ::utils::get_project_path(prefs, Path::new(path_str)) {
             if ::utils::is_project_root(prefs, project_path) {
                 if !ui.builders.contains_key(project_path) {
-                    let term = widgets::VteTerminal::new().unwrap();
+                    let term = Terminal::new();
                     term.show_all();
                     ui.build_terms.add(&term);
                     ui.builders.insert(project_path.clone(), (term, -1));
@@ -46,7 +46,7 @@ pub fn run_builder(ui: &mut ::utils::UI, prefs: &::utils::Prefs, args: &[&str]) 
     }
 }
 
-fn stop_process(term: &mut widgets::VteTerminal, current_pid: &mut i32) {
+fn stop_process(term: &mut Terminal, current_pid: &mut i32) {
     if *current_pid >= 0 {
         ::ffi::kill_process(*current_pid);
         term.feed("===Finished===\r\n");
@@ -64,14 +64,14 @@ pub fn stop_builder(ui: &mut ::utils::UI, prefs: &::utils::Prefs) {
 
 pub fn stop_builders(ui: &mut ::utils::UI) {
     for (_, mut builder) in ui.builders.iter_mut() {
-        let (ref mut term, ref mut current_pid) : (widgets::VteTerminal, i32) = *builder;
+        let (ref mut term, ref mut current_pid) : (Terminal, i32) = *builder;
         stop_process(term, current_pid);
     }
 }
 
 pub fn set_builders_font_size(ui: &mut ::utils::UI, prefs: &::utils::Prefs) {
     for (_, mut builder) in ui.builders.iter_mut() {
-        let (ref mut term, _) : (widgets::VteTerminal, i32) = *builder;
+        let (ref mut term, _) : (Terminal, i32) = *builder;
         term.set_font_size(prefs.font_size);
     }
 }
